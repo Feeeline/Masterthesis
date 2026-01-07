@@ -130,12 +130,22 @@ class ExergyAnalysis:
         self.E_P_dict = E_P
         self.E_L_dict = E_L
 
+        # Validate that all referenced connections exist in the parsed model
+        available_conns = set(self.connections.keys())
+        missing = set()
         for ex_flow in [E_F, E_P, E_L]:
             for connections in ex_flow.values():
                 for connection in connections:
-                    if connection not in self.connections:
-                        msg = f"The connection {connection} is not part of the " "plant's connections."
-                        raise ValueError(msg)
+                    if connection not in available_conns:
+                        missing.add(connection)
+        if missing:
+            # Provide a helpful error message listing missing connections and a sample of available ones
+            sample_avail = list(sorted(available_conns))[:20]
+            msg = (
+                f"The following referenced connection(s) are not present in the parsed model: {sorted(missing)}. "
+                f"Available connections (first 20): {sample_avail}"
+            )
+            raise ValueError(msg)
 
         # Calculate total fuel exergy (E_F) by summing up all specified input connections
         if "inputs" in E_F:
@@ -203,6 +213,14 @@ class ExergyAnalysis:
                 # Sum component destruction if available
                 if component.E_D is not np.nan:
                     total_component_E_D += component.E_D
+
+    def list_connection_names(self):
+        """Return a sorted list of available connection names parsed from the model."""
+        return sorted(self.connections.keys())
+
+    def list_connections_by_kind(self, kind: str):
+        """Return a sorted list of connection names filtered by `kind` (e.g., 'power', 'material', 'heat')."""
+        return sorted([name for name, data in self.connections.items() if data.get("kind") == kind])
 
         # Check if the sum of all component exergy destructions matches the overall system exergy destruction
         if not np.isclose(total_component_E_D, self.E_D, rtol=1e-5):

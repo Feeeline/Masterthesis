@@ -6,6 +6,7 @@ import os
 import CoolProp.CoolProp as CP
 
 from exerpy import __datapath__
+import re
 
 
 def mass_to_molar_fractions(mass_fractions):
@@ -293,10 +294,17 @@ def add_chemical_exergy(my_json, Tamb, pamb, chemExLib):
                 stream_data = {"mass_composition": mass_composition}
                 logging.info(f"Using mass composition for connection {conn_name}")
 
-            # Add the chemical exergy value
-            conn_data["e_CH"] = calc_chemical_exergy(stream_data, Tamb, pamb, chemExLib)
-            conn_data["e_CH_unit"] = fluid_property_data["e"]["SI_unit"]
-            logging.info(f"Added chemical exergy to connection {conn_name}: {conn_data['e_CH']} kJ/kg")
+            # If there is no composition data, skip chemical exergy calculation
+            comp_keys = stream_data.get("molar_composition") or stream_data.get("mass_composition") or {}
+            if not comp_keys:
+                logging.warning(f"No composition data for connection {conn_name}; skipping chemical exergy calculation.")
+                conn_data["e_CH"] = None
+                conn_data["e_CH_unit"] = None
+            else:
+                # Add the chemical exergy value
+                conn_data["e_CH"] = calc_chemical_exergy(stream_data, Tamb, pamb, chemExLib)
+                conn_data["e_CH_unit"] = fluid_property_data["e"]["SI_unit"]
+                logging.info(f"Added chemical exergy to connection {conn_name}: {conn_data['e_CH']} kJ/kg")
         else:
             logging.info(
                 f"Skipped chemical exergy calculation for non-material connection {conn_name} ({conn_data['kind']})"
@@ -463,7 +471,7 @@ def add_total_exergy_flow(my_json, split_physical_exergy):
     return my_json
 
 
-def convert_to_SI(property, value, unit):
+def convert_to_SI(property, value, unit, context=None):
     r"""
     Convert a value to its SI value.
 
@@ -487,6 +495,14 @@ def convert_to_SI(property, value, unit):
     ------
     ValueError: If the property or unit is invalid or conversion is not possible.
     """
+    # Debug: print incoming unit info so users can see raw UnitString from Aspen
+    try:
+        debug_msg = f"convert_to_SI called -> property='{property}', value={value}, raw_unit={repr(unit)}, context={context}"
+        print(debug_msg)
+        logging.debug(debug_msg)
+    except Exception:
+        pass
+
     # Check if value is None
     if value is None:
         logging.warning(f"Value is None for property '{property}', cannot convert.")
@@ -497,23 +513,124 @@ def convert_to_SI(property, value, unit):
         logging.warning(f"Unrecognized property: '{property}'. Returning original value {value} {unit}.")
         return value
 
-    # Check if the unit is valid
-    if unit == "Unknown":
-        logging.warning(f"Unrecognized unit {unit} for property '{property}'. Returning original value {value} {unit}.")
-        return value
+    # Normalize unit string to handle common synonyms coming from external parsers
+    def normalize_unit(u: str) -> str:
+        if not isinstance(u, str):
+            return u
+        s = u.strip().lower()
+        # remove degree symbol and similar
+        s = s.replace("°", " ")
+        # replace common separators with space
+        s = s.replace("-", " ")
+        s = s.replace("\u00b7", " ")
+        # remove commas and dots
+        s = s.replace(",", "").replace(".", "")
+        # normalize per expressions: 'per' -> '/'
+        s = re.sub(r"\bper\b", "/", s)
+        # collapse multiple spaces
+        s = re.sub(r"\s+", " ", s).strip()
+        # remove trailing plural 's' for alphabetic words longer than 2 chars
+        if s.isalpha() and s.endswith("s") and len(s) > 2:
+            s = s[:-1]
+        return s
+
+    if isinstance(unit, str):
+        raw_unit = unit
+        unit_norm = normalize_unit(unit)
+        if unit_norm == "unknown":
+            logging.warning(
+                f"Unrecognized unit {unit} for property '{property}' (context={context}). Returning original value {value} {unit}."
+            )
+            return value
+
+        # map common human-readable unit names to canonical keys used in fluid_property_data
+        unit_alias_map = {
+            # power / heat (normalized keys)
+            "watt": "W",
+            "w": "W",
+            "wat": "W",
+            "kilowatt": "kW",
+            "kw": "kW",
+            "megawatt": "MW",
+            "mw": "MW",
+            # thermal conductance variants
+            "w / k": "W / K",
+            "w/k": "W / K",
+            # plural handlings (already normalized, but keep entries)
+            "watts": "W",
+            # pressure unit variants -> Pascal
+            "n/sqm": "Pa",
+            "n/sq m": "Pa",
+            "n/m2": "Pa",
+            "n / m2": "Pa",
+            "newton/m2": "Pa",
+            "newton/sqm": "Pa",
+            "newton/sq m": "Pa",
+            "pa": "Pa",
+        }
+
+        lower_unit = unit_norm
+        if lower_unit in unit_alias_map:
+            unit = unit_alias_map[lower_unit]
+        else:
+            # try to preserve some spacing patterns for lookup (e.g., 'w / k')
+            unit = unit_norm
+
+        # Record every seen unit for later inspection (dedupe externally)
+        try:
+            repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+            seen_path = os.path.join(repo_root, "seen_units.txt")
+            with open(seen_path, "a", encoding="utf-8") as f:
+                f.write(f"{property}\t{raw_unit}\t{unit}\t{context}\n")
+        except Exception:
+            logging.exception("Could not write seen unit to file")
 
     try:
         # Handle temperature conversions separately
+        # Accept lowercase temperature unit codes (e.g., 'c' -> 'C')
+        if property == "T" and isinstance(unit, str):
+            unit = unit.upper()
+
         if property == "T":
+            # Try direct lookup first, then attempt normalized match against known keys
             if unit not in fluid_property_data["T"]["units"]:
-                raise ValueError(f"Invalid unit '{unit}' for temperature. Unit not found.")
+                # attempt normalized matching
+                matched = None
+                for candidate in fluid_property_data["T"]["units"].keys():
+                    if normalize_unit(candidate) == normalize_unit(unit):
+                        matched = candidate
+                        break
+                if matched is None:
+                    raise ValueError(
+                        f"Invalid unit '{unit}' for temperature. Unit not found. Context: {context}"
+                    )
+                unit = matched
             converters = fluid_property_data["T"]["units"][unit]
             return (value + converters[0]) * converters[1]
 
         # Handle all other property conversions
         else:
             if unit not in fluid_property_data[property]["units"]:
-                raise ValueError(f"Invalid unit '{unit}' for property '{property}'. Unit not found.")
+                # Try to match normalized form of the unit to a known key
+                matched = None
+                for candidate in fluid_property_data[property]["units"].keys():
+                    if normalize_unit(candidate) == normalize_unit(unit):
+                        matched = candidate
+                        break
+                if matched is not None:
+                    unit = matched
+                else:
+                    # Record unknown unit for later inspection so we can add mappings
+                    try:
+                        repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+                        log_path = os.path.join(repo_root, "detected_units.txt")
+                        with open(log_path, "a", encoding="utf-8") as f:
+                            f.write(f"{property}\t{unit}\t{context}\n")
+                    except Exception:
+                        logging.exception("Could not write detected unit to file")
+                    raise ValueError(
+                        f"Invalid unit '{unit}' for property '{property}'. Unit not found. Context: {context}"
+                    )
             conversion_factor = fluid_property_data[property]["units"][unit]
             return value * conversion_factor
 

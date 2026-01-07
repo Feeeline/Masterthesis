@@ -106,6 +106,7 @@ class AspenModelParser:
                         "power",
                         abs(self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\POWER_OUT").Value),
                         self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\POWER_OUT").UnitString,
+                        context=f"stream:{stream_name}:POWER_OUT",
                     )
                     if self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\POWER_OUT") is not None
                     else None
@@ -117,6 +118,7 @@ class AspenModelParser:
                         "power",
                         abs(self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\QCALC").Value),
                         self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\QCALC").UnitString,
+                        context=f"stream:{stream_name}:QCALC",
                     )
                     if self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\QCALC") is not None
                     else None
@@ -125,115 +127,89 @@ class AspenModelParser:
             # MATERIAL STREAMS
             else:
                 # Assume it's a material stream and retrieve additional properties
+                # Pre-fetch some nodes to avoid repeated FindNode calls and handle missing values safely
+                hmx_node = self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\HMX_FLOW\MIXED")
+                temp_node = self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\TEMP_OUT\MIXED")
+                pres_node = self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\PRES_OUT\MIXED")
+                hmx_mass_node = self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\HMX_MASS\MIXED")
+                smx_mass_node = self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\SMX_MASS\MIXED")
+                massflm_node = self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\MASSFLMX\MIXED")
+                exergy_node = self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\STRM_UPP\EXERGYMS\MIXED\TOTAL")
+                totflow_node = self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\TOT_FLOW")
+                # Warn if nodes exist but have no value
+                if temp_node is not None and temp_node.Value is None:
+                    logging.warning(f"TEMP_OUT node for stream {stream_name} has no value")
+                if pres_node is not None and pres_node.Value is None:
+                    logging.warning(f"PRES_OUT node for stream {stream_name} has no value")
+                if hmx_mass_node is not None and hmx_mass_node.Value is None:
+                    logging.warning(f"HMX_MASS node for stream {stream_name} has no value")
+                if hmx_node is not None and hmx_node.Value is None:
+                    logging.warning(f"HMX_FLOW node for stream {stream_name} has no value")
+                if smx_mass_node is not None and smx_mass_node.Value is None:
+                    logging.warning(f"SMX_MASS node for stream {stream_name} has no value")
+                if massflm_node is not None and massflm_node.Value is None:
+                    logging.warning(f"MASSFLMX node for stream {stream_name} has no value")
+                if exergy_node is not None and exergy_node.Value is None:
+                    logging.warning(f"EXERGYMS node for stream {stream_name} has no value")
+                if totflow_node is not None and totflow_node.Value is None:
+                    logging.warning(f"TOT_FLOW node for stream {stream_name} has no value")
+
                 connection_data.update(
                     {
                         "kind": "material",
                         "T": (
-                            convert_to_SI(
-                                "T",
-                                self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\TEMP_OUT\MIXED").Value,
-                                self.aspen.Tree.FindNode(
-                                    rf"\Data\Streams\{stream_name}\Output\TEMP_OUT\MIXED"
-                                ).UnitString,
-                            )
-                            if self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\TEMP_OUT\MIXED")
-                            is not None
+                            convert_to_SI("T", temp_node.Value, temp_node.UnitString, context=f"stream:{stream_name}:TEMP_OUT")
+                            if (temp_node is not None and temp_node.Value is not None)
                             else None
                         ),
                         "T_unit": fluid_property_data["T"]["SI_unit"],
                         "p": (
-                            convert_to_SI(
-                                "p",
-                                self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\PRES_OUT\MIXED").Value,
-                                self.aspen.Tree.FindNode(
-                                    rf"\Data\Streams\{stream_name}\Output\PRES_OUT\MIXED"
-                                ).UnitString,
-                            )
-                            if self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\PRES_OUT\MIXED")
-                            is not None
+                            convert_to_SI("p", pres_node.Value, pres_node.UnitString, context=f"stream:{stream_name}:PRES_OUT")
+                            if (pres_node is not None and pres_node.Value is not None)
                             else None
                         ),
                         "p_unit": fluid_property_data["p"]["SI_unit"],
                         "h": (
-                            convert_to_SI(
-                                "h",
-                                self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\HMX_MASS\MIXED").Value,
-                                self.aspen.Tree.FindNode(
-                                    rf"\Data\Streams\{stream_name}\Output\HMX_MASS\MIXED"
-                                ).UnitString,
-                            )
-                            if self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\HMX_MASS\MIXED")
-                            is not None
+                            convert_to_SI("h", hmx_mass_node.Value, hmx_mass_node.UnitString, context=f"stream:{stream_name}:HMX_MASS")
+                            if (hmx_mass_node is not None and hmx_mass_node.Value is not None)
                             else None
                         ),
                         "h_unit": fluid_property_data["h"]["SI_unit"],
                         "s": (
-                            convert_to_SI(
-                                "s",
-                                self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\SMX_MASS\MIXED").Value,
-                                self.aspen.Tree.FindNode(
-                                    rf"\Data\Streams\{stream_name}\Output\SMX_MASS\MIXED"
-                                ).UnitString,
-                            )
-                            if self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\SMX_MASS\MIXED")
-                            is not None
+                            convert_to_SI("s", smx_mass_node.Value, smx_mass_node.UnitString, context=f"stream:{stream_name}:SMX_MASS")
+                            if (smx_mass_node is not None and smx_mass_node.Value is not None)
                             else None
                         ),
                         "s_unit": fluid_property_data["s"]["SI_unit"],
                         "m": (
-                            convert_to_SI(
-                                "m",
-                                self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\MASSFLMX\MIXED").Value,
-                                self.aspen.Tree.FindNode(
-                                    rf"\Data\Streams\{stream_name}\Output\MASSFLMX\MIXED"
-                                ).UnitString,
-                            )
-                            if self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\MASSFLMX\MIXED")
-                            is not None
+                            convert_to_SI("m", massflm_node.Value, massflm_node.UnitString, context=f"stream:{stream_name}:MASSFLMX")
+                            if (massflm_node is not None and massflm_node.Value is not None)
                             else None
                         ),
                         "m_unit": fluid_property_data["m"]["SI_unit"],
                         "energy_flow": (
-                            convert_to_SI(
-                                "power",
-                                abs(
-                                    self.aspen.Tree.FindNode(
-                                        rf"\Data\Streams\{stream_name}\Output\HMX_FLOW\MIXED"
-                                    ).Value
-                                ),
-                                self.aspen.Tree.FindNode(
-                                    rf"\Data\Streams\{stream_name}\Output\HMX_FLOW\MIXED"
-                                ).UnitString,
-                            )
-                            if self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\HMX_FLOW\MIXED")
-                            is not None
+                            # Safely retrieve HMX_FLOW node and its value/unit
+                            (lambda: (
+                                convert_to_SI(
+                                    "power",
+                                    abs(hmx_node.Value),
+                                    hmx_node.UnitString,
+                                    context=f"stream:{stream_name}:HMX_FLOW",
+                                )
+                            ) if (hmx_node is not None and hmx_node.Value is not None) else None)()
+                            if True
                             else None
                         ),
                         "energy_flow_unit": fluid_property_data["power"]["SI_unit"],
                         "e_PH": (
-                            convert_to_SI(
-                                "e",
-                                self.aspen.Tree.FindNode(
-                                    rf"\Data\Streams\{stream_name}\Output\STRM_UPP\EXERGYMS\MIXED\TOTAL"
-                                ).Value,
-                                self.aspen.Tree.FindNode(
-                                    rf"\Data\Streams\{stream_name}\Output\STRM_UPP\EXERGYMS\MIXED\TOTAL"
-                                ).UnitString,
-                            )
-                            if self.aspen.Tree.FindNode(
-                                rf"\Data\Streams\{stream_name}\Output\STRM_UPP\EXERGYMS\MIXED\TOTAL"
-                            )
-                            is not None
-                            else (logging.warning(f"e_PH node not found for stream {stream_name}"), None)[1]
+                            convert_to_SI("e", exergy_node.Value, exergy_node.UnitString, context=f"stream:{stream_name}:EXERGYMS")
+                            if (exergy_node is not None and exergy_node.Value is not None)
+                            else (logging.warning(f"e_PH node not found or empty for stream {stream_name}"), None)[1]
                         ),
                         "e_PH_unit": fluid_property_data["e"]["SI_unit"],
                         "n": (
-                            convert_to_SI(
-                                "n",
-                                self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\TOT_FLOW").Value,
-                                self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\TOT_FLOW").UnitString,
-                            )
-                            if self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\TOT_FLOW") is not None
+                            convert_to_SI("n", totflow_node.Value, totflow_node.UnitString, context=f"stream:{stream_name}:TOT_FLOW")
+                            if (totflow_node is not None and totflow_node.Value is not None)
                             else None
                         ),
                         "n_unit": fluid_property_data["n"]["SI_unit"],
@@ -307,8 +283,9 @@ class AspenModelParser:
                         "heat",
                         self.aspen.Tree.FindNode(rf"\Data\Blocks\{block_name}\Output\QNET").Value,
                         self.aspen.Tree.FindNode(rf"\Data\Blocks\{block_name}\Output\QNET").UnitString,
+                        context=f"block:{block_name}:QNET",
                     )
-                    if self.aspen.Tree.FindNode(rf"\Data\Blocks\{block_name}\Output\QNET") is not None
+                    if (self.aspen.Tree.FindNode(rf"\Data\Blocks\{block_name}\Output\QNET") is not None and self.aspen.Tree.FindNode(rf"\Data\Blocks\{block_name}\Output\QNET").Value is not None)
                     else None
                 ),
                 "Q_unit": fluid_property_data["heat"]["SI_unit"],
@@ -317,8 +294,9 @@ class AspenModelParser:
                         "power",
                         abs(self.aspen.Tree.FindNode(rf"\Data\Blocks\{block_name}\Output\BRAKE_POWER").Value),
                         self.aspen.Tree.FindNode(rf"\Data\Blocks\{block_name}\Output\BRAKE_POWER").UnitString,
+                        context=f"block:{block_name}:BRAKE_POWER",
                     )
-                    if self.aspen.Tree.FindNode(rf"\Data\Blocks\{block_name}\Output\BRAKE_POWER") is not None
+                    if (self.aspen.Tree.FindNode(rf"\Data\Blocks\{block_name}\Output\BRAKE_POWER") is not None and self.aspen.Tree.FindNode(rf"\Data\Blocks\{block_name}\Output\BRAKE_POWER").Value is not None)
                     else None
                 ),
                 "P_unit": fluid_property_data["power"]["SI_unit"],
@@ -347,7 +325,8 @@ class AspenModelParser:
                             ).Elements(0)
                             elec_power_name = elec_power_node.Name
                             if elec_power_name in self.connections_data:
-                                elec_power = abs(self.connections_data[elec_power_name]["energy_flow"])
+                                elec_energy = self.connections_data[elec_power_name].get("energy_flow")
+                                elec_power = abs(elec_energy) if elec_energy is not None else None
                             else:
                                 logging.warning(f"No WS(IN) ports found for block {block_name}")
                                 elec_power = None
@@ -356,7 +335,8 @@ class AspenModelParser:
                             ).Elements(0)
                             brake_power_name = brake_power_node.Name
                             if brake_power_name in self.connections_data:
-                                brake_power = abs(self.connections_data[brake_power_name]["energy_flow"])
+                                brake_energy = self.connections_data[brake_power_name].get("energy_flow")
+                                brake_power = abs(brake_energy) if brake_energy is not None else None
                             else:
                                 logging.warning(f"No WS(IN) ports found for block {block_name}")
                                 brake_power = None
@@ -421,9 +401,8 @@ class AspenModelParser:
                     "source_connector": 1,  # 00 is reserved for the fluid streams
                     "target_component": None,  # Heat assumed to leave the system (not relevant for exergy analysis)
                     "target_connector": None,  # Heat assumed to leave the system (not relevant for exergy analysis)
-                    "energy_flow": abs(
-                        component_data["Q"]
-                    ),  # the user defines in the balances if the heat flow is positive or negative
+                    "energy_flow": (abs(component_data["Q"]) if component_data.get("Q") is not None else None),
+                    # the user defines in the balances if the heat flow is positive or negative
                     "energy_flow_unit": fluid_property_data["heat"]["SI_unit"],
                 }
 
@@ -443,9 +422,10 @@ class AspenModelParser:
                             "power",
                             elec_power_node.Value,
                             elec_power_node.UnitString,
+                            context=f"block:{block_name}:ELEC_POWER",
                         )
                     )
-                    if elec_power_node is not None
+                    if (elec_power_node is not None and elec_power_node.Value is not None)
                     else None
                 )
                 brake_power_node = self.aspen.Tree.FindNode(rf"\Data\Blocks\{block_name}\Output\BRAKE_POWER")
@@ -455,9 +435,10 @@ class AspenModelParser:
                             "power",
                             brake_power_node.Value,
                             brake_power_node.UnitString,
+                            context=f"block:{block_name}:BRAKE_POWER",
                         )
                     )
-                    if brake_power_node is not None
+                    if (brake_power_node is not None and brake_power_node.Value is not None)
                     else None
                 )
                 eff_driv_node = self.aspen.Tree.FindNode(rf"\Data\Blocks\{block_name}\Output\EFF_DRIV")
@@ -712,7 +693,11 @@ class AspenModelParser:
         try:
             # Parse ambient temperature (Tamb)
             temp_node = self.aspen.Tree.FindNode(r"\Data\Setup\Sim-Options\Input\REF_TEMP")
-            self.Tamb = convert_to_SI("T", temp_node.Value, temp_node.UnitString) if temp_node is not None else None
+            self.Tamb = (
+                convert_to_SI("T", temp_node.Value, temp_node.UnitString, context="ambient:REF_TEMP")
+                if (temp_node is not None and temp_node.Value is not None)
+                else None
+            )
 
             if self.Tamb is None:
                 raise ValueError(
@@ -721,7 +706,11 @@ class AspenModelParser:
 
             # Parse ambient pressure (pamb)
             pres_node = self.aspen.Tree.FindNode(r"\Data\Setup\Sim-Options\Input\REF_PRES")
-            self.pamb = convert_to_SI("p", pres_node.Value, pres_node.UnitString) if pres_node is not None else None
+            self.pamb = (
+                convert_to_SI("p", pres_node.Value, pres_node.UnitString, context="ambient:REF_PRES")
+                if (pres_node is not None and pres_node.Value is not None)
+                else None
+            )
 
             if self.pamb is None:
                 raise ValueError(

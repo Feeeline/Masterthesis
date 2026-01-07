@@ -410,6 +410,25 @@ def test_calc_chemical_exergy_invalid_library():
         calc_chemical_exergy(stream_data, 298.15, 1.01325, "InvalidLibrary")
 
 
+def test_add_chemical_exergy_skips_empty_composition():
+    # Prepare minimal JSON with a material connection that has empty composition
+    my_json = {
+        "connections": {
+            "stream_empty": {
+                "kind": "material",
+                "mass_composition": {},
+                "molar_composition": {},
+            }
+        }
+    }
+
+    # Call add_chemical_exergy; should not raise and should set e_CH to None
+    result = add_chemical_exergy(my_json, Tamb=298.15, pamb=1.01325, chemExLib="Ahrendts")
+    conn = result["connections"]["stream_empty"]
+    assert conn["e_CH"] is None
+    assert conn["e_CH_unit"] is None
+
+
 def test_add_total_exergy_flow_realistic(realistic_json_data):
     """
     Test addition of total exergy flow with realistic process data.

@@ -315,6 +315,53 @@ def test_parse_streams(dummy_convert_to_SI, dummy_fluid_property_data):
     assert conn3["mass_composition"].get("Water") == 0.8
 
 
+def test_parse_streams_handles_missing_values(caplog, dummy_convert_to_SI, dummy_fluid_property_data):
+    """
+    Ensure parsing does not crash when some stream nodes exist but have no Value.
+
+    Verifies
+    --------
+    - Parser sets the corresponding fields to None and logs a warning.
+    """
+    import exerpy.parser.from_aspen.aspen_parser as ap
+
+    ap.convert_to_SI = dummy_convert_to_SI
+    ap.fluid_property_data = dummy_fluid_property_data
+
+    stream1 = DummyNode("Stream1")
+    streams_parent = DummyNode("Streams")
+    streams_parent.Elements = DummyCollection([stream1])
+
+    nodes = {
+        r"\Data\Streams": streams_parent,
+        r"\Data\Streams\Stream1": DummyNode("Stream1"),
+        r"\Data\Streams\Stream1\Ports\SOURCE": DummyNode("SOURCE"),
+        r"\Data\Streams\Stream1\Ports\DEST": DummyNode("DEST"),
+        # TEMP_OUT exists but has no Value
+        r"\Data\Streams\Stream1\Output\TEMP_OUT\MIXED": DummyNode("TEMP_OUT", None, "K"),
+        r"\Data\Streams\Stream1\Output\PRES_OUT\MIXED": DummyNode("PRES_OUT", None, "Pa"),
+    }
+
+    nodes[r"\Data\Streams\Stream1\Ports\SOURCE"].Elements = DummyCollection([DummyNode("CompA")])
+    nodes[r"\Data\Streams\Stream1\Ports\DEST"].Elements = DummyCollection([DummyNode("CompB")])
+
+    tree = DummyTree(nodes)
+    dummy_aspen = DummyAspen(tree)
+    parser = AspenModelParser("dummy_model.apw")
+    parser.aspen = dummy_aspen
+
+    with caplog.at_level("WARNING"):
+        parser.parse_streams()
+
+    conn = parser.connections_data.get("Stream1")
+    assert conn is not None
+    # Missing TEMP_OUT and PRES_OUT values should result in None entries
+    assert conn["T"] is None
+    assert conn["p"] is None
+    # And a warning should have been logged for the missing values
+    assert any("has no value" in rec.message for rec in caplog.records)
+
+
 # --- Tests for parse_blocks and component grouping ---
 
 
