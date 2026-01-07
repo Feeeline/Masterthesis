@@ -31,6 +31,10 @@ class AspenModelParser:
             "Mixer": self.assign_mixer_connectors,
             "RStoic": self.assign_combustion_chamber_connectors,
             "FSplit": self.assign_splitter_connectors,
+            "Flash2": self.assign_multiport_connectors,
+            "MHeatX": self.assign_multiport_connectors,
+            "RadFrac": self.assign_multiport_connectors,
+            "Sep": self.assign_multiport_connectors,
             # Add other specific component functions here
         }
 
@@ -585,6 +589,45 @@ class AspenModelParser:
             logging.debug(f"Assigned connector 0 to inlet stream: {stream_name}")
 
         # Assign connectors to outlet streams
+        for idx, (port_label, stream_name) in enumerate(outlet_streams):
+            connections_data[stream_name]["source_connector"] = idx
+            logging.debug(f"Assigned connector {idx} to outlet stream: {stream_name}")
+
+    def assign_multiport_connectors(self, block_name, aspen, connections_data):
+        """
+        Assign connectors for multi-port components by examining connected streams and
+        their source/target components. Inlets are assigned target_connector values
+        from 0..N-1, outlets are assigned source_connector values from 0..M-1.
+        """
+        ports_node = aspen.Tree.FindNode(rf"\Data\Blocks\{block_name}\Ports")
+        if ports_node is None:
+            logging.warning(f"No Ports node found for block: {block_name}")
+            return
+
+        inlet_streams = []
+        outlet_streams = []
+
+        for port in ports_node.Elements:
+            port_label = port.Name
+            port_node = aspen.Tree.FindNode(rf"\Data\Blocks\{block_name}\Ports\{port_label}")
+            if port_node is not None and port_node.Elements.Count > 0:
+                for element in port_node.Elements:
+                    stream_name = element.Name
+                    if stream_name in connections_data:
+                        stream_data = connections_data[stream_name]
+                        if stream_data.get("target_component") == block_name:
+                            inlet_streams.append((port_label, stream_name))
+                        elif stream_data.get("source_component") == block_name:
+                            outlet_streams.append((port_label, stream_name))
+                        else:
+                            logging.warning(
+                                f"Stream {stream_name} connected to {block_name} but source/target components do not match."
+                            )
+
+        for idx, (port_label, stream_name) in enumerate(inlet_streams):
+            connections_data[stream_name]["target_connector"] = idx
+            logging.debug(f"Assigned connector {idx} to inlet stream: {stream_name}")
+
         for idx, (port_label, stream_name) in enumerate(outlet_streams):
             connections_data[stream_name]["source_connector"] = idx
             logging.debug(f"Assigned connector {idx} to outlet stream: {stream_name}")

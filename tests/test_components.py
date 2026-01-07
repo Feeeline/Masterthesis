@@ -11,12 +11,16 @@ import pytest
 from exerpy.components.combustion.base import CombustionChamber
 from exerpy.components.heat_exchanger.base import HeatExchanger
 from exerpy.components.heat_exchanger.condenser import Condenser
+from exerpy.components.heat_exchanger.mheatx import MHeatX
 from exerpy.components.heat_exchanger.simple import SimpleHeatExchanger
 from exerpy.components.helpers.cycle_closer import CycleCloser
 from exerpy.components.nodes.deaerator import Deaerator
 from exerpy.components.nodes.drum import Drum
+from exerpy.components.nodes.flash2 import Flash2
 from exerpy.components.nodes.flash_tank import FlashTank
 from exerpy.components.nodes.mixer import Mixer
+from exerpy.components.nodes.radfrac import RadFrac
+from exerpy.components.nodes.sep import Sep
 from exerpy.components.nodes.storage import Storage
 from exerpy.components.piping.valve import Valve
 from exerpy.components.power_machines.generator import Generator
@@ -24,6 +28,7 @@ from exerpy.components.power_machines.motor import Motor
 from exerpy.components.turbomachinery.compressor import Compressor
 from exerpy.components.turbomachinery.pump import Pump
 from exerpy.components.turbomachinery.turbine import Turbine
+from exerpy.components.component import component_registry
 
 
 @pytest.fixture
@@ -163,6 +168,16 @@ def test_heat_exchanger_calc_exergy_balance_success(heat_exchanger, valid_heat_e
     assert pytest.approx(expected_E_D, rel=1e-3) == heat_exchanger.E_D
     if expected_epsilon is not None:
         assert heat_exchanger.epsilon == pytest.approx(expected_epsilon, rel=1e-3)
+
+
+def test_registry_includes_aspen_components():
+    """
+    Ensure Aspen-specific component types are registered in the component registry.
+    """
+    assert "Flash2" in component_registry.items
+    assert "Sep" in component_registry.items
+    assert "MHeatX" in component_registry.items
+    assert "RadFrac" in component_registry.items
 
 
 def test_heat_exchanger_missing_streams(heat_exchanger):

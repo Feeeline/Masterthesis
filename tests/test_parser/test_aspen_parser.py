@@ -510,6 +510,47 @@ def test_assign_splitter_connectors():
     assert connections_data["StreamOut"].get("source_connector") == 0
 
 
+def test_assign_multiport_connectors():
+    """
+    Test the assign_multiport_connectors function for multi-port components.
+
+    Verifies
+    --------
+    - Inlet streams get assigned incremental target_connector numbers.
+    - Outlet streams get assigned incremental source_connector numbers.
+    """
+    inlet_elem1 = DummyNode("StreamIn1")
+    inlet_elem2 = DummyNode("StreamIn2")
+    outlet_elem1 = DummyNode("StreamOut1")
+    outlet_elem2 = DummyNode("StreamOut2")
+    inlet_port = DummyNode("Inlet")
+    inlet_port.Elements = DummyCollection([inlet_elem1, inlet_elem2])
+    outlet_port = DummyNode("Outlet")
+    outlet_port.Elements = DummyCollection([outlet_elem1, outlet_elem2])
+    ports_node = DummyNode("Ports")
+    ports_node.Elements = DummyCollection([inlet_port, outlet_port])
+    dummy_tree = DummyTree(
+        {
+            r"\Data\Blocks\Block1\Ports": ports_node,
+            r"\Data\Blocks\Block1\Ports\Inlet": inlet_port,
+            r"\Data\Blocks\Block1\Ports\Outlet": outlet_port,
+        }
+    )
+    dummy_aspen = DummyAspen(dummy_tree)
+    connections_data = {
+        "StreamIn1": {"target_component": "Block1"},
+        "StreamIn2": {"target_component": "Block1"},
+        "StreamOut1": {"source_component": "Block1"},
+        "StreamOut2": {"source_component": "Block1"},
+    }
+    parser = AspenModelParser("dummy.apw")
+    parser.assign_multiport_connectors("Block1", dummy_aspen, connections_data)
+    assert connections_data["StreamIn1"].get("target_connector") == 0
+    assert connections_data["StreamIn2"].get("target_connector") == 1
+    assert connections_data["StreamOut1"].get("source_connector") == 0
+    assert connections_data["StreamOut2"].get("source_connector") == 1
+
+
 def test_assign_combustion_chamber_connectors():
     """
     Test the assign_combustion_chamber_connectors function for a combustion chamber component.

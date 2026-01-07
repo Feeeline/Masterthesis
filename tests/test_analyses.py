@@ -15,7 +15,11 @@ import pytest
 
 from exerpy.analyses import ExergyAnalysis, _construct_components, _load_json
 from exerpy.components.component import Component, component_registry
+from exerpy.components.heat_exchanger.mheatx import MHeatX
 from exerpy.components.helpers.cycle_closer import CycleCloser
+from exerpy.components.nodes.flash2 import Flash2
+from exerpy.components.nodes.radfrac import RadFrac
+from exerpy.components.nodes.sep import Sep
 from exerpy.parser.from_ebsilon import __ebsilon_path__
 
 
@@ -126,6 +130,117 @@ def test_component_construction(mock_component_data, mock_connection_data):
     assert 0 in components["C1"].inl
     assert 0 in components["C1"].outl
     assert components["T1"].inl[0]["T"] == 500
+
+
+def test_aspen_components_registered_no_warning(caplog):
+    component_data = {
+        "Flash2": {"Flash1": {"name": "Flash1", "type": "Flash2"}},
+        "Sep": {"Sep1": {"name": "Sep1", "type": "Sep"}},
+        "MHeatX": {"HX1": {"name": "HX1", "type": "MHeatX"}},
+        "RadFrac": {"Col1": {"name": "Col1", "type": "RadFrac"}},
+    }
+    connection_data = {
+        "S1": {
+            "kind": "material",
+            "source_component": None,
+            "source_connector": None,
+            "target_component": "Flash1",
+            "target_connector": 0,
+        },
+        "S2": {
+            "kind": "material",
+            "source_component": "Flash1",
+            "source_connector": 0,
+            "target_component": None,
+            "target_connector": None,
+        },
+        "S3": {
+            "kind": "material",
+            "source_component": "Flash1",
+            "source_connector": 1,
+            "target_component": None,
+            "target_connector": None,
+        },
+        "S4": {
+            "kind": "material",
+            "source_component": None,
+            "source_connector": None,
+            "target_component": "Sep1",
+            "target_connector": 0,
+        },
+        "S5": {
+            "kind": "material",
+            "source_component": "Sep1",
+            "source_connector": 0,
+            "target_component": None,
+            "target_connector": None,
+        },
+        "S6": {
+            "kind": "material",
+            "source_component": "Sep1",
+            "source_connector": 1,
+            "target_component": None,
+            "target_connector": None,
+        },
+        "S7": {
+            "kind": "material",
+            "source_component": None,
+            "source_connector": None,
+            "target_component": "HX1",
+            "target_connector": 0,
+        },
+        "S8": {
+            "kind": "material",
+            "source_component": None,
+            "source_connector": None,
+            "target_component": "HX1",
+            "target_connector": 1,
+        },
+        "S9": {
+            "kind": "material",
+            "source_component": "HX1",
+            "source_connector": 0,
+            "target_component": None,
+            "target_connector": None,
+        },
+        "S10": {
+            "kind": "material",
+            "source_component": "HX1",
+            "source_connector": 1,
+            "target_component": None,
+            "target_connector": None,
+        },
+        "S11": {
+            "kind": "material",
+            "source_component": None,
+            "source_connector": None,
+            "target_component": "Col1",
+            "target_connector": 0,
+        },
+        "S12": {
+            "kind": "material",
+            "source_component": "Col1",
+            "source_connector": 0,
+            "target_component": None,
+            "target_connector": None,
+        },
+        "S13": {
+            "kind": "material",
+            "source_component": "Col1",
+            "source_connector": 1,
+            "target_component": None,
+            "target_connector": None,
+        },
+    }
+
+    with caplog.at_level("WARNING"):
+        components = _construct_components(component_data, connection_data, 298.15)
+
+    assert "Flash1" in components
+    assert "Sep1" in components
+    assert "HX1" in components
+    assert "Col1" in components
+    assert not any("not registered" in record.message for record in caplog.records)
 
 
 def test_invalid_component_type():

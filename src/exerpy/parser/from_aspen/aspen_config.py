@@ -11,6 +11,10 @@ grouped_components = {
     "Splitter": ["FSplit"],
     "Generator": ["Gen"],
     "Motor": ["Motor"],
+    "Flash2": ["Flash2"],
+    "MHeatX": ["MHeatX"],
+    "RadFrac": ["RadFrac"],
+    "Sep": ["Sep"],
 }
 """
 This is the mapping of component groups to their respective component IDs:
