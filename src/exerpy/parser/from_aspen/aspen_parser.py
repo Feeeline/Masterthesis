@@ -485,11 +485,12 @@ class AspenModelParser:
                             logging.warning(f"Conversion for {name} in stream {stream_name} failed: {e}. Setting to None.")
                             connection_data[key] = None
                             connection_data[f"{key}_unit"] = None
-                    else:
+                    elif key not in connection_data:
                         connection_data[key] = None
+                        connection_data[f"{key}_unit"] = None
+                    if key not in connection_data or connection_data.get(f"{key}_raw") is None:
                         connection_data[f"{key}_raw"] = None
                         connection_data[f"{key}_raw_unit"] = None
-                        connection_data[f"{key}_unit"] = None
 
                 # Log parsed properties for visibility
                 # Build a more detailed summary including raw units and raw values when available
