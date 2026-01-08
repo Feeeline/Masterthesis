@@ -140,6 +140,23 @@ class AspenModelParser:
                 massflm_node = self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\MASSFLMX\MIXED")
                 exergy_node = self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\STRM_UPP\EXERGYMS\MIXED\TOTAL")
                 totflow_node = self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\TOT_FLOW")
+                lfrac_node = self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\LFRAC\MIXED")
+                vfrac_node = self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\VFRAC_OUT\MIXED")
+                vlstd_node = self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\VLSTD")
+                hmx_total_node = self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\HMX\MIXED")
+                smx_total_node = self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\SMX\MIXED")
+                usrech_node = self.aspen.Tree.FindNode(
+                    rf"\Data\Streams\{stream_name}\Output\STRM_UPP\USRECH\MIXED\TOTAL"
+                )
+                usreme_node = self.aspen.Tree.FindNode(
+                    rf"\Data\Streams\{stream_name}\Output\STRM_UPP\USREME\MIXED\TOTAL"
+                )
+                usreph_node = self.aspen.Tree.FindNode(
+                    rf"\Data\Streams\{stream_name}\Output\STRM_UPP\USREPH\MIXED\TOTAL"
+                )
+                usreth_node = self.aspen.Tree.FindNode(
+                    rf"\Data\Streams\{stream_name}\Output\STRM_UPP\USRETH\MIXED\TOTAL"
+                )
                 # Warn if nodes exist but have no value
                 if temp_node is not None and temp_node.Value is None:
                     logging.warning(f"TEMP_OUT node for stream {stream_name} has no value")
@@ -157,6 +174,24 @@ class AspenModelParser:
                     logging.warning(f"EXERGYMS node for stream {stream_name} has no value")
                 if totflow_node is not None and totflow_node.Value is None:
                     logging.warning(f"TOT_FLOW node for stream {stream_name} has no value")
+                if lfrac_node is not None and lfrac_node.Value is None:
+                    logging.warning(f"LFRAC node for stream {stream_name} has no value")
+                if vfrac_node is not None and vfrac_node.Value is None:
+                    logging.warning(f"VFRAC_OUT node for stream {stream_name} has no value")
+                if vlstd_node is not None and vlstd_node.Value is None:
+                    logging.warning(f"VLSTD node for stream {stream_name} has no value")
+                if hmx_total_node is not None and hmx_total_node.Value is None:
+                    logging.warning(f"HMX node for stream {stream_name} has no value")
+                if smx_total_node is not None and smx_total_node.Value is None:
+                    logging.warning(f"SMX node for stream {stream_name} has no value")
+                if usrech_node is not None and usrech_node.Value is None:
+                    logging.warning(f"USRECH node for stream {stream_name} has no value")
+                if usreme_node is not None and usreme_node.Value is None:
+                    logging.warning(f"USREME node for stream {stream_name} has no value")
+                if usreph_node is not None and usreph_node.Value is None:
+                    logging.warning(f"USREPH node for stream {stream_name} has no value")
+                if usreth_node is not None and usreth_node.Value is None:
+                    logging.warning(f"USRETH node for stream {stream_name} has no value")
 
                 connection_data.update(
                     {
@@ -217,6 +252,70 @@ class AspenModelParser:
                             else None
                         ),
                         "n_unit": fluid_property_data["n"]["SI_unit"],
+                        "lfrac": lfrac_node.Value if (lfrac_node is not None and lfrac_node.Value is not None) else None,
+                        "lfrac_unit": (
+                            lfrac_node.UnitString if (lfrac_node is not None and lfrac_node.Value is not None) else None
+                        ),
+                        "vfrac_out": vfrac_node.Value if (vfrac_node is not None and vfrac_node.Value is not None) else None,
+                        "vfrac_out_unit": (
+                            vfrac_node.UnitString if (vfrac_node is not None and vfrac_node.Value is not None) else None
+                        ),
+                        "vlstd": vlstd_node.Value if (vlstd_node is not None and vlstd_node.Value is not None) else None,
+                        "vlstd_unit": (
+                            vlstd_node.UnitString if (vlstd_node is not None and vlstd_node.Value is not None) else None
+                        ),
+                        "hmx": (
+                            hmx_total_node.Value
+                            if (hmx_total_node is not None and hmx_total_node.Value is not None)
+                            else None
+                        ),
+                        "hmx_unit": (
+                            hmx_total_node.UnitString
+                            if (hmx_total_node is not None and hmx_total_node.Value is not None)
+                            else None
+                        ),
+                        "smx": (
+                            smx_total_node.Value
+                            if (smx_total_node is not None and smx_total_node.Value is not None)
+                            else None
+                        ),
+                        "smx_unit": (
+                            smx_total_node.UnitString
+                            if (smx_total_node is not None and smx_total_node.Value is not None)
+                            else None
+                        ),
+                        "usrech": (
+                            usrech_node.Value if (usrech_node is not None and usrech_node.Value is not None) else None
+                        ),
+                        "usrech_unit": (
+                            usrech_node.UnitString
+                            if (usrech_node is not None and usrech_node.Value is not None)
+                            else None
+                        ),
+                        "usreme": (
+                            usreme_node.Value if (usreme_node is not None and usreme_node.Value is not None) else None
+                        ),
+                        "usreme_unit": (
+                            usreme_node.UnitString
+                            if (usreme_node is not None and usreme_node.Value is not None)
+                            else None
+                        ),
+                        "usreph": (
+                            usreph_node.Value if (usreph_node is not None and usreph_node.Value is not None) else None
+                        ),
+                        "usreph_unit": (
+                            usreph_node.UnitString
+                            if (usreph_node is not None and usreph_node.Value is not None)
+                            else None
+                        ),
+                        "usreth": (
+                            usreth_node.Value if (usreth_node is not None and usreth_node.Value is not None) else None
+                        ),
+                        "usreth_unit": (
+                            usreth_node.UnitString
+                            if (usreth_node is not None and usreth_node.Value is not None)
+                            else None
+                        ),
                         "mass_composition": {},
                         "molar_composition": {},
                     }
@@ -232,6 +331,15 @@ class AspenModelParser:
                             rf"\Data\Streams\{stream_name}\Output\MOLEFRAC\MIXED\{fluid_name}"
                         ).Value
                         if mole_frac not in [0, None]:  # Skip fluids with 0 or None as the fraction
+                            connection_data["molar_composition"][fluid_name] = mole_frac
+
+                for fluid_name in ["N2", "O2", "AR", "CO2", "H2O"]:
+                    mole_frac_node = self.aspen.Tree.FindNode(
+                        rf"\Data\Streams\{stream_name}\Output\MOLEFRAC\MIXED\{fluid_name}"
+                    )
+                    if mole_frac_node is not None:
+                        mole_frac = mole_frac_node.Value
+                        if mole_frac not in [0, None]:
                             connection_data["molar_composition"][fluid_name] = mole_frac
 
                 mass_frac_node = self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\MASSFRAC\MIXED")
