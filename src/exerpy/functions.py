@@ -877,3 +877,22 @@ fluid_property_data = {
         "units": {"m3 / s": 1, "l / s": 1e-3, "l/s": 1e-3, "m³/s": 1, "l/min": 1 / 60e3, "l/h": 1 / 3.6e6},
     },
 }
+
+# Property aliases used by Aspen parsing to disambiguate units
+for alias, base in {
+    "h_m": "h",
+    "s_m": "s",
+    "xlf": "x",
+    "xvf": "x",
+    "vstd": "x",
+    "x_n2": "x",
+    "x_o2": "x",
+    "x_ar": "x",
+    "x_co2": "x",
+    "x_h2o": "x",
+    "e_ch": "e",
+    "e_m": "e",
+    "e_ph": "e",
+    "e_th": "e",
+}.items():
+    fluid_property_data[alias] = fluid_property_data[base]

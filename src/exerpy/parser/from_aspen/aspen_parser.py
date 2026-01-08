@@ -213,13 +213,13 @@ class AspenModelParser:
                         ),
                         "p_unit": fluid_property_data["p"]["SI_unit"],
                         "h": (
-                            convert_to_SI("h", hmx_mass_node.Value, hmx_mass_node.UnitString, context=f"stream:{stream_name}:HMX_MASS")
+                            convert_to_SI("h_m", hmx_mass_node.Value, hmx_mass_node.UnitString, context=f"stream:{stream_name}:HMX_MASS")
                             if (hmx_mass_node is not None and hmx_mass_node.Value is not None)
                             else None
                         ),
                         "h_unit": fluid_property_data["h"]["SI_unit"],
                         "s": (
-                            convert_to_SI("s", smx_mass_node.Value, smx_mass_node.UnitString, context=f"stream:{stream_name}:SMX_MASS")
+                            convert_to_SI("s_m", smx_mass_node.Value, smx_mass_node.UnitString, context=f"stream:{stream_name}:SMX_MASS")
                             if (smx_mass_node is not None and smx_mass_node.Value is not None)
                             else None
                         ),
@@ -231,19 +231,15 @@ class AspenModelParser:
                         ),
                         "m_unit": fluid_property_data["m"]["SI_unit"],
                         "energy_flow": (
-                            # Safely retrieve HMX_FLOW node and its value/unit
-                            (lambda: (
-                                convert_to_SI(
-                                    "power",
-                                    abs(hmx_node.Value),
-                                    hmx_node.UnitString,
-                                    context=f"stream:{stream_name}:HMX_FLOW",
-                                )
-                            ) if (hmx_node is not None and hmx_node.Value is not None) else None)()
-                            if True
+                            abs(hmx_node.Value)
+                            if (hmx_node is not None and hmx_node.Value is not None)
                             else None
                         ),
-                        "energy_flow_unit": fluid_property_data["power"]["SI_unit"],
+                        "energy_flow_unit": (
+                            hmx_node.UnitString
+                            if (hmx_node is not None and hmx_node.Value is not None)
+                            else None
+                        ),
                         "e_PH": (
                             convert_to_SI("e", exergy_node.Value, exergy_node.UnitString, context=f"stream:{stream_name}:EXERGYMS")
                             if (exergy_node is not None and exergy_node.Value is not None)
@@ -361,7 +357,7 @@ class AspenModelParser:
                 if lfrac_node is not None and lfrac_node.Value is not None:
                     raw_unit = lfrac_node.UnitString or "1"
                     try:
-                        connection_data["lf"] = convert_to_SI("x", lfrac_node.Value, raw_unit, context=f"stream:{stream_name}:LFRAC")
+                        connection_data["lf"] = convert_to_SI("xlf", lfrac_node.Value, raw_unit, context=f"stream:{stream_name}:LFRAC")
                         connection_data["lf_unit"] = fluid_property_data["x"]["SI_unit"]
                     except Exception:
                         logging.warning(f"Conversion for LFRAC in stream {stream_name} failed; storing raw value.")
@@ -378,7 +374,7 @@ class AspenModelParser:
                 if vfrac_node is not None and vfrac_node.Value is not None:
                     raw_unit = vfrac_node.UnitString or "1"
                     try:
-                        connection_data["vf"] = convert_to_SI("x", vfrac_node.Value, raw_unit, context=f"stream:{stream_name}:VFRAC_OUT")
+                        connection_data["vf"] = convert_to_SI("xvf", vfrac_node.Value, raw_unit, context=f"stream:{stream_name}:VFRAC_OUT")
                         connection_data["vf_unit"] = fluid_property_data["x"]["SI_unit"]
                     except Exception:
                         logging.warning(f"Conversion for VFRAC_OUT in stream {stream_name} failed; storing raw value.")
@@ -395,7 +391,7 @@ class AspenModelParser:
                 if vlstd_node is not None and vlstd_node.Value is not None:
                     raw_unit = vlstd_node.UnitString or "1"
                     try:
-                        connection_data["vstd"] = convert_to_SI("x", vlstd_node.Value, raw_unit, context=f"stream:{stream_name}:VLSTD")
+                        connection_data["vstd"] = convert_to_SI("vstd", vlstd_node.Value, raw_unit, context=f"stream:{stream_name}:VLSTD")
                         connection_data["vstd_unit"] = fluid_property_data["x"]["SI_unit"]
                     except Exception:
                         logging.warning(f"Conversion for VLSTD in stream {stream_name} failed; storing raw value.")
@@ -414,8 +410,15 @@ class AspenModelParser:
                     sp_node = self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\MOLEFRAC\MIXED\{sp}")
                     if sp_node is not None and sp_node.Value is not None:
                         raw_unit = sp_node.UnitString or "1"
+                        property_key = {
+                            "N2": "x_n2",
+                            "O2": "x_o2",
+                            "AR": "x_ar",
+                            "CO2": "x_co2",
+                            "H2O": "x_h2o",
+                        }[sp]
                         try:
-                            connection_data[key] = convert_to_SI("x", sp_node.Value, raw_unit, context=f"stream:{stream_name}:MOLEFRAC:{sp}")
+                            connection_data[key] = convert_to_SI(property_key, sp_node.Value, raw_unit, context=f"stream:{stream_name}:MOLEFRAC:{sp}")
                             connection_data[f"{key}_unit"] = fluid_property_data["x"]["SI_unit"]
                         except Exception:
                             logging.warning(f"Conversion for MOLEFRAC {sp} in stream {stream_name} failed; storing raw value.")
@@ -467,12 +470,17 @@ class AspenModelParser:
                     connection_data["smx_raw_unit"] = None
 
                 # STRM_UPP user-supplied exergy terms -> try 'e', fallback to 'power'
-                for node, key, name in [(usrech_node, "ech", "USRECH"), (usreme_node, "em", "USREME"), (usreph_node, "eph", "USREPH"), (usreth_node, "eth", "USRETH")]:
+                for node, key, name, property_key in [
+                    (usrech_node, "ech", "USRECH", "e_ch"),
+                    (usreme_node, "em", "USREME", "e_m"),
+                    (usreph_node, "eph", "USREPH", "e_ph"),
+                    (usreth_node, "eth", "USRETH", "e_th"),
+                ]:
                     if node is not None and node.Value is not None:
                         connection_data[f"{key}_raw"] = node.Value
                         connection_data[f"{key}_raw_unit"] = node.UnitString
                         try:
-                            connection_data[key] = convert_to_SI("e", node.Value, node.UnitString, context=f"stream:{stream_name}:{name}")
+                            connection_data[key] = convert_to_SI(property_key, node.Value, node.UnitString, context=f"stream:{stream_name}:{name}")
                             connection_data[f"{key}_unit"] = fluid_property_data["e"]["SI_unit"]
                         except Exception:
                             logging.warning(
