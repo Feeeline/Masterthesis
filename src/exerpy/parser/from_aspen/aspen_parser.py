@@ -536,6 +536,12 @@ class AspenModelParser:
         block_nodes = self.aspen.Tree.FindNode(r"\Data\Blocks").Elements
         block_names = [block_node.Name for block_node in block_nodes]
 
+        # Log block tree early for visibility (use print so pytest captures it into parser_run.log)
+        logging.warning(f"Block tree discovered: {block_names}")
+        print(f"Block tree discovered: {block_names}")
+        logging.warning("Block parsing will collect variables: EFF_ISEN (eta_s), EFF_MECH (eta_mech), QNET (Q), BRAKE_POWER (P), ELEC_POWER (P_el), EFF_DRIV (eta_el); pumps will create motors where available.")
+        print("Block parsing will collect variables: EFF_ISEN (eta_s), EFF_MECH (eta_mech), QNET (Q), BRAKE_POWER (P), ELEC_POWER (P_el), EFF_DRIV (eta_el); pumps will create motors where available.")
+
         # Process each block
         for block_name in block_names:
             model_type_node = self.aspen.Tree.FindNode(rf"\Data\Blocks\{block_name}\Input\MODEL_TYPE")
@@ -695,11 +701,41 @@ class AspenModelParser:
                 # Store the heat connection
                 self.connections_data[heat_connection_name] = heat_connection_data
 
+            # Build a concise per-block summary (values + units when available)
+            summary_parts = []
+            def add_bpart(key, pretty):
+                val = component_data.get(key)
+                unit = component_data.get(f"{key}_unit")
+                if val is None:
+                    summary_parts.append(f"{pretty}=None")
+                else:
+                    if unit is not None:
+                        summary_parts.append(f"{pretty}={val} ({unit})")
+                    else:
+                        summary_parts.append(f"{pretty}={val}")
+
+            # Basic block properties
+            add_bpart("type", "type")
+            add_bpart("eta_s", "eta_s")
+            add_bpart("eta_mech", "eta_mech")
+            add_bpart("Q", "Q")
+            add_bpart("P", "P")
+            # Motor-related fields
+            if "P_el" in component_data:
+                add_bpart("P_el", "P_el")
+            if "P_mech" in component_data:
+                add_bpart("P_mech", "P_mech")
+            if "eta_el" in component_data:
+                add_bpart("eta_el", "eta_el")
+
+            logging.warning(f"Parsed block {block_name}: " + ", ".join(summary_parts))
+            print(f"Parsed block {block_name}: " + ", ".join(summary_parts))
             # Group the component
             self.group_component(component_data, block_name)
 
             # Handle Pumps and their associated Motors
             if component_type == "Pump":
+
                 motor_name = f"{block_name}-MOTOR"
                 elec_power_node = self.aspen.Tree.FindNode(rf"\Data\Blocks\{block_name}\Output\ELEC_POWER")
                 elec_power = (
