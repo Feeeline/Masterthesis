@@ -253,39 +253,69 @@ class AspenModelParser:
                         ),
                         "n_unit": fluid_property_data["n"]["SI_unit"],
                         "lfrac": lfrac_node.Value if (lfrac_node is not None and lfrac_node.Value is not None) else None,
-                        "lfrac_unit": lfrac_node.UnitString if lfrac_node is not None else None,
+                        "lfrac_unit": (
+                            lfrac_node.UnitString if (lfrac_node is not None and lfrac_node.Value is not None) else None
+                        ),
                         "vfrac_out": vfrac_node.Value if (vfrac_node is not None and vfrac_node.Value is not None) else None,
-                        "vfrac_out_unit": vfrac_node.UnitString if vfrac_node is not None else None,
+                        "vfrac_out_unit": (
+                            vfrac_node.UnitString if (vfrac_node is not None and vfrac_node.Value is not None) else None
+                        ),
                         "vlstd": vlstd_node.Value if (vlstd_node is not None and vlstd_node.Value is not None) else None,
-                        "vlstd_unit": vlstd_node.UnitString if vlstd_node is not None else None,
+                        "vlstd_unit": (
+                            vlstd_node.UnitString if (vlstd_node is not None and vlstd_node.Value is not None) else None
+                        ),
                         "hmx": (
                             hmx_total_node.Value
                             if (hmx_total_node is not None and hmx_total_node.Value is not None)
                             else None
                         ),
-                        "hmx_unit": hmx_total_node.UnitString if hmx_total_node is not None else None,
+                        "hmx_unit": (
+                            hmx_total_node.UnitString
+                            if (hmx_total_node is not None and hmx_total_node.Value is not None)
+                            else None
+                        ),
                         "smx": (
                             smx_total_node.Value
                             if (smx_total_node is not None and smx_total_node.Value is not None)
                             else None
                         ),
-                        "smx_unit": smx_total_node.UnitString if smx_total_node is not None else None,
+                        "smx_unit": (
+                            smx_total_node.UnitString
+                            if (smx_total_node is not None and smx_total_node.Value is not None)
+                            else None
+                        ),
                         "usrech": (
                             usrech_node.Value if (usrech_node is not None and usrech_node.Value is not None) else None
                         ),
-                        "usrech_unit": usrech_node.UnitString if usrech_node is not None else None,
+                        "usrech_unit": (
+                            usrech_node.UnitString
+                            if (usrech_node is not None and usrech_node.Value is not None)
+                            else None
+                        ),
                         "usreme": (
                             usreme_node.Value if (usreme_node is not None and usreme_node.Value is not None) else None
                         ),
-                        "usreme_unit": usreme_node.UnitString if usreme_node is not None else None,
+                        "usreme_unit": (
+                            usreme_node.UnitString
+                            if (usreme_node is not None and usreme_node.Value is not None)
+                            else None
+                        ),
                         "usreph": (
                             usreph_node.Value if (usreph_node is not None and usreph_node.Value is not None) else None
                         ),
-                        "usreph_unit": usreph_node.UnitString if usreph_node is not None else None,
+                        "usreph_unit": (
+                            usreph_node.UnitString
+                            if (usreph_node is not None and usreph_node.Value is not None)
+                            else None
+                        ),
                         "usreth": (
                             usreth_node.Value if (usreth_node is not None and usreth_node.Value is not None) else None
                         ),
-                        "usreth_unit": usreth_node.UnitString if usreth_node is not None else None,
+                        "usreth_unit": (
+                            usreth_node.UnitString
+                            if (usreth_node is not None and usreth_node.Value is not None)
+                            else None
+                        ),
                         "mass_composition": {},
                         "molar_composition": {},
                     }
