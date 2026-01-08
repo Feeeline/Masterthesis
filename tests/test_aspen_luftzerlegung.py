@@ -1,3 +1,6 @@
+import json
+import os
+
 from exerpy import ExergyAnalysis
 
 model_path = r'C:\Users\Felin\Documents\Masterthesis\Code\Exerpy\exerpy\examples\asu_aspen\Doppelkolonne.bkp'
@@ -20,4 +23,17 @@ product = {"inputs": [], "outputs": [c for c in material_conns if c.endswith('32
 loss = {"inputs": [], "outputs": [c for c in material_conns if c.endswith('28') or c.endswith('25')][:2]}
 
 ean.analyse(E_F=fuel, E_P=product, E_L=loss)
-ean.export_to_json("C:\\Users\\Felin\\Documents\\Masterthesis\\Code\\Exerpies\\examples\\asu_aspen\\Doppelkolonne_exergy_analysis.json")
+
+# Export JSON in the same structure as examples/json_example/example.json
+output_path = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..", "examples", "json_example", "aspen_luftzerlegung.json")
+)
+os.makedirs(os.path.dirname(output_path), exist_ok=True)
+export_data = ean._serialize()
+json_payload = {
+    "components": export_data.get("components", {}),
+    "connections": export_data.get("connections", {}),
+    "ambient_conditions": export_data.get("ambient_conditions", {}),
+}
+with open(output_path, "w", encoding="utf-8") as json_file:
+    json.dump(json_payload, json_file, indent=4)
