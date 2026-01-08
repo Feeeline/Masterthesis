@@ -854,7 +854,7 @@ fluid_property_data = {
     "power": {
         "text": "power",
         "SI_unit": "W",
-        "units": {"W": 1, "kW": 1e3, "MW": 1e6},
+        "units": {"W": 1, "kW": 1e3, "MW": 1e6, "J/s": 1},
     },
     "heat": {
         "text": "heat",

@@ -480,6 +480,10 @@ def test_add_total_exergy_flow_realistic(realistic_json_data):
         # Entropy conversions
         ("s", 1, "kJ/kgK", 1000),  # 1 kJ/kgK = 1000 J/kgK
         ("s", 0.239, "kJ/kg-K", 239),  # 0.239 kJ/kg-K = 239 J/kgK (fixed expected value)
+        # Exergy flow alias conversions (treated like power)
+        ("e_ch", 114.320938, "kW", 114320.938),
+        ("e_m", 0.0, "kW", 0.0),
+        ("e_th", 2669.28671, "kW", 2669286.71),
     ],
 )
 def test_convert_to_SI(property, value, unit, expected):
