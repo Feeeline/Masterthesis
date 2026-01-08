@@ -83,7 +83,7 @@ class AspenModelParser:
         # ALL ASPEN CONNECTIONS
         # Log stream tree for visibility before parsing streams
         logging.warning(f"Stream tree discovered: {stream_names}")
-        logging.warning("Stream parsing will collect standard properties (T, p, h, s, m, exergy) and user-requested properties: LFRAC->lf, VFRAC_OUT->vf, VLSTD->vstd, MOLEFRAC(N2/O2/AR/CO2/H2O)->mfn2/mfo2/mfar/mfco/mfho, HMX->hmx, SMX->smx, STRM_UPP USRE*->ech/em/eph/eth")
+        logging.warning("Stream parsing will collect standard properties (T, p, h, s, m, exergy) and user-requested properties: LFRAC->lf, VFRAC_OUT->vf, VLSTD->vstd, MOLEFRAC(N2/O2/AR/CO2/H2O)->mfn2/mfo2/mfar/mfco/mfho, HMX->hmx, SMX->smx, STRM_UPP USRE*->e_CH/e_M/e_PH/e_T")
 
         # Initialize connection data with the common fields
         for stream_name in stream_names:
@@ -470,10 +470,10 @@ class AspenModelParser:
 
                 # STRM_UPP user-supplied exergy terms -> try 'e', fallback to 'power'
                 for node, key, name, property_key in [
-                    (usrech_node, "ech", "USRECH", "e_ch"),
-                    (usreme_node, "em", "USREME", "e_m"),
-                    (usreph_node, "eph", "USREPH", "e_ph"),
-                    (usreth_node, "eth", "USRETH", "e_th"),
+                    (usrech_node, "e_CH", "USRECH", "e_CH"),
+                    (usreme_node, "e_M", "USREME", "e_M"),
+                    (usreph_node, "e_PH", "USREPH", "e_PH"),
+                    (usreth_node, "e_T", "USRETH", "e_T"),
                 ]:
                     if node is not None and node.Value is not None:
                         connection_data[f"{key}_raw"] = node.Value
@@ -485,11 +485,12 @@ class AspenModelParser:
                             logging.warning(f"Conversion for {name} in stream {stream_name} failed: {e}. Setting to None.")
                             connection_data[key] = None
                             connection_data[f"{key}_unit"] = None
-                    else:
+                    elif key not in connection_data:
                         connection_data[key] = None
+                        connection_data[f"{key}_unit"] = None
+                    if key not in connection_data or connection_data.get(f"{key}_raw") is None:
                         connection_data[f"{key}_raw"] = None
                         connection_data[f"{key}_raw_unit"] = None
-                        connection_data[f"{key}_unit"] = None
 
                 # Log parsed properties for visibility
                 # Build a more detailed summary including raw units and raw values when available
@@ -519,10 +520,10 @@ class AspenModelParser:
                 add_part("mfho", "mfho")
                 add_part("hmx", "hmx")
                 add_part("smx", "smx")
-                add_part("ech", "ech")
-                add_part("em", "em")
-                add_part("eph", "eph")
-                add_part("eth", "eth")
+                add_part("e_CH", "e_CH")
+                add_part("e_M", "e_M")
+                add_part("e_PH", "e_PH")
+                add_part("e_T", "e_T")
 
                 logging.warning(f"Parsed stream {stream_name}: " + ", ".join(summary_parts))
 
