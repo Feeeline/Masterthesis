@@ -508,8 +508,16 @@ def convert_to_SI(property, value, unit, context=None):
         logging.warning(f"Value is None for property '{property}', cannot convert.")
         return None
 
+    property_alias_map = {
+        "e_ch": "power",
+        "e_m": "power",
+        "e_ph": "power",
+        "e_th": "power",
+    }
+    property_for_units = property_alias_map.get(property, property)
+
     # Check if the property is valid and exists in fluid_property_data
-    if property not in fluid_property_data:
+    if property_for_units not in fluid_property_data:
         logging.warning(f"Unrecognized property: '{property}'. Returning original value {value} {unit}.")
         return value
 
@@ -588,10 +596,10 @@ def convert_to_SI(property, value, unit, context=None):
     try:
         # Handle temperature conversions separately
         # Accept lowercase temperature unit codes (e.g., 'c' -> 'C')
-        if property == "T" and isinstance(unit, str):
+        if property_for_units == "T" and isinstance(unit, str):
             unit = unit.upper()
 
-        if property == "T":
+        if property_for_units == "T":
             # Try direct lookup first, then attempt normalized match against known keys
             if unit not in fluid_property_data["T"]["units"]:
                 # attempt normalized matching
@@ -610,10 +618,10 @@ def convert_to_SI(property, value, unit, context=None):
 
         # Handle all other property conversions
         else:
-            if unit not in fluid_property_data[property]["units"]:
+            if unit not in fluid_property_data[property_for_units]["units"]:
                 # Try to match normalized form of the unit to a known key
                 matched = None
-                for candidate in fluid_property_data[property]["units"].keys():
+                for candidate in fluid_property_data[property_for_units]["units"].keys():
                     if normalize_unit(candidate) == normalize_unit(unit):
                         matched = candidate
                         break
@@ -631,7 +639,7 @@ def convert_to_SI(property, value, unit, context=None):
                     raise ValueError(
                         f"Invalid unit '{unit}' for property '{property}'. Unit not found. Context: {context}"
                     )
-            conversion_factor = fluid_property_data[property]["units"][unit]
+            conversion_factor = fluid_property_data[property_for_units]["units"][unit]
             return value * conversion_factor
 
     except KeyError as e:
@@ -854,7 +862,7 @@ fluid_property_data = {
     "power": {
         "text": "power",
         "SI_unit": "W",
-        "units": {"W": 1, "kW": 1e3, "MW": 1e6},
+        "units": {"W": 1, "kW": 1e3, "MW": 1e6, "J/s": 1},
     },
     "heat": {
         "text": "heat",
@@ -877,3 +885,22 @@ fluid_property_data = {
         "units": {"m3 / s": 1, "l / s": 1e-3, "l/s": 1e-3, "m³/s": 1, "l/min": 1 / 60e3, "l/h": 1 / 3.6e6},
     },
 }
+
+# Property aliases used by Aspen parsing to disambiguate units
+for alias, base in {
+    "h_m": "h",
+    "s_m": "s",
+    "xlf": "x",
+    "xvf": "x",
+    "vstd": "x",
+    "x_n2": "x",
+    "x_o2": "x",
+    "x_ar": "x",
+    "x_co2": "x",
+    "x_h2o": "x",
+    "e_ch": "power",
+    "e_m": "power",
+    "e_ph": "power",
+    "e_th": "power",
+}.items():
+    fluid_property_data[alias] = fluid_property_data[base]
