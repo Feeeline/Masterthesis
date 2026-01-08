@@ -385,11 +385,50 @@ class HeatExchanger(Component):
             self.E_D = self.E_F - self.E_P
         self.epsilon = self.calc_epsilon()
 
-        # Log the results
+        # Determine branch for logging
+        all_streams = list(self.inl.values()) + list(self.outl.values())
+        if not self.dissipative:
+            if all([stream["T"] >= T0 for stream in all_streams]):
+                branch = "all_above"
+            elif all([stream["T"] <= T0 for stream in all_streams]):
+                branch = "all_below_eq"
+            elif (
+                self.inl[0]["T"] > T0
+                and self.outl[1]["T"] > T0
+                and self.outl[0]["T"] <= T0
+                and self.inl[1]["T"] <= T0
+            ):
+                branch = "crossing"
+            elif (
+                self.inl[0]["T"] > T0
+                and self.inl[1]["T"] <= T0
+                and self.outl[0]["T"] <= T0
+                and self.outl[1]["T"] <= T0
+            ):
+                branch = "only_hot_in"
+            elif self.inl[0]["T"] > T0 and self.inl[1]["T"] <= T0 and self.outl[0]["T"] > T0 and self.outl[1]["T"] > T0:
+                branch = "only_cold_in"
+            elif (
+                self.inl[0]["T"] > T0
+                and self.inl[1]["T"] <= T0
+                and self.outl[0]["T"] > T0
+                and self.outl[1]["T"] <= T0
+            ):
+                branch = "dissipative_case"
+            else:
+                branch = "other"
+        else:
+            branch = "forced_dissipative"
+
+        # Minimal but explicit block log
         logging.info(
-            f"Exergy balance of HeatExchanger {self.name} calculated: "
-            f"E_P={self.E_P:.2f}, E_F={self.E_F:.2f}, E_D={self.E_D:.2f}, "
-            f"Efficiency={self.epsilon:.2%}"
+            f"HeatExchanger {self.name} | branch={branch} | "
+            f"in1:T={self.inl[0]['T']:.2f}K,m={self.inl[0]['m']},e_PH={self.inl[0].get('e_PH')},e_T={self.inl[0].get('e_T')},e_M={self.inl[0].get('e_M')} | "
+            f"in2:T={self.inl[1]['T']:.2f}K,m={self.inl[1]['m']},e_PH={self.inl[1].get('e_PH')},e_T={self.inl[1].get('e_T')},e_M={self.inl[1].get('e_M')} | "
+            f"out1:T={self.outl[0]['T']:.2f}K,m={self.outl[0]['m']},e_PH={self.outl[0].get('e_PH')},e_T={self.outl[0].get('e_T')},e_M={self.outl[0].get('e_M')} | "
+            f"out2:T={self.outl[1]['T']:.2f}K,m={self.outl[1]['m']},e_PH={self.outl[1].get('e_PH')},e_T={self.outl[1].get('e_T')},e_M={self.outl[1].get('e_M')} | "
+            f"E_F={self.E_F:.2f} W, E_P={self.E_P if np.isnan(self.E_P) else f'{self.E_P:.2f}'} W, "
+            f"E_D={self.E_D:.2f} W, eps={self.epsilon:.2%}"
         )
 
     def aux_eqs(self, A, b, counter, T0, equations, chemical_exergy_enabled):

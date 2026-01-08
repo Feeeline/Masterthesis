@@ -201,8 +201,65 @@ class ExergyAnalysis:
             if component.__class__.__name__ == "CycleCloser":
                 continue
             else:
+                # Log inputs for this component before exergy calculation
+                try:
+                    inl_summary = []
+                    for k, v in component.inl.items():
+                        try:
+                            inl_summary.append({
+                                "name": k,
+                                "T": v.get("T"),
+                                "p": v.get("p"),
+                                "m": v.get("m"),
+                                "h": v.get("h"),
+                                "e_PH": v.get("e_PH"),
+                                "e_T": v.get("e_T"),
+                                "e_M": v.get("e_M"),
+                            })
+                        except Exception:
+                            inl_summary.append({"name": k, "raw": str(v)})
+                except Exception:
+                    inl_summary = str(component.inl)
+
+                try:
+                    outl_summary = []
+                    for k, v in component.outl.items():
+                        try:
+                            outl_summary.append({
+                                "name": k,
+                                "T": v.get("T"),
+                                "p": v.get("p"),
+                                "m": v.get("m"),
+                                "h": v.get("h"),
+                                "e_PH": v.get("e_PH"),
+                                "e_T": v.get("e_T"),
+                                "e_M": v.get("e_M"),
+                            })
+                        except Exception:
+                            outl_summary.append({"name": k, "raw": str(v)})
+                except Exception:
+                    outl_summary = str(component.outl)
+
+                # Also capture power/heat connections if present on the component object
+                power_info = {}
+                for idx, conn in getattr(component, "inl", {}).items():
+                    if conn is not None and conn.get("kind") == "power" and "energy_flow" in conn:
+                        power_info[f"in_{idx}"] = conn.get("energy_flow")
+                for idx, conn in getattr(component, "outl", {}).items():
+                    if conn is not None and conn.get("kind") == "power" and "energy_flow" in conn:
+                        power_info[f"out_{idx}"] = conn.get("energy_flow")
+
+                # Emit both print (guaranteed to appear in redirected test log) and logging.info
+                msg = (
+                    f"Component inputs before calc | {component.name} ({component.__class__.__name__}) | "
+                    f"inlets={inl_summary} | outlets={outl_summary} | power={power_info}"
+                )
+                logging.info(msg)
+                print(msg)
+
                 # Calculate E_F, E_D, E_P
                 component.calc_exergy_balance(self.Tamb, self.pamb, self.split_physical_exergy)
+
                 # Safely calculate y and y* avoiding division by zero
                 if self.E_F != 0:
                     component.y = component.E_D / self.E_F
@@ -671,7 +728,7 @@ class ExergyAnalysis:
                 kind = conn_data.get("kind", "")
                 exergy = conn_data.get("E", 0)
                 # Only consider material/heat/power streams with significant exergy
-                if kind in ["material", "heat", "power"] and abs(exergy) > 1e-3:
+                if kind in ["material", "heat", "power"] and exergy is not None and abs(exergy) > 1e-3:
                     system_boundary_conns.append(conn_name)
 
         # Find unaccounted boundary connections

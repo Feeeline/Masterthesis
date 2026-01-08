@@ -151,11 +151,26 @@ class Turbine(Component):
             self.E_D = self.inl[0]["m"] * self.inl[0]["e_PH"] - self._total_outlet("m", "e_PH") - abs(self.P)
         self.epsilon = self.calc_epsilon()
 
-        # Log the results
+        # Determine branch for logging
+        Tin = self.inl[0]["T"]
+        Tout = self.outl[0]["T"]
+        if Tin >= T0 and Tout >= T0 and Tin >= Tout:
+            branch = "both_above_non_increasing"
+        elif Tin > T0 and Tout <= T0:
+            branch = "in_above_out_at_or_below"
+        elif Tin <= T0 and Tout <= T0:
+            branch = "both_below_eq"
+        else:
+            branch = "unexpected"
+
+        # Block log: minimal but explicit
         logging.info(
-            f"Exergy balance of Turbine {self.name} calculated: "
-            f"E_P={self.E_P:.2f}, E_F={self.E_F:.2f}, E_D={self.E_D:.2f}, "
-            f"Efficiency={self.epsilon:.2%}"
+            f"Turbine {self.name} | branch={branch} | T_in={Tin:.2f}K T_out={Tout:.2f}K | P={self.P:.2f} W | "
+            f"in_m={self.inl[0].get('m')}, out_m_sum={self._total_outlet('m','') if hasattr(self,'_total_outlet') else 'N/A'} | "
+            f"e_PH_in={self.inl[0].get('e_PH')}, e_PH_out={self._total_outlet('m','e_PH') if hasattr(self,'_total_outlet') else 'N/A'} | "
+            f"e_T_in={self.inl[0].get('e_T')}, e_T_out={self._total_outlet('m','e_T') if hasattr(self,'_total_outlet') else 'N/A'} | "
+            f"E_F={self.E_F:.2f} W, E_P={self.E_P if np.isnan(self.E_P) else f'{self.E_P:.2f}'} W, "
+            f"E_D={self.E_D:.2f} W, eps={self.epsilon:.2%}"
         )
 
     def _total_outlet(self, mass_flow: str, property_name: str) -> float:

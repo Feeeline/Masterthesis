@@ -812,6 +812,14 @@ class AspenModelParser:
             # Assign connectors
             self.assign_connectors(component_data, block_name)
 
+        # Summary logging after parsing all blocks
+        logging.warning(
+            f"Parsing completed: parsed {len(block_names)} blocks, connections={len(self.connections_data)} items, component groups={len(self.components_data)}"
+        )
+        print(
+            f"Parsing completed: parsed {len(block_names)} blocks, connections={len(self.connections_data)} items, component groups={len(self.components_data)}"
+        )
+
     def assign_connectors(self, component_data, block_name):
         """
         Assigns connectors to streams for each component based on its type.

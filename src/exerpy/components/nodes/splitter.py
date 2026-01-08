@@ -67,11 +67,14 @@ class Splitter(Component):
         self.E_D = E_in - E_out
         self.epsilon = np.nan
 
-        # Log the results.
+        # Prepare outlet summary
+        outlet_summaries = [f"{outlet.get('name','out')}:m={outlet.get('m',0)},e_PH={outlet.get('e_PH',0)}" for outlet in outlet_list]
+        outlet_summary = ", ".join(outlet_summaries)
+
+        # Block log: minimal but explicit
         logging.info(
-            f"Exergy balance of Splitter {self.name} calculated: "
-            f"E_P={self.E_P:.2f}, E_F={self.E_F:.2f}, E_D={self.E_D:.2f}, "
-            f"Efficiency={self.epsilon:.2%}"
+            f"Splitter {self.name} | E_in={E_in:.2f} W, E_out={E_out:.2f} W | outlets=[{outlet_summary}] | "
+            f"E_D={self.E_D:.2f} W"
         )
 
     def aux_eqs(self, A, b, counter, T0, equations, chemical_exergy_enabled):

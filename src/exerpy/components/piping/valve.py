@@ -211,11 +211,26 @@ class Valve(Component):
         # Calculate exergy efficiency
         self.epsilon = self.calc_epsilon()
 
-        # Log the results
+        # Determine branch for logging
+        if T_in > T0 and T_out > T0:
+            branch = "both_above"
+        elif T_in > T0 and T_out <= T0:
+            branch = "in_above_out_below_eq"
+        elif T_in <= T0 and T_out <= T0:
+            branch = "both_below_eq"
+        elif T_in <= T0 and T_out > T0:
+            branch = "in_below_out_above"
+        else:
+            branch = "unexpected"
+
+        # Block log: minimal but explicit
         logging.info(
-            f"Exergy balance of Valve {self.name} calculated: "
-            f"E_P={self.E_P:.2f}, E_F={self.E_F:.2f}, E_D={self.E_D:.2f}, "
-            f"Efficiency={self.epsilon:.2%}"
+            f"Valve {self.name} | branch={branch} | T_in={T_in:.2f}K T_out={T_out:.2f}K | "
+            f"e_PH_in={self.inl[0].get('e_PH')}, e_PH_out={self.outl[0].get('e_PH')}, "
+            f"e_T_in={self.inl[0].get('e_T')}, e_T_out={self.outl[0].get('e_T')}, "
+            f"e_M_in={self.inl[0].get('e_M')}, e_M_out={self.outl[0].get('e_M')} | "
+            f"E_F={self.E_F:.2f} W, E_P={self.E_P if np.isnan(self.E_P) else f'{self.E_P:.2f}'} W, "
+            f"E_D={self.E_D:.2f} W, eps={self.epsilon:.2%}"
         )
 
     def aux_eqs(self, A, b, counter, T0, equations, chemical_exergy_enabled):

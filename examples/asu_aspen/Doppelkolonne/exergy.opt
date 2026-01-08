@@ -1,7 +1,0 @@
-! This is a exergy linker file
-! Use no local files from the directory
-:no_local
-
-! Specify the path of the exergy.dll
-! Example "C:\Users\Your Name\Desktop\exergy.dll"
-"C:\Users\Felin\Documents\Masterthesis\Code\Aspen\Masterthesis\latest\exergy.dll"
