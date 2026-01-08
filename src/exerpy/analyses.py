@@ -868,6 +868,24 @@ def _process_json(
         if missing_fields:
             raise ValueError(f"Connection '{conn_name}' missing required fields: {missing_fields}")
 
+    # Normalize exergy keys from lowercase variants (e_ph/e_ch/e_m/e_t) to expected uppercase names.
+    exergy_key_map = {
+        "e_ph": "e_PH",
+        "e_ch": "e_CH",
+        "e_m": "e_M",
+        "e_t": "e_T",
+    }
+    for conn_name, conn_data in data["connections"].items():
+        for src_key, dst_key in exergy_key_map.items():
+            if dst_key not in conn_data and src_key in conn_data:
+                conn_data[dst_key] = conn_data.get(src_key)
+                unit_key = f"{src_key}_unit"
+                if f"{dst_key}_unit" not in conn_data and unit_key in conn_data:
+                    conn_data[f"{dst_key}_unit"] = conn_data.get(unit_key)
+                logging.warning(
+                    f"Normalized connection {conn_name} exergy key '{src_key}' to '{dst_key}'."
+                )
+
     # Add chemical exergy if library provided
     if chemExLib:
         data = add_chemical_exergy(data, Tamb, pamb, chemExLib)
