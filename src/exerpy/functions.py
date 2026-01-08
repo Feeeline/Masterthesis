@@ -890,9 +890,10 @@ for alias, base in {
     "x_ar": "x",
     "x_co2": "x",
     "x_h2o": "x",
-    "e_ch": "e",
-    "e_m": "e",
-    "e_ph": "e",
-    "e_th": "e",
+    # Map energy-flow-like exergy outputs from Aspen to power units
+    "e_ch": "power",
+    "e_m": "power",
+    "e_ph": "power",
+    "e_th": "power",
 }.items():
     fluid_property_data[alias] = fluid_property_data[base]

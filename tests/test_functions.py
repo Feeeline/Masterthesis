@@ -19,6 +19,7 @@ from exerpy.functions import (
     convert_to_SI,
     mass_to_molar_fractions,
     molar_to_mass_fractions,
+    fluid_property_data,
 )
 
 
@@ -238,6 +239,24 @@ def test_mass_to_molar_fractions_flue_gas(flue_gas_composition):
     ----------
     flue_gas_composition : dict
         Fixture providing typical flue gas composition
+"""
+    molar_fractions = mass_to_molar_fractions(flue_gas_composition["mass_composition"])
+
+    assert isinstance(molar_fractions, dict)
+    assert abs(sum(molar_fractions.values()) - 1.0) < 1e-6
+    assert set(molar_fractions.keys()) == set(flue_gas_composition["mass_composition"].keys())
+
+
+# New tests for e_* mapping to power units
+def test_convert_e_ch_as_power():
+    val = convert_to_SI("e_ch", 114.320938, "kW", context="test")
+    assert abs(val - 114320.938) < 1e-6
+    assert fluid_property_data["e_ch"]["SI_unit"] == fluid_property_data["power"]["SI_unit"]
+
+
+def test_mass_to_molar_fractions_flue_gas(flue_gas_composition):
+    """
+    Test mass to molar fraction conversion for flue gas mixture.
 
     Verifies
     --------
@@ -503,11 +522,11 @@ def test_convert_to_SI(property, value, unit, expected):
 
     Notes
     -----
-    - Temperature: C/F → K
-    - Pressure: bar/psi → Pa
-    - Mass flow: kg/s, kg/h → kg/s
-    - Enthalpy: kJ/kg, kcal/kg → J/kg
-    - Entropy: kJ/kgK → J/kgK
+    - Temperature: C/F -> K
+    - Pressure: bar/psi -> Pa
+    - Mass flow: kg/s, kg/h -> kg/s
+    - Enthalpy: kJ/kg, kcal/kg -> J/kg
+    - Entropy: kJ/kgK -> J/kgK
 
     Using relative tolerance for larger values (pressure)
     and absolute tolerance for other properties.
