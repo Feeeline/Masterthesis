@@ -227,15 +227,15 @@ def calc_eph_from_min(pipe: Any, Tamb: float) -> float | None:
         t_min = convert_to_SI("T", tl_ext.T_Min, unit_id_to_string.get(pipe.T.Dimension, "Unknown"))  # K
 
         # 3) Calculate physical exergy using Tamb as reference temperature
-        e_ph = h_i - h_min - Tamb * (s_i - s_min)
+        e_PH = h_i - h_min - Tamb * (s_i - s_min)
 
         logging.info(
             f"e_PH(min) for {getattr(pipe, 'Name', '<unknown>')}: "
             f"T_min={t_min-273.15:.2f} °C, h_min={h_min:.1f} J/kg, s_min={s_min:.3f} J/kgK, "
-            f"Tamb={Tamb-273.15:.2f} °C, e_PH={e_ph:.1f} J/kg"
+            f"Tamb={Tamb-273.15:.2f} °C, e_PH={e_PH:.1f} J/kg"
         )
 
-        return e_ph
+        return e_PH
 
     except Exception as e:
         logging.error(f"Failed to calculate e_PH from min for {getattr(pipe, 'Name', '<unknown>')}: {e}")

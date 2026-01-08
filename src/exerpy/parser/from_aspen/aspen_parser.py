@@ -470,10 +470,10 @@ class AspenModelParser:
 
                 # STRM_UPP user-supplied exergy terms -> try 'e', fallback to 'power'
                 for node, key, name, property_key in [
-                    (usrech_node, "ech", "USRECH", "e_ch"),
-                    (usreme_node, "em", "USREME", "e_m"),
-                    (usreph_node, "eph", "USREPH", "e_ph"),
-                    (usreth_node, "eth", "USRETH", "e_th"),
+                    (usrech_node, "ech", "USRECH", "e_CH"),
+                    (usreme_node, "em", "USREME", "e_M"),
+                    (usreph_node, "eph", "USREPH", "e_PH"),
+                    (usreth_node, "eth", "USRETH", "e_T"),
                 ]:
                     if node is not None and node.Value is not None:
                         connection_data[f"{key}_raw"] = node.Value
