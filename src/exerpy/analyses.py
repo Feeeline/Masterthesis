@@ -106,6 +106,31 @@ class ExergyAnalysis:
         # Convert the parsed data into components
         self.components = _construct_components(component_data, connection_data, Tamb)
         self.connections = connection_data
+        
+        # Initialize MHeatX configuration (optional, for spezProdukt mode)
+        self.mheatx_config = {}
+
+    def set_mheatx_config(self, config_dict: dict) -> None:
+        """
+        Set configuration for MHeatX components in spezProdukt mode.
+        
+        Parameters
+        ----------
+        config_dict : dict
+            Dictionary mapping MHeatX component names to their configurations.
+            Example:
+            {
+                "MW": {
+                    "part": "E_PH",
+                    "hot_pairs": [("S11", "S12"), ("S19", "S20")],
+                    "cold_pairs": [("S15", "S16"), ("S27", "S28")],
+                    "product_pairs": [("S15", "S16")],
+                    "fuel_pairs": None  # optional, defaults to hot_pairs
+                }
+            }
+        """
+        self.mheatx_config = config_dict
+        logging.info(f"MHeatX configuration set for {len(config_dict)} component(s): {list(config_dict.keys())}")
 
     def analyse(self, E_F, E_P, E_L=None) -> None:
         """
@@ -323,7 +348,12 @@ class ExergyAnalysis:
                 print(msg)
 
                 # Calculate E_F, E_D, E_P
-                component.calc_exergy_balance(self.Tamb, self.pamb, self.split_physical_exergy)
+                # For MHeatX: pass configuration if available
+                if component.__class__.__name__ == "MHeatX":
+                    cfg = self.mheatx_config.get(component.name)
+                    component.calc_exergy_balance(self.Tamb, self.pamb, self.split_physical_exergy, mheatx_config=cfg)
+                else:
+                    component.calc_exergy_balance(self.Tamb, self.pamb, self.split_physical_exergy)
 
                 # Safely calculate y and y* avoiding division by zero
                 if self.E_F != 0:

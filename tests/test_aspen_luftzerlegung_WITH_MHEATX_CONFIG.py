@@ -1,3 +1,6 @@
+# Beispiel: MHeatX mit aktivierter spezProdukt-Konfiguration
+# Kopieren Sie diese Datei und passen Sie sie an Ihre MHeatX-Blöcke an
+
 import json
 import os
 import logging
@@ -30,34 +33,84 @@ model_path = r'C:\Users\Felin\Documents\Masterthesis\Code\Exerpy\exerpy\examples
 
 ean = ExergyAnalysis.from_aspen(model_path, chemExLib='Ahrendts', split_physical_exergy=True)
 
-# ===== MHeatX CONFIGURATION (spezProdukt mode - OPTIONAL) =====
-# If you want to configure specific stream pairs for MHeatX components,
-# define them here. Otherwise, leave empty {} for balance-mode only.
+# ===== MHeatX CONFIGURATION (spezProdukt mode - EXAMPLE) =====
+# Dies ist ein BEISPIEL mit aktivierter Konfiguration für MW und RC.
+# Passen Sie die Stream-Nummern (0, 1, 2, ...) an Ihre Komponenten an!
 #
-# Structure:
-# {
-#     "component_name": {
-#         "part": "E_PH" | "E_T" | "E_M",  # exergy component to use
-#         "hot_pairs": [("S_in", "S_out"), ...],      # streams giving up exergy (fuel-like)
-#         "cold_pairs": [("S_in", "S_out"), ...],     # streams taking exergy (product-like)
-#         "product_pairs": [("S_in", "S_out"), ...],  # which cold pairs are "product"
-#         "fuel_pairs": [("S_in", "S_out"), ...],     # optional: override fuel base (default=hot_pairs)
-#     }
-# }
+# Tipps zum Finden von Stream-Namen:
+# 1. Aktivieren Sie Balance-Mode (immer aktiv)
+# 2. Suchen Sie im Log nach "Component inputs before calc | MW (MHeatX) |"
+# 3. Die Felder "inlets=[...]" und "outlets=[...]" zeigen verfügbare Nummern
 #
-# Example (uncomment and customize as needed):
+# Beispiel aus dem Log:
+#   inlets=[
+#     {'name': 0, 'T': 308.15, 'm': 24.8, ...},
+#     {'name': 2, 'T': 96.71, 'm': 8.06, ...},
+#     ...
+#   ]
+# Stream-Namen sind hier: 0, 2, 1, 4, 3
+# Verwenden Sie diese in den Paaren!
+
 MHEATX_CFG = {
-    # "MW": {
-    #     "part": "E_PH",
-    #     "hot_pairs": [("S11", "S12"), ("S19", "S20")],       # cooled streams
-    #     "cold_pairs": [("S15", "S16"), ("S27", "S28"), ("S29", "S30")],  # heated streams
-    #     "product_pairs": [("S15", "S16")],  # which of the cold streams are product
-    # },
+    "MW": {
+        "part": "E_PH",
+        
+        # hot_pairs: Ströme, die Exergie ABGEBEN (normalerweise Kühlung)
+        # Aus dem Log für MW:
+        # Inlet 0 (warm, m=24.8): E_in  = 3744706.73 W, E_out = 7626066.64 W → wird gekühlt
+        # Inlet 2 (warm, m=8.06): E_in  = 2353688.21 W, E_out = 1228743.46 W → wird gekühlt
+        "hot_pairs": [
+            (0, 0),   # Inlet 0 -> Outlet 0 (Hauptluft-Kühlstrom)
+            (2, 2)    # Inlet 2 -> Outlet 2 (Prozessfluid-Kühlstrom)
+        ],
+        
+        # cold_pairs: Ströme, die Exergie AUFNEHMEN (normalerweise Erwärmung)
+        # Inlet 1 (kalt, m=4.7): E_in  = 713003.53 W, E_out = 1270701.42 W → wird erwärmt
+        # Inlet 3 (kalt, m=13.48): E_in  = 3629349.53 W, E_out = 1107769.80 W → wird erwärmt
+        # Inlet 4 (kalt, m=8.01): E_in  = 1970929.41 W, E_out = 723334.81 W → wird erwärmt
+        "cold_pairs": [
+            (1, 1),   # Inlet 1 -> Outlet 1 (Nebenluft-Erwärmung)
+            (3, 3),   # Inlet 3 -> Outlet 3 (Prozessfluid-Erwärmung 1)
+            (4, 4)    # Inlet 4 -> Outlet 4 (Prozessfluid-Erwärmung 2)
+        ],
+        
+        # product_pairs: Welche der cold_pairs sind "Produkt"?
+        # Dies ist domain-spezifisch und muss vom Nutzer entschieden werden!
+        # Beispiel: Nur Nebenluft-Erwärmung ist Produkt
+        "product_pairs": [
+            (1, 1)    # Nur dieser Strom zählt als Produkt
+        ],
+        
+        # fuel_pairs: Optional - Fuel-Definition überschreiben
+        # Falls nicht angegeben, wird hot_pairs als Fuel verwendet
+        # Beispiel: fuel_pairs = [(0, 0)]  würde nur Hauptluft zählen
+        # fuel_pairs: None  # Leer lassen für Default = hot_pairs
+    },
+    
+    "RC": {
+        # RC ist der Rückkühl-Wärmewechsler mit einfacherer Struktur (2 inlets, 2 outlets)
+        "part": "E_PH",
+        
+        "hot_pairs": [
+            (0, 0)    # Ein heißer Strom wird gekühlt
+        ],
+        
+        "cold_pairs": [
+            (1, 1)    # Ein kalter Strom wird erwärmt
+        ],
+        
+        "product_pairs": [
+            (1, 1)    # Dieser Strom ist Produkt
+        ],
+    }
 }
 
 # Apply configuration to ExergyAnalysis
 if MHEATX_CFG:
+    logging.info("===== MHEATX CONFIGURATION ACTIVE =====")
     ean.set_mheatx_config(MHEATX_CFG)
+    logging.info(f"MHeatX configuration applied to: {list(MHEATX_CFG.keys())}")
+    logging.info("==========================================\n")
 
 # Discover power connections in the parsed model and use them for the test.
 # Some Aspen files name power flows differently, so we pick available 'power' connections dynamically.
