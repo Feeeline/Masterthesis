@@ -35,7 +35,20 @@ class Flash2(Component):
 
     def calc_exergy_balance(self, T0: float, p0: float, split_physical_exergy) -> None:
         r"""
-        Compute the exergy balance of the Flash2 component.
+        Compute the exergy balance of the Flash2 component as an adiabatic, workless separator.
+
+        This component represents a water separator with:
+        - One material inlet (mixed stream)
+        - Two material outlets:
+          * Gas outlet (typically "dry air" product)
+          * Liquid outlet (water waste stream)
+        
+        For a simple adiabatic separator with no work input (W=0), the exergy balance is:
+            E_D = E_in - E_out
+        
+        where E_in and E_out are the total material exergy flow rates. Both gas and liquid
+        outlets must be counted in E_out, even though the liquid stream is considered waste
+        from a process perspective - it still carries exergy out of the component.
 
         Parameters
         ----------
@@ -45,19 +58,42 @@ class Flash2(Component):
             Ambient pressure in Pascal.
         split_physical_exergy : bool
             Flag indicating whether physical exergy is split into thermal and mechanical components.
+        
+        Notes
+        -----
+        This implementation uses total physical exergy (e_PH) for the balance computation
+        to avoid temperature-regime complications. The exergy destruction should be positive
+        for a real separator due to irreversibilities (pressure drop, mixing effects).
         """
         if len(self.inl) < 1 or len(self.outl) < 2:
             raise ValueError("Flash2 requires one inlet and at least two outlets.")
 
-        exergy_type = "e_T" if split_physical_exergy else "e_PH"
-
-        self.E_F = self._sum_exergy(self.inl, exergy_type)
-        self.E_P = self._sum_exergy(self.outl, exergy_type)
-        self.E_D = self.E_F - self.E_P
+        # Use total physical exergy (e_PH) for adiabatic separator balance
+        # This avoids issues with temperature-regime Fuel/Product definitions
+        E_in = self._sum_exergy(self.inl, "e_PH")
+        E_out = self._sum_exergy(self.outl, "e_PH")
+        
+        # Calculate exergy destruction: should be positive for real process
+        self.E_D = E_in - E_out
+        
+        # Clamp small negative values caused by numerical rounding
+        # If |E_D| < 1e-6 * max(E_in, 1.0), treat as zero
+        if self.E_D < 0 and abs(self.E_D) < 1e-6 * max(E_in, 1.0):
+            logging.warning(
+                f"Flash2 {self.name}: Tiny negative E_D={self.E_D:.6f} W clamped to zero "
+                f"(likely numerical error). E_in={E_in:.2f} W, E_out={E_out:.2f} W"
+            )
+            self.E_D = 0.0
+        
+        # Set E_F and E_P for reporting consistency
+        # Option B: E_F = E_in, E_P = E_out
+        self.E_F = E_in
+        self.E_P = E_out
         self.epsilon = self.calc_epsilon()
 
         logging.info(
-            f"Exergy balance of Flash2 {self.name} calculated: "
-            f"E_F = {self.E_F:.2f} W, E_P = {self.E_P:.2f} W, E_D = {self.E_D:.2f} W, "
-            f"Efficiency = {self.epsilon:.2%}"
+            f"Exergy balance of Flash2 {self.name} (adiabatic separator): "
+            f"E_in={E_in:.2f} W, E_out={E_out:.2f} W, E_D={self.E_D:.2f} W, "
+            f"epsilon={self.epsilon:.2%} | "
+            f"[Note: Both gas and liquid outlets counted in E_out]"
         )

@@ -55,9 +55,9 @@ def validate_ebsilon_requirements() -> None:
     is_available, message = check_ebsilon_installation()
 
     if is_available:
-        print(f"✓ Ebsilon is properly installed and available at: {__ebsilon_path__}")
+        print(f"[OK] Ebsilon is properly installed and available at: {__ebsilon_path__}")
     else:
-        print(f"✗ Ebsilon is not available: {message}")
+        print(f"[ERR] Ebsilon is not available: {message}")
         print("\nTo enable Ebsilon functionality:")
         print("1. Ensure Ebsilon Professional is installed on your system")
         print("2. Set the EBS environment variable to the Ebsilon installation path")

@@ -211,10 +211,10 @@ class ExergyAnalysis:
                         logging.info(f"      Inlet[{k}] type={type(v).__name__}")
                         try:
                             if v is None:
-                                logging.warning(f"        ✗ Inlet[{k}] is None!")
+                                logging.warning(f"        [MISS] Inlet[{k}] is None!")
                                 inl_summary.append({"name": k, "status": "None"})
                             elif not isinstance(v, dict):
-                                logging.warning(f"        ✗ Inlet[{k}] is not dict: {type(v).__name__}")
+                                logging.warning(f"        [MISS] Inlet[{k}] is not dict: {type(v).__name__}")
                                 inl_summary.append({"name": k, "raw": str(v)[:100]})
                             else:
                                 # Show ALL keys present
@@ -234,7 +234,7 @@ class ExergyAnalysis:
                                 
                                 # Check e_PH specifically
                                 if 'e_PH' not in v:
-                                    logging.warning(f"        ✗ 'e_PH' key NOT in inlet dict!")
+                                    logging.warning(f"        [MISS] 'e_PH' key NOT in inlet dict!")
                                     # Look for similar keys
                                     e_keys = [key for key in all_keys if key.startswith('e')]
                                     if e_keys:
@@ -242,16 +242,16 @@ class ExergyAnalysis:
                                         for ek in e_keys:
                                             logging.warning(f"            {ek} = {v[ek]}")
                                 elif v['e_PH'] is None:
-                                    logging.warning(f"        ⚠ 'e_PH' key exists but value is None")
+                                    logging.warning(f"        [WARN] 'e_PH' key exists but value is None")
                                 else:
-                                    logging.info(f"        ✓ e_PH = {v['e_PH']}")
+                                    logging.info(f"        [OK] e_PH = {v['e_PH']}")
                                 
                                 inl_summary.append(inlet_data)
                         except Exception as ex:
-                            logging.error(f"        ✗ Error processing inlet[{k}]: {ex}")
+                            logging.error(f"        [ERR] Error processing inlet[{k}]: {ex}")
                             inl_summary.append({"name": k, "error": str(ex)})
                 except Exception as ex:
-                    logging.error(f"    ✗ Error building inl_summary: {ex}")
+                    logging.error(f"    [ERR] Error building inl_summary: {ex}")
                     inl_summary = str(component.inl)
 
                 try:
@@ -262,10 +262,10 @@ class ExergyAnalysis:
                         logging.info(f"      Outlet[{k}] type={type(v).__name__}")
                         try:
                             if v is None:
-                                logging.warning(f"        ✗ Outlet[{k}] is None!")
+                                logging.warning(f"        [MISS] Outlet[{k}] is None!")
                                 outl_summary.append({"name": k, "status": "None"})
                             elif not isinstance(v, dict):
-                                logging.warning(f"        ✗ Outlet[{k}] is not dict: {type(v).__name__}")
+                                logging.warning(f"        [MISS] Outlet[{k}] is not dict: {type(v).__name__}")
                                 outl_summary.append({"name": k, "raw": str(v)[:100]})
                             else:
                                 # Show ALL keys present
@@ -285,7 +285,7 @@ class ExergyAnalysis:
                                 
                                 # Check e_PH specifically
                                 if 'e_PH' not in v:
-                                    logging.warning(f"        ✗ 'e_PH' key NOT in outlet dict!")
+                                    logging.warning(f"        [MISS] 'e_PH' key NOT in outlet dict!")
                                     # Look for similar keys
                                     e_keys = [key for key in all_keys if key.startswith('e')]
                                     if e_keys:
@@ -293,16 +293,16 @@ class ExergyAnalysis:
                                         for ek in e_keys:
                                             logging.warning(f"            {ek} = {v[ek]}")
                                 elif v['e_PH'] is None:
-                                    logging.warning(f"        ⚠ 'e_PH' key exists but value is None")
+                                    logging.warning(f"        [WARN] 'e_PH' key exists but value is None")
                                 else:
-                                    logging.info(f"        ✓ e_PH = {v['e_PH']}")
+                                    logging.info(f"        [OK] e_PH = {v['e_PH']}")
                                 
                                 outl_summary.append(outlet_data)
                         except Exception as ex:
-                            logging.error(f"        ✗ Error processing outlet[{k}]: {ex}")
+                            logging.error(f"        [ERR] Error processing outlet[{k}]: {ex}")
                             outl_summary.append({"name": k, "error": str(ex)})
                 except Exception as ex:
-                    logging.error(f"    ✗ Error building outl_summary: {ex}")
+                    logging.error(f"    [ERR] Error building outl_summary: {ex}")
                     outl_summary = str(component.outl)
 
                 # Also capture power/heat connections if present on the component object
@@ -842,9 +842,9 @@ def _construct_components(component_data, connection_data, Tamb):
             logging.info(f"  Sample connection[{conn_id}]:")
             logging.info(f"    Keys present: {sorted(conn_info.keys())}")
             if 'e_PH' in conn_info:
-                logging.info(f"    ✓ e_PH = {conn_info['e_PH']}")
+                logging.info(f"    [OK] e_PH = {conn_info['e_PH']}")
             else:
-                logging.info(f"    ✗ e_PH NOT FOUND in connection")
+                logging.info(f"    [MISS] e_PH NOT FOUND in connection")
             sample_count += 1
     logging.info("="*80 + "\n")
 
@@ -898,7 +898,7 @@ def _construct_components(component_data, connection_data, Tamb):
                             conn_info[component_key] = e_specific  # Store under component key
                         elif e_total is not None:
                             # Very small value, likely already specific or zero
-                            logging.info(f"    {parser_key}={e_total:.2e} → {component_key} (no conversion, near-zero)")
+                            logging.info(f"    {parser_key}={e_total:.2e} -> {component_key} (no conversion, near-zero)")
                             conn_info[component_key] = e_total
                         else:
                             # No value found
@@ -915,11 +915,11 @@ def _construct_components(component_data, connection_data, Tamb):
                     target_connector_idx = conn_info["target_connector"]  # Use 0-based indexing
                     
                     # LOG BEFORE ASSIGNMENT
-                    logging.info(f"  INLET[{target_connector_idx}] ← conn_id={_conn_id}")
+                    logging.info(f"  INLET[{target_connector_idx}] <- conn_id={_conn_id}")
                     logging.info(f"    conn_info keys: {sorted(conn_info.keys())}")
                     logging.info(f"    T={conn_info.get('T')}, p={conn_info.get('p')}, m={conn_info.get('m')}, h={conn_info.get('h')}")
                     if 'e_PH' in conn_info:
-                        logging.info(f"    ✓ e_PH={conn_info['e_PH']}, e_T={conn_info.get('e_T')}, e_M={conn_info.get('e_M')}")
+                        logging.info(f"    [OK] e_PH={conn_info['e_PH']}, e_T={conn_info.get('e_T')}, e_M={conn_info.get('e_M')}")
                     else:
                         logging.info(f"    ✗ e_PH NOT in conn_info! Available e_* keys: {[k for k in conn_info.keys() if k.startswith('e')]}")
                     
@@ -930,20 +930,20 @@ def _construct_components(component_data, connection_data, Tamb):
                     if target_connector_idx in component.inl:
                         assigned_dict = component.inl[target_connector_idx]
                         if 'e_PH' in assigned_dict:
-                            logging.info(f"    ✓ Verified: component.inl[{target_connector_idx}] has e_PH={assigned_dict['e_PH']}")
+                            logging.info(f"    [OK] Verified: component.inl[{target_connector_idx}] has e_PH={assigned_dict['e_PH']}")
                         else:
-                            logging.info(f"    ✗ WARNING: component.inl[{target_connector_idx}] missing e_PH after assignment!")
+                            logging.info(f"    [WARN] component.inl[{target_connector_idx}] missing e_PH after assignment!")
 
                 # Assign outlet streams
                 if conn_info["source_component"] == component_name:
                     source_connector_idx = conn_info["source_connector"]  # Use 0-based indexing
                     
                     # LOG BEFORE ASSIGNMENT
-                    logging.info(f"  OUTLET[{source_connector_idx}] ← conn_id={_conn_id}")
+                    logging.info(f"  OUTLET[{source_connector_idx}] <- conn_id={_conn_id}")
                     logging.info(f"    conn_info keys: {sorted(conn_info.keys())}")
                     logging.info(f"    T={conn_info.get('T')}, p={conn_info.get('p')}, m={conn_info.get('m')}, h={conn_info.get('h')}")
                     if 'e_PH' in conn_info:
-                        logging.info(f"    ✓ e_PH={conn_info['e_PH']}, e_T={conn_info.get('e_T')}, e_M={conn_info.get('e_M')}")
+                        logging.info(f"    [OK] e_PH={conn_info['e_PH']}, e_T={conn_info.get('e_T')}, e_M={conn_info.get('e_M')}")
                     else:
                         logging.info(f"    ✗ e_PH NOT in conn_info! Available e_* keys: {[k for k in conn_info.keys() if k.startswith('e')]}")
                     
@@ -954,9 +954,9 @@ def _construct_components(component_data, connection_data, Tamb):
                     if source_connector_idx in component.outl:
                         assigned_dict = component.outl[source_connector_idx]
                         if 'e_PH' in assigned_dict:
-                            logging.info(f"    ✓ Verified: component.outl[{source_connector_idx}] has e_PH={assigned_dict['e_PH']}")
+                            logging.info(f"    [OK] Verified: component.outl[{source_connector_idx}] has e_PH={assigned_dict['e_PH']}")
                         else:
-                            logging.info(f"    ✗ WARNING: component.outl[{source_connector_idx}] missing e_PH after assignment!")
+                            logging.info(f"    [WARN] component.outl[{source_connector_idx}] missing e_PH after assignment!")
             
             logging.info(f"--- {component_name}: Assigned {inlet_count} inlets, {outlet_count} outlets ---\n")
 
@@ -1847,36 +1847,36 @@ class ExergoeconomicAnalysis:
 
         # empty equations
         if deps["zero_rows"]:
-            print("⚠ Equations with no variables:")
+            print("[WARN] Equations with no variables:")
             for eq in deps["zero_rows"]:
-                print(f"  • Eq[{eq}]: {self.equations.get(eq)}")
+                print(f"  - Eq[{eq}]: {self.equations.get(eq)}")
         else:
-            print("✓ No empty equations.")
+            print("[OK] No empty equations.")
 
         # unused variables
         if deps["zero_columns"]:
-            print("\n⚠ Variables never used in any equation:")
+            print("\n[WARN] Variables never used in any equation:")
             for var in deps["zero_columns"]:
                 name = self.variables.get(str(var))
-                print(f"  • Var[{var}]: {name}")
+                print(f"  - Var[{var}]: {name}")
         else:
-            print("✓ All variables appear in at least one equation.")
+            print("[OK] All variables appear in at least one equation.")
 
         # exactly colinear
         if deps["colinear_equations_strict"]:
-            print("\n⚠ Exactly colinear (redundant) equation pairs:")
+            print("\n[WARN] Exactly colinear (redundant) equation pairs:")
             for i, j in deps["colinear_equations_strict"]:
-                print(f"  • Eq[{i}] {self.equations[i]!r}  ≈  Eq[{j}] {self.equations[j]!r}")
+                print(f"  - Eq[{i}] {self.equations[i]!r}  ~  Eq[{j}] {self.equations[j]!r}")
         else:
-            print("✓ No exactly colinear equation pairs detected.")
+            print("[OK] No exactly colinear equation pairs detected.")
 
         # near-colinear
         if deps["colinear_equations_near_only"]:
-            print("\n⚠ Nearly colinear equation pairs (|dot−‖i‖‖j‖| ≤ tol_near):")
+            print("\n[WARN] Nearly colinear equation pairs (|dot-||i|| ||j|| | <= tol_near):")
             for i, j in deps["colinear_equations_near_only"]:
-                print(f"  • Eq[{i}] {self.equations[i]!r}  ≈? Eq[{j}] {self.equations[j]!r}")
+                print(f"  - Eq[{i}] {self.equations[i]!r}  ~? Eq[{j}] {self.equations[j]!r}")
         else:
-            print("✓ No near-colinear equation pairs detected.")
+            print("[OK] No near-colinear equation pairs detected.")
 
     def exergoeconomic_results(self, print_results=True):
         """

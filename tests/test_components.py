@@ -1359,3 +1359,100 @@ def test_flash_tank_missing_streams_raises(flash_tank):
     flash_tank.outl = {0: {"m": 1, "e_PH": 90, "e_T": 45}}
     with pytest.raises(ValueError, match="Flash tank requires one inlet and two outlets."):
         flash_tank.calc_exergy_balance(T0=300, p0=101325, split_physical_exergy=True)
+
+
+def test_flash2_adiabatic_separator_balance():
+    """
+    Test that Flash2 (water separator) correctly computes exergy balance
+    using the adiabatic, workless separator model with positive E_D.
+    
+    This test verifies the fix for GW1 component where the original
+    implementation yielded slightly negative E_D due to using thermal
+    exergy (e_T) instead of total physical exergy (e_PH).
+    
+    Test case based on actual Aspen simulation data from GW1:
+    - Inlet: mixed air stream with some moisture
+    - Outlet 0: "dry air" gas stream (product)
+    - Outlet 1: liquid water stream (waste)
+    
+    Expected behavior:
+    - E_D should be positive (representing irreversibilities)
+    - Both gas and liquid outlets must be counted in E_out
+    - Uses e_PH for exergy balance calculations
+    """
+    flash2 = Flash2(name="GW1")
+    
+    # Simulate GW1 streams from Aspen (simplified values based on log data)
+    # Inlet: mixed stream
+    inlet_stream = {
+        "m": 29.7656782,  # kg/s
+        "e_PH": 152345.33,  # J/kg - total physical exergy
+        "e_T": 1022.04,  # J/kg - thermal exergy (for comparison)
+        "T": 308.15,
+        "p": 634000.0,
+    }
+    
+    # Outlet 0: gas stream (dry air)
+    outlet_gas = {
+        "m": 29.7248277,  # kg/s
+        "e_PH": 151174.14,  # J/kg
+        "e_T": 1024.41,
+        "T": 308.15,
+        "p": 624000.0,
+    }
+    
+    # Outlet 1: liquid water stream (waste - still carries exergy!)
+    outlet_liquid = {
+        "m": 0.0408505138,  # kg/s (small amount)
+        "e_PH": 3612.18,  # J/kg (high specific exergy for liquid)
+        "e_T": 3001.27,
+        "T": 308.15,
+        "p": 624000.0,
+    }
+    
+    flash2.inl = {0: inlet_stream}
+    flash2.outl = {0: outlet_gas, 1: outlet_liquid}
+    
+    # Calculate exergy balance
+    flash2.calc_exergy_balance(T0=288.15, p0=101325, split_physical_exergy=True)
+    
+    # Expected values (using e_PH as per the fix):
+    E_in = 29.7656782 * 152345.33  # ≈ 4,534,662 W
+    E_out_gas = 29.7248277 * 151174.14  # ≈ 4,493,348 W
+    E_out_liquid = 0.0408505138 * 3612.18  # ≈ 148 W
+    E_out = E_out_gas + E_out_liquid  # ≈ 4,493,496 W
+    expected_E_D = E_in - E_out  # ≈ 41,166 W ≈ 41.2 kW
+    
+    # Verify results
+    assert flash2.E_F == pytest.approx(E_in, rel=1e-3), "E_F should equal inlet exergy"
+    assert flash2.E_P == pytest.approx(E_out, rel=1e-3), "E_P should equal total outlet exergy"
+    assert flash2.E_D > 0, "E_D must be positive for real separator"
+    assert flash2.E_D == pytest.approx(expected_E_D, rel=1e-2), "E_D should match expected value"
+    assert 0.98 < flash2.epsilon < 1.0, "Efficiency should be high but < 100% for real process"
+    
+    # Verify the exergy destruction is around 40-42 kW (from log: 40889.06 W)
+    assert 38000 < flash2.E_D < 43000, "E_D should be approximately 40.9 kW"
+
+
+def test_flash2_negative_clamping():
+    """
+    Test that Flash2 clamps tiny negative E_D values to zero (numerical rounding errors).
+    """
+    flash2 = Flash2(name="TestFlash2")
+    
+    # Create a case with nearly perfect balance (simulating numerical error)
+    # E_in = 1000.0 W, E_out = 1000.0001 W (tiny difference due to rounding)
+    inlet = {"m": 10.0, "e_PH": 100.0}
+    outlet1 = {"m": 8.0, "e_PH": 100.00001}  # Slightly higher due to rounding
+    outlet2 = {"m": 2.0, "e_PH": 100.00005}
+    
+    flash2.inl = {0: inlet}
+    flash2.outl = {0: outlet1, 1: outlet2}
+    
+    flash2.calc_exergy_balance(T0=288.15, p0=101325, split_physical_exergy=True)
+    
+    # The tiny negative value should be clamped to zero
+    assert flash2.E_D == 0.0, "Tiny negative E_D should be clamped to zero"
+    # Efficiency might be slightly above 1.0 due to rounding, but should be close
+    assert flash2.epsilon == pytest.approx(1.0, rel=1e-3), "Efficiency should be approximately 100% when E_D ≈ 0"
+

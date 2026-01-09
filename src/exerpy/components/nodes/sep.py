@@ -37,6 +37,12 @@ class Sep(Component):
         r"""
         Compute the exergy balance of the separator.
 
+        Treats Sep as an adiabatic, workless separator using total physical exergy (e_PH).
+        - E_in  = sum(m_in * e_PH) over all material inlets
+        - E_out = sum(m_out * e_PH) over ALL material outlets (including waste)
+        - E_D   = E_in - E_out (clamped if tiny negative)
+        - E_F   = E_in, E_P = E_out, epsilon = E_P/E_F
+
         Parameters
         ----------
         T0 : float
@@ -45,19 +51,44 @@ class Sep(Component):
             Ambient pressure in Pascal.
         split_physical_exergy : bool
             Flag indicating whether physical exergy is split into thermal and mechanical components.
+            (Note: For Sep, we always use e_PH regardless of this flag.)
         """
         if len(self.inl) < 1 or len(self.outl) < 2:
             raise ValueError("Sep requires one inlet and at least two outlets.")
 
-        exergy_type = "e_T" if split_physical_exergy else "e_PH"
+        # Adiabatic, workless separator: use e_PH for all material streams (inlets and outlets)
+        E_in = 0.0
+        for conn in self.inl.values():
+            if conn.get("kind") == "material":
+                mass_flow = conn.get("m", 0) or 0
+                e_ph = conn.get("e_PH", 0) or 0
+                E_in += mass_flow * e_ph
 
-        self.E_F = self._sum_exergy(self.inl, exergy_type)
-        self.E_P = self._sum_exergy(self.outl, exergy_type)
-        self.E_D = self.E_F - self.E_P
+        E_out = 0.0
+        for conn in self.outl.values():
+            if conn.get("kind") == "material":
+                mass_flow = conn.get("m", 0) or 0
+                e_ph = conn.get("e_PH", 0) or 0
+                E_out += mass_flow * e_ph
+
+        # Compute exergy destruction
+        E_D = E_in - E_out
+
+        # Clamp tiny negative values (numerical rounding)
+        tolerance = 1e-6 * max(E_in, 1.0)
+        if E_D < 0 and abs(E_D) < tolerance:
+            E_D = 0.0
+
+        self.E_F = E_in
+        self.E_P = E_out
+        self.E_D = E_D
         self.epsilon = self.calc_epsilon()
 
+        # Debug log: note that all outlets (product + waste) are counted
+        product_count = sum(1 for conn in self.outl.values() if conn.get("kind") == "material")
         logging.info(
-            f"Exergy balance of Sep {self.name} calculated: "
-            f"E_F = {self.E_F:.2f} W, E_P = {self.E_P:.2f} W, E_D = {self.E_D:.2f} W, "
-            f"Efficiency = {self.epsilon:.2%}"
+            f"Sep {self.name} (adiabatic separator) | E_in={E_in:.2f} W, E_out={E_out:.2f} W | "
+            f"product and waste outlets counted={product_count} | "
+            f"E_F={self.E_F:.2f} W, E_P={self.E_P:.2f} W, E_D={self.E_D:.2f} W, "
+            f"Efficiency={self.epsilon:.2%}"
         )
