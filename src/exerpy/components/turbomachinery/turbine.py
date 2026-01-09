@@ -164,11 +164,12 @@ class Turbine(Component):
             branch = "unexpected"
 
         # Block log: minimal but explicit
+        out_m_sum = sum(outlet.get('m', 0) for outlet in self.outl.values() if outlet and outlet.get('kind', 'material') != 'power' and outlet.get('m') is not None)
         logging.info(
             f"Turbine {self.name} | branch={branch} | T_in={Tin:.2f}K T_out={Tout:.2f}K | P={self.P:.2f} W | "
-            f"in_m={self.inl[0].get('m')}, out_m_sum={self._total_outlet('m','') if hasattr(self,'_total_outlet') else 'N/A'} | "
-            f"e_PH_in={self.inl[0].get('e_PH')}, e_PH_out={self._total_outlet('m','e_PH') if hasattr(self,'_total_outlet') else 'N/A'} | "
-            f"e_T_in={self.inl[0].get('e_T')}, e_T_out={self._total_outlet('m','e_T') if hasattr(self,'_total_outlet') else 'N/A'} | "
+            f"in_m={self.inl[0].get('m')}, out_m_sum={out_m_sum:.6f} kg/s | "
+            f"e_PH_in={self.inl[0].get('e_PH'):.2f} J/kg, E_PH_out={self._total_outlet('m','e_PH'):.2f} W | "
+            f"e_T_in={self.inl[0].get('e_T'):.2f} J/kg, E_T_out={self._total_outlet('m','e_T'):.2f} W | "
             f"E_F={self.E_F:.2f} W, E_P={self.E_P if np.isnan(self.E_P) else f'{self.E_P:.2f}'} W, "
             f"E_D={self.E_D:.2f} W, eps={self.epsilon:.2%}"
         )
