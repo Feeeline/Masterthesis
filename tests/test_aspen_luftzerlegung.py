@@ -121,3 +121,182 @@ json_payload = {
 }
 with open(output_path, "w", encoding="utf-8") as json_file:
     json.dump(json_payload, json_file, indent=4)
+
+# Export LaTeX table with all material stream data
+def _latex_escape(value: str) -> str:
+    replacements = {
+        "\\": r"\textbackslash{}",
+        "&": r"\&",
+        "%": r"\%",
+        "$": r"\$",
+        "#": r"\#",
+        "_": r"\_",
+        "{": r"\{",
+        "}": r"\}",
+        "~": r"\textasciitilde{}",
+        "^": r"\textasciicircum{}",
+    }
+    for key, repl in replacements.items():
+        value = value.replace(key, repl)
+    return value
+
+
+def _format_value(value):
+    if value is None:
+        return "-"
+    if isinstance(value, (int, float)):
+        return f"{value:.6g}"
+    return _latex_escape(str(value))
+
+
+def _build_streams_latex_table(connections: dict) -> str:
+    columns = [
+        ("name", "Stream", None),
+        ("m", r"$\\dot m$", "m_unit"),
+        ("n", r"$\\dot n$", "n_unit"),
+        ("T", r"$T$", "T_unit"),
+        ("p", r"$p$", "p_unit"),
+        ("h", r"$h$", "h_unit"),
+        ("s", r"$s$", "s_unit"),
+        ("mfn2", r"$x_{N_2}$", "mfn2_unit"),
+        ("mfo2", r"$x_{O_2}$", "mfo2_unit"),
+        ("mfco", r"$x_{CO_2}$", "mfco_unit"),
+        ("mfar", r"$x_{Ar}$", "mfar_unit"),
+        ("mfho", r"$x_{H_2O}$", "mfho_unit"),
+        ("lfrac", r"$l_{frac}$", "lfrac_unit"),
+        ("vfrac_out", r"$v_{frac}$", "vfrac_out_unit"),
+        ("e_PH", r"$e_{PH}$", "e_PH_unit"),
+        ("e_CH", r"$e_{CH}$", "e_CH_unit"),
+        ("e_T", r"$e_T$", "e_T_unit"),
+        ("e_M", r"$e_M$", "e_M_unit"),
+    ]
+
+    material_streams = [
+        conn for conn in connections.values() if conn.get("kind") == "material"
+    ]
+
+    def _sort_key(conn):
+        name = conn.get("name", "")
+        try:
+            return (0, int(str(name)))
+        except (ValueError, TypeError):
+            return (1, str(name))
+
+    material_streams.sort(key=_sort_key)
+
+    unit_lookup = {}
+    for key, _, unit_key in columns:
+        if not unit_key:
+            unit_lookup[key] = ""
+            continue
+        unit = None
+        for conn in material_streams:
+            unit = conn.get(unit_key)
+            if unit:
+                break
+        unit_lookup[key] = unit or ""
+
+    header = " & ".join(label for _, label, _ in columns) + r" \\"
+    unit_row = " & ".join(
+        f"({ _latex_escape(unit_lookup[key]) })" if unit_lookup[key] else ""
+        for key, _, _ in columns
+    ) + r" \\"
+
+    rows = []
+    for conn in material_streams:
+        values = []
+        for key, _, _ in columns:
+            val = conn.get(key)
+            values.append(_format_value(val))
+        rows.append(" & ".join(values) + r" \\")
+
+    col_spec = "l" + "r" * (len(columns) - 1)
+    lines = [
+        r"\\begin{table}[ht]",
+        r"\\centering",
+        rf"\\begin{{tabular}}{{{col_spec}}}",
+        r"\\hline",
+        header,
+        unit_row,
+        r"\\hline",
+        *rows,
+        r"\\hline",
+        r"\\end{tabular}",
+        r"\\caption{Stromdaten aus Aspen}",
+        r"\\label{tab:aspen-streams}",
+        r"\\end{table}",
+        "",
+    ]
+    return "\n".join(lines)
+
+
+def _collect_components(connections: dict, composition_key: str) -> list[str]:
+    components = set()
+    for conn in connections.values():
+        if conn.get("kind") != "material":
+            continue
+        comp = conn.get(composition_key) or {}
+        components.update(comp.keys())
+    return sorted(components)
+
+
+def _build_composition_table(connections: dict, composition_key: str, caption: str, label: str) -> str:
+    material_streams = [
+        conn for conn in connections.values() if conn.get("kind") == "material"
+    ]
+
+    def _sort_key(conn):
+        name = conn.get("name", "")
+        try:
+            return (0, int(str(name)))
+        except (ValueError, TypeError):
+            return (1, str(name))
+
+    material_streams.sort(key=_sort_key)
+    components = _collect_components(connections, composition_key)
+
+    if not components:
+        return ""
+
+    header = " & ".join(["Stream", *components]) + r" \\"
+    rows = []
+    for conn in material_streams:
+        values = [conn.get("name", "-")]
+        comp = conn.get(composition_key) or {}
+        for comp_name in components:
+            values.append(_format_value(comp.get(comp_name)))
+        rows.append(" & ".join(values) + r" \\")
+
+    col_spec = "l" + "r" * len(components)
+    lines = [
+        r"\\begin{table}[ht]",
+        r"\\centering",
+        rf"\\begin{{tabular}}{{{col_spec}}}",
+        r"\\hline",
+        header,
+        r"\\hline",
+        *rows,
+        r"\\hline",
+        r"\\end{tabular}",
+        rf"\\caption{{{caption}}}",
+        rf"\\label{{{label}}}",
+        r"\\end{table}",
+        "",
+    ]
+    return "\n".join(lines)
+
+
+latex_output_path = os.path.abspath(
+    os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        "Overleaf_LaTeX",
+        "tabellen",
+        "aspen_luftzerlegung_streams.tex",
+    )
+)
+os.makedirs(os.path.dirname(latex_output_path), exist_ok=True)
+connections_data = json_payload.get("connections", {})
+latex_table = _build_streams_latex_table(connections_data)
+with open(latex_output_path, "w", encoding="utf-8") as tex_file:
+    tex_file.write(latex_table)
