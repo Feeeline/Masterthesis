@@ -1,0 +1,110 @@
+\chapter{Methodik}
+\label{ch:methodik_modellierung}
+
+In diesem Kapitel werden die verwendeten Methoden zur Energie- und Exergiebewertung sowie zur ökonomischen Einordnung vorgestellt. Sie bilden die Grundlage für die Modellannahmen in Kapitel \ref{ch:modell} und die Ergebnisdarstellung in Kapitel \ref{ch:ergebnisse}.
+
+\section{Energieanalyse}
+\label{sec:energieanalyse}
+
+Die Grundlage für die energetische Bewertung eines offenen Systems bildet der erste Hauptsatz der Thermodynamik, angewendet auf ein Kontrollvolumen. Er verknüpft die zeitliche Änderung der im Kontrollvolumen gespeicherten inneren, kinetischen und potenziellen Energie mit den über die Systemgrenzen übertragenen Wärme- und Arbeitsströmen sowie den mit den Stoffströmen transportierten Enthalpien, kinetischen und potenziellen Energien
+\begin{equation}
+\frac{d}{dt} \left( U + E_{\text{kin}} + E_{\text{pot}} \right)
+= \dot{Q} + \dot{W}
++ \sum_{\text{ein}} \dot{m}_{\text{ein}} \left( h_{\text{ein}} + \frac{v_{\text{ein}}^2}{2} + g z_{\text{ein}} \right)
+- \sum_{\text{aus}} \dot{m}_{\text{aus}} \left( h_{\text{aus}} + \frac{v_{\text{aus}}^2}{2} + g z_{\text{aus}} \right).
+\end{equation}
+Unter stationären Bedingungen und unter Vernachlässigung von Änderungen der kinetischen und potenziellen Energien vereinfacht sich die Bilanz zu
+\begin{equation}
+0 = \dot{Q} + \dot{W}
++ \sum_{\text{ein}} \dot{m}_{\text{ein}} h_{\text{ein}}
+- \sum_{\text{aus}} \dot{m}_{\text{aus}} h_{\text{aus}},
+\end{equation}
+sodass die energetische Bewertung auf Wärme-, Arbeits- und Enthalpieströme an den Systemgrenzen beschränkt bleibt. Diese stationäre Form ist die in der Energieverfahrenstechnik gebräuchliche Arbeitsschreibweise für offene stationäre Systeme. \cite{baehr_thermodynamik_2016}
+
+\section{Exergieanalyse}
+\label{sec:exergieanalyse}
+
+Die thermodynamische Bewertung des untersuchten Systems erfolgt mithilfe der Exergieanalyse. Im Gegensatz zur reinen Energiebilanzierung, die auf dem ersten Hauptsatz der Thermodynamik basiert, ermöglicht die Exergieanalyse unter Einbeziehung des zweiten Hauptsatzes eine qualitative Bewertung der Energieströme. Exergie beschreibt das maximal nutzbare Arbeitsvermögen eines Systems relativ zu einer definierten Referenzumgebung. Die Exergie eines Stoffstroms kann in physikalische, chemische, kinetische und potenzielle Anteile zerlegt werden
+
+\begin{equation}
+\dot{E} = \dot{E}^{PH} + \dot{E}^{CH} + \dot{E}^{KN} + \dot{E}^{PT}.
+\end{equation}
+
+Für die betrachteten Prozesse sind Änderungen der kinetischen und potenziellen Exergie im Vergleich zu den übrigen Anteilen vernachlässigbar, sodass die Exergie im Wesentlichen durch physikalische und chemische Exergie beschrieben wird. Die physikalische Exergie umfasst die thermischen und mechanischen Beiträge
+
+\begin{equation}
+\dot{E}^{PH} = \dot{E}^{T} + \dot{E}^{M}
+\end{equation}
+
+und kann in Bezug auf den Referenzzustand 0 über die Differenz der Enthalpien und Entropien bestimmt werden
+
+\begin{equation}
+\dot{E}^{PH} = \dot{m} \left[ (h - h_0) - T_0 (s - s_0) \right].
+\end{equation}
+
+Die chemische Exergie beschreibt das Arbeitsvermögen, das sich aus der Abweichung der Stoffzusammensetzung eines Systems von der Referenzumgebung ergibt. In dieser Arbeit wird die chemische Exergie auf Basis des Referenzmodells nach Szargut bestimmt. Hierfür werden die Standardwerte der molaren chemischen Exergie der Reinstoffe $\bar{e}^{CH}_i$ aus hinterlegten Literaturdaten verwendet. Für Gemische ergibt sich die chemische Exergie aus der Summe der Reinstoffanteile sowie einem Mischungsbeitrag. Für einen Stoffstrom $j$ kann dies in molarer Form beschrieben werden durch
+\begin{equation}
+\dot{E}^{CH}_j
+=
+\dot{n}_j
+\left(
+\sum_i x_i \,\bar{e}^{CH}_i
++
+R T_0 \sum_i x_i \ln(x_i)
+\right).
+\label{eq:chemExergySzargut}
+\end{equation}
+Dabei bezeichnet $\dot{n}_j$ den molaren Stoffstrom, $x_i$ die Molfraktion der Komponente $i$, $R$ die universelle Gaskonstante und $T_0$ die Temperatur der Referenzumgebung.\\
+\\
+Zur Bestimmung irreversibler Verluste innerhalb von Anlagenkomponenten wird eine Exergiebilanz über ein Kontrollvolumen formuliert. Diese umfasst Exergietransport über Wärme- und Arbeitsströme sowie über ein- und austretende Stoffströme. Die Exergievernichtung $\dot{E}_D$ beschreibt die durch Irreversibilitäten verursachten Verluste innerhalb der Systemgrenze der Komponente beispielsweise durch Reibung oder Wärmeübertragung bei großen Temperaturdifferenzen.
+
+\begin{equation}
+\frac{d\dot{E}_{sys}}{dt} = \sum_j \left( 1 - \frac{T_0}{T_j} \right) \dot{Q}_j
++ \left( \dot{W} + p_0 \frac{dV}{dt} \right)
++ \sum_{\text{i}} \dot{E}_{\text{i}}
+- \sum_{\text{o}} \dot{E}_{\text{o}}
+- \dot{E}_D
+\end{equation}
+
+Für eine detaillierte Bewertung wird für jede Komponente des Gesamtsystems die Exergiebilanz in Brennstoffexergie (Fuel), Produktexergie (Product) und Exergievernichtung (Destruction) aufgeteilt. Der Brennstoff ($\dot{E}_F$) definiert hierbei den exergetischen Aufwand, der für den Betrieb der Komponente aufgebracht werden muss, während das Produkt ($\dot{E}_P$) den gewünschten Nutzen beschreibt. Für eine Komponente ($k$) ergibt sich
+
+\begin{equation}
+\dot{E}_{F,k} = \dot{E}_{P,k} + \dot{E}_{D,k}
+\end{equation}
+
+und im Gesamtsystem treten Exergieverluste ($\dot{E}_{L,tot}$) auf, die durch Exergieabgabe an die Umgebung verursacht werden. Die Bilanzgleichung ergibt sich zu
+
+\begin{equation}
+\dot{E}_{F,tot} = \dot{E}_{P,tot} + \dot{E}_{D,tot} + \dot{E}_{L,tot}
+\end{equation}
+
+Diese Methodik ermöglicht eine konsistente Bewertung der Prozessvarianten sowohl auf Gesamtanlagen- als auch auf Komponentenebene.\\
+\\
+Um die thermodynamische Güte der einzelnen Komponenten sowie des Gesamtsystems vergleichbar zu machen kann der Exergetische Wirkungsgrad berechnet werden. Der exergetische Wirkungsgrad einer Komponente ergibt sich aus dem Verhältnis von Produktexergie zu Brennstoffexergie
+
+\begin{equation}
+\varepsilon_k = \frac{\dot{E}_{P,k}}{\dot{E}_{F,k}}
+\end{equation}
+
+und analog kann ein Gesamtwirkungsgrad für die Anlage definiert werden
+
+\begin{equation}
+\varepsilon_{tot} 
+= \frac{\dot{E}_{P,tot}}{\dot{E}_{F,tot}}
+= 1 - \frac{\dot{E}_{D,tot} + \dot{E}_{L,tot}}{\dot{E}_{F,tot}}.
+\end{equation}
+
+\section{Wirtschaftlichkeitsanalyse}
+\label{sec:wirtschaftlichkeitsanalyse}
+
+...
+
+\section{Simulationssoftware}
+\label{sec:simulationssoftware}
+
+Die stationäre Modellierung und Bilanzierung der Luftzerlegungsprozesse erfolgt mit der Simulationssoftware Aspen Plus V14.5. Zur Berechnung der thermophysikalischen Zustandsgrößen wird die Peng-Robinson-Zustandsgleichung verwendet, um die Realgasverhalten der Komponenten im kryogenen Bereich präzise abzubilden. Alle Berechnungen erfolgten unter stationären Bedingungen (steady-state) und die Simulation wurde im sequential modular mode durchgeführt. 
+
+Exergieberechnung und Datenauswertung Für die thermodynamische Bewertung werden neben den energetischen Bilanzgrößen die thermischen, mechanischen und chemischen Exergien der Stoffströme bestimmt. Diese werden unmittelbar innerhalb der Simulationsumgebung mithilfe von Fortran-Subroutinen berechnet, welche am Institut für Energietechnik der Technischen Universität Berlin entwickelt wurden \cite{TUB_ExergySubroutine_2017}.
+
+Für die automatisierte Auswertung und detaillierte Exergieanalyse der resultierenden Datenströme wird das Open-Source-Werkzeug ExerPy \cite{ExerPy} eingesetzt. Dieses Python-basierte Tool ermöglicht die systematische Berechnung von Exergievernichtungen, Wirkungsgraden und der gesamt Exergiebilanz auf Basis unter anderen von Aspen Plus exportierten Daten. Im Rahmen dieser Arbeit wurde der Quellcode von ExerPy spezifisch an die Anforderungen der Luftzerlegungsprozesse sowie die Schnittstellen der vorliegenden Simulation angepasst.
+

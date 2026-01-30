@@ -1,0 +1,65 @@
+\chapter{Prozessbeschreibung}
+\label{ch:prozess}
+
+Nachfolgend werden die der Simulation zugrunde gelegten Zielbedingungen sowie ein Überblick über die untersuchten Prozessvarianten und Fälle vorgestellt. Die beiden Prozesskonzepte werden hinsichtlich ihres Aufbaus und ihrer Funktionsweise beschrieben. Fall~A beschreibt einen Einkolonnen-Stickstoffgenerator, während Fall~B einen Doppelkolonnen-Stickstoffgenerator repräsentiert. Die nachfolgenden Abschnitte verdeutlichen die apparativen Unterschiede der Varianten sowie die daraus resultierenden Prozessabfolgen.
+
+\section{Zielbedingungen und Überblick über die untersuchten Prozessvarianten}
+\label{sec:prozess_überblick}
+
+Das Stickstoffprodukt soll in gasförmigem Zustand für die nachgeschaltete Ammoniaksynthese bereitgestellt werden. Es wird davon ausgegangen, dass Wasser und Kohlendioxid im Prozess vollständig abgeschieden werden. Als zentrale Zielbedingung wird eine Stickstoffreinheit für Stickstoff 5.0 mit einer maximalen Verunreinigung von \SI{10}{ppm} festgelegt, außerdem soll ein kritischer maximaler Sauerstoffgehalt von \SI{5}{ppm} nicht überschritten werden. Diese Reinheitsanforderungen gelten für alle im Folgenden betrachteten Prozessvarianten gleichermaßen.\\
+\\
+Bezüglich der Produktmenge werden zwei Varianten des Prozesses betrachtet: eine großtechnische Referenzvariante sowie eine entsprechend skalierte Kleinvariante. Ausgangspunkt bildet die in Penkuhn und Tsatsaronis beschriebene Ammoniaksynthese \cite{penkuhn_comparison_2017}, bei der ein Produktmassenstrom von \(\dot{m}_{\mathrm{NH_3}} = 19{,}7~\mathrm{kg/s}\) Ammoniak erzielt wird. Ausgehend von dieser Referenz wurde der zugehörige Stickstoffstrom berechnet. \\
+Zur Abbildung einer kleineren Prozessvariante wurde das System anschließend um den Faktor \(1/3{,}42\) skaliert, sodass der Wasserstoff-Feed einem Massenstrom von \(1~\mathrm{kg/s}\) entspricht. Die daraus resultierenden Mengenanforderungen für den Stickstoffstrom sind in Tabelle~\ref{tab:n2_produktstreams} dargestellt.
+
+\begin{table}[h]
+\centering
+\caption{Berechnete Stoffströme für Stickstoff in der großen und skalierten Variante 
+(bei Normbedingungen \(T_\mathrm{N}=273{,}15~\mathrm{K},\ p_\mathrm{N}=1{,}013~\mathrm{bar}\)).}
+\label{tab:n2_produktstreams}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Variante} & 
+\(\dot{n}_{\mathrm{N_2}}\) [mol/s] &
+\(\dot{m}_{\mathrm{N_2}}\) [kg/s] &
+\(\dot{V}_{\mathrm{N_2,N}}\) [Nm\(^3\)/h] \\
+\midrule
+Große Variante (Referenz) & 567.98 & 15.91 & 45\,830 \\
+Kleinere Variante (\(1/3{,}42\)) & 166.08 & 4.65 & 13\,401 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Für Druck und Temperatur des Stickstoffproduktes werden im Rahmen der Prozessbeschreibung keine festen Zielwerte vorgegeben. Da das Produktgas vor der Nutzung in der Ammoniaksynthese mit Wasserstoff vermischt und anschließend erneut verdichtet sowie aufgeheizt wird, wäre eine gezielte Bereitstellung auf erhöhtem Druck- oder Temperaturniveau energetisch nicht sinnvoll. Die Auswahl geeigneter Prozessdrücke erfolgt daher auf Basis des spezifischen Energiebedarfs und wird in einem späteren Kapitel näher erläutert.
+
+\section{Fall A - Einkolonnen Stickstoffgenerator}
+\label{sec:prozess_FallA}
+
+\begin{figure}[htbp]
+  \centering
+  \centering
+  \hspace*{-0.5cm}
+  \includegraphics[width=1.05\textwidth]{bilder/Single.jpg}
+  \caption{Fließbild des Einkolonnenprozesses zur kryogenen Stickstoffgewinnung (Single-Column Stickstoffgenerator) mit Luftverdichtung, Vorreinigung, Hauptwärmetauscher und Rektifikationskolonne.}
+  \label{fig:meinbild}
+\end{figure}
+
+Der Prozess der kryogenen Luftzerlegung beginnt mit der Ansaugung von Umgebungsluft (S1), welche in einem zweistufigen Kompressionssystem, bestehend aus den Luftkompressoren LK1 und LK2, verdichtet wird. Zur Abfuhr der Kompressionswärme sind den Verdichterstufen die Zwischenkühler ZK1 und ZK2 nachgeschaltet. Die Reinigung der verdichteten Luft von Wasser und Kohlendioxid erfolgt im Vorreinigungsblock, bestehend aus einem Wasserabscheider GW1 sowie einem Adsorber GW2.\\
+Anschließend tritt der gereinigte Luftstrom in den Hauptwärmetauscher (MW) ein, wo die Abkühlung im Gegenstrom zu den kalten Rückströmen bis nahe an den Verflüssigungspunkt erfolgt. Zur Deckung des Kältebedarfs wird ein interner Teilstrom isenthalp über ein Drosselorgan (D2) entspannt, wodurch das für den Kolonnenbetrieb erforderliche Temperaturniveau erreicht wird. Die abgekühlte Luft wird anschließend in die Kolonne (KOL) eingespeist, in der die Trennung der Hauptkomponenten über Rektifikation erfolgt.\\
+Am Kolonnenkopf wird ein stickstoffreicher Dampfstrom abgezogen, im Hauptwärmetauscher (MW) angewärmt und als gasförmiger Produktstickstoff (S24) bereitgestellt. Der am Kolonnensumpf anfallende sauerstoffangereicherte Reststrom wird zur internen Kälte- und Refluxbereitstellung genutzt. Der Strom (S12) kondensiert im thermisch gekoppelten Kondensator-Reboiler, welcher gleichzeitig den Rücklauf für den Kolonnenkopf generiert. Nachfolgend wird der sauerstoffreiche Reststrom geteilt und über das Drosselorgan (D2) sowie die Expansionsturbine (TURB) entspannt. Die dabei bereitgestellte Kälteleistung wird im Wärmetauschersystem übertragen, bevor das Restgas an die Umgebung abgeführt wird (S21).
+
+\section{Fall B - Doppelkolonnen Stickstoffgenerator}
+\label{sec:prozess_FallB}
+
+Die Konfiguration des Kompressionssystems sowie der Gaswäsche entspricht dem Aufbau des Einkolonnensystems. Vor Eintritt in den Multistromwärmetauscher (MW) erfolgt eine Aufteilung des gereinigten Luftstroms (SPLIT1) in zwei Teilströme. Der erste Teilstrom (S11) wird im MW bis nahe an den Sättigungszustand abgekühlt und als Hauptzulauf in den Sumpf der Hochdruckkolonne (KOLHP) eingeleitet. Der zweite Teilstrom (S19) wird nach einer Teilabkühlung im MW in der Expansionsturbine (T1) arbeitsleistend entspannt und der Niederdruckkolonne (KOLLP) zugeführt. \\
+In der Hochdruckkolonne (KOLHP) erfolgt die erste Rektifikationsstufe. Die am Kopf anfallende stickstoffreiche Gasphase wird geteilt: Ein Teil wird nach Anwärmung im MW als Produktstickstoff (S16) ausgeleitet, während der verbleibende Teil im Hauptkondensator verflüssigt wird. Ein Teilstrom dieses flüssigen Stickstoffs wird als Rücklauf auf die KOLLP aufgegeben. Die am Sumpf der KOLHP anfallende sauerstoffreiche Flüssigkeit wird entspannt und zur weiteren Zerlegung in die Niederdruckkolonne (KOLLP) eingespeist.\\
+Das Doppelkolonnensystem verfügt über zwei thermisch gekoppelte Kondensator-Reboiler-Einheiten. Die primäre Kopplung erfolgt zwischen dem Kopf der KOLHP und dem Sumpf der KOLLP, wobei kondensierender Stickstoff die Verdampfungsenthalpie für den Sumpf der Niederdrucksäule bereitstellt. Eine weitere Kopplung dient der Rücklaufbereitstellung für die KOLLP, indem ein interner Stoffstrom gegen den Kopfkondensator der Niederdrucksäule kondensiert wird. \\
+Da der Produktstickstoff der KOLLP auf einem niedrigeren Druckniveau anfällt, wird dieser zur Herstellung der Vergleichbarkeit im Produktverdichter (PK1) auf das Druckniveau der Hochdruckkolonne komprimiert.
+
+\begin{figure}[htbp]
+  \centering
+  \centering
+  \hspace*{-2cm}
+  \includegraphics[width=1.2\textwidth]{bilder/Doppel.jpg}
+  \caption{Fließbild des Doppelkolonnenprozesses zur kryogenen Stickstoffgewinnung (Double-Column Stickstoffgenerator) mit Hochdruck- und Niederdruckkolonne, thermischer Kopplung über Kondensator/Reboiler sowie integrierter Kältebereitstellung.}
+  \label{fig:meinbild}
+\end{figure}

@@ -1,0 +1,107 @@
+%laden der Präambel mit Latexbefehlen/-klassen
+\include{abschlussarbeit.preambel}
+
+\begin{document}
+%globale Einstellung für Quellcodedarstellung mit listings
+\lstset{basicstyle=\scriptsize\ttfamily,language={[LaTeX]TeX}}
+
+%Seitennummerierung römisch
+\pagenumbering{roman}
+\renewcommand{\thepage}{\Roman{page}}  % <-- Große römische Zahlen
+
+
+
+%Titelseiten
+\input{00_titelei}
+
+\clearpage
+
+%Es werden nur Kapitel und Abschnitte angezeigt. Unterabschnitte (/subsection) nicht mehr. Sonst tocdepth höher einstellen.
+\setcounter{tocdepth}{2}    % bis Subsection ins TOC
+\setcounter{secnumdepth}{2} % (optional) Subsections nummerieren
+\addcontentsline{toc}{chapter}{Inhaltsverzeichnis}
+\tableofcontents
+
+\clearpage
+
+%Tabellenverzeichnis
+\clearpage
+\addcontentsline{toc}{chapter}{\listtablename}
+\listoftables
+
+\clearpage
+\addcontentsline{toc}{chapter}{\listfigurename}
+\listoffigures
+
+
+% Symbol- und Abkürzungsverzeichnis
+\clearpage
+\input{98_symbole_abk}
+\glsaddall[types={latin,greek}]
+% Kein Seitenumbruch zwischen den Glossaren
+\begingroup
+  \let\cleardoublepage\relax
+  \let\clearpage\relax
+  \chapter*{Symbol- und Abkürzungsverzeichnis}
+  \addcontentsline{toc}{chapter}{Symbol- und Abkürzungsverzeichnis}
+  \printglossary[
+  type=latin,
+  style=long,
+  nonumberlist,
+  title={\normalsize Lateinische Symbole}
+  ]
+  \vspace{1em}
+  \printglossary[
+  type=greek,
+  style=long,
+  nonumberlist,
+  title={\normalsize Griechische Symbole}
+  ]
+  \vspace{1em}
+  \printglossary[
+  type=\acronymtype,
+  style=long,
+  nonumberlist,
+  title={\normalsize Abkürzungen}
+  ]
+\endgroup
+
+\clearpage
+
+%Seitennummerierung zurücksetzen und arabisch
+\pagestyle{headings}
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+%Kapitel
+\input{01_einleitung}
+\clearpage	
+\input{02_gundlagen}
+\clearpage	
+\input{03_methodik}
+\clearpage	
+\input{04_prozessbeschreibung}
+\clearpage	
+\input{05_modellierung}
+\clearpage	
+\input{06_ergebnisse}
+\clearpage	
+\input{07_diskussion}
+\clearpage	
+\input{08_fazit_ausblick}
+
+%Literatur
+\clearpage
+\printbibliography[heading=bibintoc]
+
+%Bildnachweise
+\cleardoublepage
+\input{97_bildnachweis}
+
+%Anhang
+\cleardoublepage
+\appendix
+\input{99_anhang}
+
+
+\end{document}

@@ -1,0 +1,121 @@
+%Dokumentklasse und Spracheinstellung
+%für elektronische Veröffentlichung
+\documentclass[12pt,oneside,paper=A4,DIV=15,BCOR=0mm,abstract=true,headsepline,headings=normal,ngerman]{scrreprt}
+%für Druck
+%\documentclass[12pt,twoside,paper=A4,DIV=15,BCOR=12mm,abstract=true,headsepline,headings=normal,ngerman]{scrreprt}
+\usepackage{babel}
+\usepackage[utf8]{inputenc}
+
+%Schriftart
+\usepackage{libertine}
+\usepackage{libertinust1math}
+\usepackage[T1]{fontenc}
+
+%Mathe, Symbole, EInheitendarstellung, Chemie
+\usepackage{amsmath}
+\usepackage{amsxtra}
+\usepackage{eurosym}
+\usepackage{siunitx}  
+\sisetup{locale=DE}
+\usepackage[version=4]{mhchem}
+
+\usepackage[auto]{microtype}
+\clubpenalty = 10000
+\widowpenalty = 10000
+\displaywidowpenalty = 10000
+
+
+%Glossary
+\usepackage[acronym,nogrouptoc]{glossaries}
+\newglossary[lg]{latin}{lat}{latgls}{Lateinische Symbole}
+\newglossary[gg]{greek}{grk}{grkgls}{Griechische Symbole}
+\makeglossaries
+
+
+%Einbindung von Bildern, Tabellen, pdf-Seiten, Quellcode
+\usepackage{graphicx}
+\usepackage{multirow,multicol,booktabs}
+\usepackage{threeparttable}
+\usepackage{longtable}
+\usepackage{rotating}
+\usepackage{booktabs}
+\usepackage{ltablex}
+\usepackage{subfig}
+\captionsetup[subtable]{position=top}
+\usepackage{pdfpages}
+\usepackage{listings}
+\usepackage{wrapfig}
+
+
+%Darstellung von URL
+\usepackage{url}
+\urlstyle{same}
+
+
+
+%Pakete für Kontrolle und Review
+\usepackage{todonotes}
+\usepackage{blindtext}
+
+%Darstellung der Literaturangaben
+\usepackage[
+backend=biber,
+style=iso-numeric,
+citestyle=numeric-comp,
+maxbibnames=2,
+firstinits=true
+]{biblatex}
+
+\renewcommand*{\labelnamepunct}{\addcolon\addspace}
+
+%Speicherort der Literaturangaben (*.bib Datei)
+\addbibresource{references.bib} % Dateiname exakt wie importiert!
+%\bibliography{literatur/references}
+
+%Fussnoten
+%Markierung in der Fußnote selbst weder hochgestellt noch kleiner gesetzt
+%\deffootnote{1em}{1em}{\thefootnotemark\ }
+%linksbündige Fußnotenmarkierungen
+\deffootnote{1.5em}{1em}{%
+	\makebox[1.5em][l]{\thefootnotemark}%
+}
+
+%Fussnoten nicht umbrechen
+\interfootnotelinepenalty=10000
+
+%Gestaltung der Bildunterschrift und Tabellenüberschirften sowie Titelseitenangaben
+\addtokomafont{caption}{\small}
+\setkomafont{captionlabel}{\sffamily\bfseries}
+\setkomafont{author}{\large}
+\setkomafont{date}{\large}
+\setkomafont{publishers}{\large}
+
+\renewcaptionname{ngerman}{\figurename}{Abb.}
+\renewcaptionname{ngerman}{\tablename}{Tab.} 
+
+%Tabellenumgebungen mit Schriftgröße 10 und 7
+\newenvironment{tabular10}{%
+	\fontsize{10}{12}\selectfont\tabular
+}{%
+	\endtabular
+}
+
+\newenvironment{tabular7}{%
+	\fontsize{7}{12}\selectfont\tabular
+}{%
+	\endtabular
+}
+
+
+%Verweise und Refernezen, pdf-Eisntellungen
+%Angaben aktualisieren!
+\usepackage[
+pdftitle={Masterthesis Feline Ehresmann},
+pdfsubject={},
+pdfauthor={Feline Ehresmann},
+pdfkeywords={},  
+%Links nicht einrahmen
+hidelinks
+]{hyperref}
+\usepackage[german]{cleveref}
+

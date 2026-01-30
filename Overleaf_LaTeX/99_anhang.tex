@@ -1,0 +1,113 @@
+\part*{Anhang}
+\addcontentsline{toc}{chapter}{Anhang}
+
+\chapter{Allgemeine Daten}
+\label{ch:a_grund}
+
+\begin{table}[h!]
+\centering
+\caption{Zusammensetzung der trockenen Luft, nach \cite{hausen_tieftemperaturtechnik_1985, windmeier_cryogenic_2013}}
+\label{tab:a_Luftzusammensetzung}
+\begin{tabular}{l r}
+\toprule
+Komponente & Anteil \\
+\midrule
+Stickstoff (N$_2$)     & 78{,}084\,Vol.\% \\
+Sauerstoff (O$_2$)     & 20{,}942\,Vol.\% \\
+Argon (Ar)             & 0{,}934\,Vol.\% \\
+Kohlendioxid (CO$_2$)  & 0{,}035\,Vol.\% \\
+\midrule
+Neon (Ne)              & 18{,}2\,ppm \\
+Helium (He)            & 5{,}2\,ppm \\
+Krypton (Kr)           & 1{,}1\,ppm \\
+Xenon (Xe)             & 0{,}09\,ppm \\
+Wasserstoff (H$_2$)    & 0{,}05\,ppm \\
+Ozon (O$_3$)           & 0{,}003–0{,}03\,ppm \\
+\midrule
+\multicolumn{2}{l}{Wasserdampf (H$_2$O): variabel, typ.\ 1-3\,Vol.\% bei 25\,°C} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\chapter{Modellierung}
+\label{ch:a_sim}
+
+
+
+\chapter{Exergieberechnungen}
+\label{ch:a_exergie}
+
+\begin{sidewaystable}
+\centering
+\caption{Definition von Brennstoff- und Produktexergie der betrachteten Komponenten für das Doppelkolonnenmodell}
+\label{tab:exdef_components_current}
+\begin{tabular}{lll}
+\toprule
+Komponente & $\dot{E}_{F,k}$ & $\dot{E}_{P,k}$ \\
+\midrule
+LK1 &
+$\dot{W}_{LK1}$ &
+$\dot{E}^{M}_{2}-\dot{E}^{M}_{1}
++\dot{E}^{T}_{2}-\dot{E}^{T}_{1}$ \\
+
+LK2 &
+$\dot{W}_{LK2}$ &
+$\dot{E}^{M}_{4}-\dot{E}^{M}_{3}
++\dot{E}^{T}_{4}-\dot{E}^{T}_{3}$ \\
+
+PK1 &
+$\dot{W}_{PK1}$ &
+$\dot{E}^{M}_{31}-\dot{E}^{M}_{30}
++\dot{E}^{T}_{31}-\dot{E}^{T}_{30}$ \\
+
+\addlinespace
+ZK1 (Intercooler, dissipativ) &
+$\dot{E}_{D,ZK1}=\dot{E}_{2}-\dot{E}_{3}$ &
+-- \\
+
+ZK2 (Intercooler, dissipativ) &
+$\dot{E}_{D,ZK2}=\dot{E}_{4}-\dot{E}_{5}$ &
+-- \\
+
+\addlinespace
+GW1 (Flash, dissipativ) &
+$\dot{E}_{D,GW1}=\dot{E}_{5}-\dot{E}_{6}-\dot{E}_{7}$ &
+-- \\
+
+GW2 (Adsorber, dissipativ) &
+$\dot{E}_{D,GW2}=\dot{E}_{6}-\dot{E}_{8}-\dot{E}_{9}-\dot{E}_{10}$ &
+-- \\
+
+\addlinespace
+MIX1 (Mixer, dissipativ) &
+$\dot{m}_{31}\!\left(e^{PH}_{31}-e^{PH}_{32}\right)$ &
+$\dot{m}_{16}\!\left(e^{PH}_{32}-e^{PH}_{16}\right)$ \\
+
+\addlinespace
+ZK1 (Intercooler, dissipativ) &
+dissipative component: $\dot{E}_{D,ZK1}= \dot{E}_{2}-\dot{E}_{3}$ &
+-- \\
+
+ZK2 (Intercooler, dissipativ) &
+dissipative component: $\dot{E}_{D,ZK2}= \dot{E}_{4}-\dot{E}_{5}$ &
+-- \\
+
+\addlinespace
+RC (Reboiler/Kondensator) &
+$\dot{E}_{F,RC}=\dot{E}_{SZRC1}-\dot{E}_{SZRC2}$ &
+$\dot{E}_{P,RC}=\dot{E}_{SZRC4}-\dot{E}_{SZRC3}$ \\
+-- \\
+
+MW (MHeatX) &
+$\dot{E}_{F,MW}=(\dot{E}_{16}-\dot{E}_{15})+(\dot{E}_{28}-\dot{E}_{27})+(\dot{E}_{30}-\dot{E}_{29})$ &
+$\dot{E}_{P,MW}=(\dot{E}_{11}-\dot{E}_{12})+(\dot{E}_{19}-\dot{E}_{20})$ \\
+-- \\
+\bottomrule
+\end{tabular}
+\end{sidewaystable}
+
+
+
+\chapter{Wirtschaftlichkeitsanalyse}
+\label{ch:a_kosten}
