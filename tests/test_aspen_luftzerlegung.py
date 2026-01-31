@@ -152,8 +152,8 @@ def _format_value(value):
 def _build_streams_latex_table(connections: dict) -> str:
     columns = [
         ("name", "Stream", None),
-        ("m", r"$\\dot m$", "m_unit"),
-        ("n", r"$\\dot n$", "n_unit"),
+        ("m", r"$\dot m$", "m_unit"),
+        ("n", r"$\dot n$", "n_unit"),
         ("T", r"$T$", "T_unit"),
         ("p", r"$p$", "p_unit"),
         ("h", r"$h$", "h_unit"),
@@ -196,11 +196,11 @@ def _build_streams_latex_table(connections: dict) -> str:
                 break
         unit_lookup[key] = unit or ""
 
-    header = " & ".join(label for _, label, _ in columns) + r" \\"
+    header = " & ".join(label for _, label, _ in columns) + " \\\\"
     unit_row = " & ".join(
         f"({ _latex_escape(unit_lookup[key]) })" if unit_lookup[key] else ""
         for key, _, _ in columns
-    ) + r" \\"
+    ) + " \\\\"
 
     rows = []
     for conn in material_streams:
@@ -212,20 +212,14 @@ def _build_streams_latex_table(connections: dict) -> str:
 
     col_spec = "l" + "r" * (len(columns) - 1)
     lines = [
-        r"\\begin{table}[ht]",
-        r"\\centering",
-        rf"\\begin{{tabular}}{{{col_spec}}}",
-        r"\\hline",
+        f"\\begin{{tabular}}{{{col_spec}}}",
+        "\\hline",
         header,
         unit_row,
-        r"\\hline",
+        "\\hline",
         *rows,
-        r"\\hline",
-        r"\\end{tabular}",
-        r"\\caption{Stromdaten aus Aspen}",
-        r"\\label{tab:aspen-streams}",
-        r"\\end{table}",
-        "",
+        "\\hline",
+        "\\end{tabular}",
     ]
     return "\n".join(lines)
 
@@ -238,7 +232,6 @@ def _collect_components(connections: dict, composition_key: str) -> list[str]:
         comp = conn.get(composition_key) or {}
         components.update(comp.keys())
     return sorted(components)
-
 
 def _build_composition_table(connections: dict, composition_key: str, caption: str, label: str) -> str:
     material_streams = [
@@ -258,7 +251,7 @@ def _build_composition_table(connections: dict, composition_key: str, caption: s
     if not components:
         return ""
 
-    header = " & ".join(["Stream", *components]) + r" \\"
+        header = " & ".join(["Stream", *components]) + r" \\\\"
     rows = []
     for conn in material_streams:
         values = [conn.get("name", "-")]
