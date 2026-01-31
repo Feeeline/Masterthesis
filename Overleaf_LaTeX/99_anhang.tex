@@ -24,7 +24,7 @@ Xenon (Xe)             & 0{,}09\,ppm \\
 Wasserstoff (H$_2$)    & 0{,}05\,ppm \\
 Ozon (O$_3$)           & 0{,}003–0{,}03\,ppm \\
 \midrule
-\multicolumn{2}{l}{Wasserdampf (H$_2$O): variabel, typ.\ 1-3\,Vol.\% bei 25\,°C} \\
+\multicolumn{2}{l}{Wasserdampf (H$_2$O): variabel, typ.\ 25-75\,Vol.\% bei 15\,°C} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -37,6 +37,80 @@ Ozon (O$_3$)           & 0{,}003–0{,}03\,ppm \\
 
 \chapter{Exergieberechnungen}
 \label{ch:a_exergie}
+
+\begin{sidewaystable}
+\centering
+\caption{Definition von Brennstoff- und Produktexergie der betrachteten Komponenten für das Einzelkolonnenmodell}
+\label{tab:exdef_components_current}
+\begin{tabular}{lll}
+\toprule
+Komponente & $\dot{E}_{F,k}$ & $\dot{E}_{P,k}$ \\
+\midrule
+LK1 &
+$\dot{W}_{LK1}$ &
+$\dot{E}^{M}_{2}-\dot{E}^{M}_{1}
++\dot{E}^{T}_{2}-\dot{E}^{T}_{1}$ \\
+
+LK2 &
+$\dot{W}_{LK2}$ &
+$\dot{E}^{M}_{4}-\dot{E}^{M}_{3}
++\dot{E}^{T}_{4}-\dot{E}^{T}_{3}$ \\
+
+\addlinespace
+ZK1 (Intercooler, dissipativ) &
+$\dot{E}_{D,ZK1}=\dot{E}_{2}-\dot{E}_{3}$ &
+-- \\
+
+ZK2 (Intercooler, dissipativ) &
+$\dot{E}_{D,ZK2}=\dot{E}_{4}-\dot{E}_{5}$ &
+-- \\
+
+\addlinespace
+GW1 (Flash, dissipativ) &
+$\dot{E}_{D,GW1}=\dot{E}_{5}-\dot{E}_{6}-\dot{E}_{7}$ &
+-- \\
+
+GW2 (Adsorber, dissipativ) &
+$\dot{E}_{D,GW2}=\dot{E}_{6}-\dot{E}_{8}-\dot{E}_{9}-\dot{E}_{10}$ &
+-- \\
+
+MW &
+$\dot{E}_{F,MW}=(\dot{E}_{16}-\dot{E}_{15})+(\dot{E}_{28}-\dot{E}_{27})+(\dot{E}_{30}-\dot{E}_{29})$ &
+$\dot{E}_{P,MW}=(\dot{E}_{11}-\dot{E}_{12})+(\dot{E}_{19}-\dot{E}_{20})$ \\
+-- \\
+
+\addlinespace
+KOL &
+$\dot{E}_{F,KOL}=$ &
+$\dot{E}_{P,KOL}=$ \\
+-- \\
+
+\addlinespace
+RC (Reboiler/Kondensator) &
+$\dot{E}_{F,RC}=\dot{E}_{SZRC1}-\dot{E}_{SZRC2}$ &
+$\dot{E}_{P,RC}=\dot{E}_{SZRC4}-\dot{E}_{SZRC3}$ \\
+-- \\
+
+\addlinespace
+D1 &
+$\dot{E}_{F,D1}=$ &
+$\dot{E}_{P,D1}=$ \\
+-- \\
+
+D2&
+$\dot{E}_{F,D2}=$ &
+$\dot{E}_{P,D2}=$ \\
+-- \\
+
+\addlinespace
+T &
+$\dot{E}_{F,T}=$ &
+$\dot{E}_{P,T}=$ \\
+-- \\
+\bottomrule
+\end{tabular}
+\end{sidewaystable}
+
 
 \begin{sidewaystable}
 \centering
@@ -55,11 +129,6 @@ LK2 &
 $\dot{W}_{LK2}$ &
 $\dot{E}^{M}_{4}-\dot{E}^{M}_{3}
 +\dot{E}^{T}_{4}-\dot{E}^{T}_{3}$ \\
-
-PK1 &
-$\dot{W}_{PK1}$ &
-$\dot{E}^{M}_{31}-\dot{E}^{M}_{30}
-+\dot{E}^{T}_{31}-\dot{E}^{T}_{30}$ \\
 
 \addlinespace
 ZK1 (Intercooler, dissipativ) &
@@ -80,29 +149,65 @@ $\dot{E}_{D,GW2}=\dot{E}_{6}-\dot{E}_{8}-\dot{E}_{9}-\dot{E}_{10}$ &
 -- \\
 
 \addlinespace
-MIX1 (Mixer, dissipativ) &
-$\dot{m}_{31}\!\left(e^{PH}_{31}-e^{PH}_{32}\right)$ &
-$\dot{m}_{16}\!\left(e^{PH}_{32}-e^{PH}_{16}\right)$ \\
-
-\addlinespace
-ZK1 (Intercooler, dissipativ) &
-dissipative component: $\dot{E}_{D,ZK1}= \dot{E}_{2}-\dot{E}_{3}$ &
--- \\
-
-ZK2 (Intercooler, dissipativ) &
-dissipative component: $\dot{E}_{D,ZK2}= \dot{E}_{4}-\dot{E}_{5}$ &
+MW &
+$\dot{E}_{F,MW}=(\dot{E}_{16}-\dot{E}_{15})+(\dot{E}_{28}-\dot{E}_{27})+(\dot{E}_{30}-\dot{E}_{29})$ &
+$\dot{E}_{P,MW}=(\dot{E}_{11}-\dot{E}_{12})+(\dot{E}_{19}-\dot{E}_{20})$ \\
 -- \\
 
 \addlinespace
-RC (Reboiler/Kondensator) &
+KOLHP &
+$\dot{E}_{F,KOLHP}=$ &
+$\dot{E}_{P,KOLHP}=$ \\
+-- \\
+
+KOLLP &
+$\dot{E}_{F,KOLLP}=$ &
+$\dot{E}_{P,KOLLP}=$ \\
+-- \\
+
+\addlinespace
+RC1 (Reboiler/Kondensator) &
 $\dot{E}_{F,RC}=\dot{E}_{SZRC1}-\dot{E}_{SZRC2}$ &
 $\dot{E}_{P,RC}=\dot{E}_{SZRC4}-\dot{E}_{SZRC3}$ \\
 -- \\
 
-MW (MHeatX) &
-$\dot{E}_{F,MW}=(\dot{E}_{16}-\dot{E}_{15})+(\dot{E}_{28}-\dot{E}_{27})+(\dot{E}_{30}-\dot{E}_{29})$ &
-$\dot{E}_{P,MW}=(\dot{E}_{11}-\dot{E}_{12})+(\dot{E}_{19}-\dot{E}_{20})$ \\
+RC2 (Reboiler/Kondensator) &
+$\dot{E}_{F,RC}=$ &
+$\dot{E}_{P,RC}=$ \\
 -- \\
+
+\addlinespace
+D1 &
+$\dot{E}_{F,D1}=$ &
+$\dot{E}_{P,D1}=$ \\
+-- \\
+
+D2&
+$\dot{E}_{F,D2}=$ &
+$\dot{E}_{P,D2}=$ \\
+-- \\
+
+D3 &
+$\dot{E}_{F,D3}=$ &
+$\dot{E}_{P,D3}=$ \\
+-- \\
+
+D4&
+$\dot{E}_{F,D4}=$ &
+$\dot{E}_{P,D4}=$ \\
+-- \\
+
+\addlinespace
+T &
+$\dot{E}_{F,T}=$ &
+$\dot{E}_{P,T}=$ \\
+-- \\
+
+\addlinespace
+PK1 &
+$\dot{W}_{PK1}$ &
+$\dot{E}^{M}_{31}-\dot{E}^{M}_{30}
++\dot{E}^{T}_{31}-\dot{E}^{T}_{30}$ \\
 \bottomrule
 \end{tabular}
 \end{sidewaystable}

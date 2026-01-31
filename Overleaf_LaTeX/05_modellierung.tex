@@ -39,7 +39,7 @@ Die Betriebsdrücke der einzelnen Anlagenteile werden im Modell vorgegeben. Druc
 
 Der folgende Abschnitt beschreibt die Modellannahmen der einzelnen Komponentengruppen sowie deren verfahrenstechnische Abbildung in der Simulation. Sofern nicht explizit anders angegeben, gelten diese Annahmen einheitlich für alle untersuchten Prozessvarianten, Fall A und B. Die Darstellung erfolgt nach Funktionsblöcken gegliedert, wobei die getroffenen Vereinfachungen transparent begründet werden.
 
-\subsection*{Luftkompression}
+\subsection{Luftkompression}
 \label{sec:modell_komression}
 
 Der Luftstrom wird in zwei hintereinandergeschalteten Verdichterstufen (\textit{LK1} und \textit{LK2}) komprimiert. Zur Reduktion der spezifischen Verdichterarbeit ist zwischen den beiden Verdichterstufen eine Zwischenkühlung vorgesehen (\textit{ZK1}). Zusätzlich wird auch nach der zweiten Verdichterstufe eine Kühlung des komprimierten Luftstroms vor der Gasreinigung realisiert (\textit{ZK2}). Durch die mehrstufige Verdichtung mit Zwischenkühlung wird die Eintrittstemperatur in die jeweils nachfolgende Verdichterstufe abgesenkt und damit der energetische Aufwand der Kompression reduziert.\\
@@ -59,7 +59,7 @@ Aus diesen Beziehungen ergibt sich der erforderliche Austrittsdruck der ersten V
 Beide Verdichter werden als stationäre, adiabate Kompressoren modelliert. Die Kompression erfolgt isentrop unter Verwendung eines konstanten isentropen Wirkungsgrades von $\eta_\mathrm{is} = 0{,}84$. Mechanische Verluste werden über einen konstanten mechanischen Wirkungsgrad von 
 $\eta_\mathrm{mech} = 0{,}99$ berücksichtigt. Eine explizite Wärmeabgabe der Verdichter an die Umgebung wird nicht modelliert.
 
-\subsection*{Luftreinigung}
+\subsection{Luftreinigung}
 \label{sec:modell_reinigung}
 
 Die Luftreinigung wird in der Simulation idealisiert abgebildet, eine detaillierte Modellierung realer Vorreinigungseinheiten, wie etwa Molekularsieb- oder Adsorptionsprozesse, erfolgt nicht. Ziel der Gasreinigung ist die Entfernung von Wasser und Kohlendioxid aus dem komprimierten Luftstrom und erfolgt über zwei Komponetnen. Zunächst wird das Kondensat im Phasenabscheider (Flash) mechanisch abgetrennt, um den Eintritt flüssigen Wassers in die Adsorptionsstufe zu verhindern, was zur Verklumpung des Adsorptionsmittel bzw. Zerstörung des Molekularsiebs führen würde. Diese erste partielle Abscheidung von Wasser im Flash-Block (\textit{GW1}) ist Temperatur- und Druckgesteuert betrieben, wobei die Austrittstemperatur auf 35,\textdegree C festgelegt und ein konstanter Druckverlust von 0,1 bar berücksichtigt wird. Als zulässige Phasen werden Gas- und Flüssigphase berücksichtigt.\\
@@ -73,7 +73,7 @@ Neben der energetischen Wärmerückgewinnung bzw. Kühlung der Luftströme über
 Der Luftstrom, der der Niederdruckkolonne zugeführt wird, wird nach dem Hauptwärmeübertrager in einer Expansionsturbine entspannt. Für einen stabilen Turbinenbetrieb ist ein vollständig gasförmiger Eintrittszustand erforderlich. Entsprechend wird dieser Strom im Hauptwärmeübertrager als Sattdampf geführt und geringfügig überhitzt, wobei eine Überhitzung von etwa 2\,K angesetzt wird, um das Auftreten einer Flüssigphase sicher auszuschließen. \\
 Für alle im Hauptwärmeübertrager geführten Ströme wird ein konstanter Druckverlust von 0,1\,bar angesetzt. Dieser pauschale Druckverlust liegt bei den betrachteten Druckniveaus im unteren einstelligen Prozentbereich des jeweiligen Eintrittsdrucks und entspricht typischen Literaturannahmen für Wärmeübertrager in systemorientierten Modellen kryogener Luftzerlegungsanlagen. Die Druckverluste sind in der Auslegung der vorgelagerten Verdichtungsstufen bereits berücksichtigt.
 
-\subsection*{Kolonnenblock des Einkolonnen-Modell}
+\subsection{Kolonnenblock des Einkolonnen-Modell}
 \label{sec:modell_kolonne_one}
 
 Für die Bereitstellung von gasförmigem Stickstoff wird vorerst der Einkolonnenprozess betrachtet, bei dem die Trennaufgabe in einer einzelnen kryogenen Rektifikationskolonne realisiert wird. Der Fokus der vorliegenden Modellvariante liegt ausschließlich auf der Erzeugung eines gasförmigen Stickstoffprodukts. Die Entnahme von flüssigem Stickstoff ist in diesem Modell grundsätzlich möglich, wird jedoch im Rahmen dieser Arbeit nicht weiter berücksichtigt, um die Analyse auf den betrachteten Anwendungsfall zu beschränken.\\
@@ -84,7 +84,7 @@ Die Kolonne ist über eine kombinierte Reboiler-Kondensator-Einheit thermisch ge
 Der Feedstrom wird am unteren Ende der Kolonne (Stufe~1) eingespeist. Ein klassischer Abtriebsteil unterhalb der Feedstufe ist somit nicht vorhanden. Der thermodynamische Zustand des Feedstroms hat daher einen maßgeblichen Einfluss auf die Trennleistung der Kolonne. Insbesondere die Phasenzusammensetzung des eingespeisten Luftstroms bestimmt die interne Verdampfungsrate sowie den Stoffaustausch innerhalb der Kolonne. Der Feedstrom wird entsprechend als leicht nasser Dampf mit einer definierten Dampfqualität von besagtem $x = 0{,}9$ eingespeist, wie im Abschnitt zur Wärmeübertragung beschrieben. Der Einspeisedruck des Feedstroms ergibt sich aus dem gewählten Kolonnendruckniveau unter Berücksichtigung der Druckverluste in der Gasreinigung und im Hauptwärmeübertrager. Der Luftverdichter \textit{LK2} komprimiert den Luftstrom gezielt auf diesen erforderlichen Feeddruck. Die exakte Anpassung des Feedstromdrucks an den Druck der Einspeisestufe erfolgt über einen \texttt{Calculator}-Block in Aspen Plus. \\
 Bei der Modellierung der Rektifikationskolonne verbleibt ein Freiheitsgrad, der zur Spezifikation der gewünschten Produktreinheit des Stickstoffs genutzt wird. Dieser Freiheitsgrad wird in Aspen Plus über eine \texttt{Design Specification} auf eine vorgegebene Stickstoffreinheit im Produktgas festgelegt. Auf diese Weise wird die erforderliche Trennschärfe der Kolonne direkt über die Produktzusammensetzung definiert. Die Einstellung der Design Specification erfolgt über die Anpassung des Rücklaufverhältnisses am Kondensator. Zunächst wird das minimale Rücklaufverhältnis ermittelt, bei dem die geforderte Produktreinheit gerade erreicht wird. Um einen stabilen und robusten Betrieb der Kolonne sicherzustellen, wird dieses minimale Rücklaufverhältnis anschließend mit einem üblichen Sicherheitsfaktor von 1{,}3 multipliziert \cite{kraume_transportvorgange_2020}. Der so erhaltene Wert von $2{,}14$ wird als Betriebsrücklaufverhältnis der Kolonne angesetzt.
 
-\subsection*{Kolonnenblock des Doppelkolonnen-model}
+\subsection{Kolonnenblock des Doppelkolonnen-model}
 \label{sec:modell_kolonne_double}
 
 Ziel des Doppelkolonnenprozesses, bestehend aus einer Hochdruckkolonne (HP-Kolonne, \textit{KOLHP}) und einer Niederdruckkolonne (LP-Kolonne, \textit{KOLLP}), ist die Erzeugung von gasförmigem Stickstoff unter Nutzung einer thermisch integrierten Kolonnenanordnung. Die grundlegenden thermodynamischen Annahmen entsprechen denen des Einkolonnenmodells und werden an dieser Stelle nicht erneut ausgeführt.\\
@@ -100,7 +100,7 @@ In die Niederdruckkolonne werden insgesamt drei Stoffströme eingespeist. Das fl
 Da die Hochdruckkolonne als \texttt{RadFrac}-Modell mit Reboiler und Kondensator konfiguriert ist, verbleiben grundsätzlich zwei Freiheitsgrade. Einer dieser Freiheitsgrade entfällt durch die thermische Kopplung des Reboilers mit dem Kondensator der Niederdruckkolonne, indem die im Kondensator der LP-Kolonne berechnete Wärmeleistung für den Reboiler der Hochdruckkolonne vorgegeben wird. Mit dem verbleibenden Freiheitsgrad wird, wie bei den anderen Kolonnen, die Stickstoffreinheit des Produktgases festgelegt, mit einem eingestellten stabilen Rücklaufverhältnis von 1,9.\\
 Neben der beschriebenen thermischen Kopplung zwischen Hoch- und Niederdruckkolonne ist in der Anordnung ein weiterer Reboiler-Kondensator-Kreislauf vorhanden. Dieser zweite Reboiler-Kondensator entspricht dem Kondensator der Niederdruckkolonne und ist mit dem Bodenstrom der Niederdruckkolonne gekoppelt. Die detaillierte Betrachtung der gekoppelten Reboiler-Kondensator-Systeme erfolgt im nächsten Abschnitt.
 
-\subsection*{Reboiler-Kondesnator}
+\subsection{Reboiler-Kondesnator}
 \label{sec:modell_Recon}
 
 Der explizite Nachbau der gekoppelten Reboiler-Kondensator-Systeme verfolgt in der vorliegenden Arbeit mehrere Ziele. Zum einen ermöglicht diese Modellierung eine getrennte Betrachtung der beteiligten Stoff- und Wärmeströme in Aspen Plus, sodass diese im Rahmen der späteren Exergieanalyse einzeln ausgewertet werden können. Zu diesem Zweck werden die zusätzlich eingeführten internen Wärmeströme als separate Zusatzströme mit der Bezeichnung \textit{SZ} modelliert. \\
@@ -116,24 +116,24 @@ Zur expliziten Abbildung der thermischen Kopplung zwischen Reboiler und Kondensa
 Abbildung~\ref{fig:reboiler_kondensator_einkolonne} zeigt den vereinfachten Aufbau des gekoppelten Reboiler-Kondensator-Systems im Einkolonnenmodell. Der heiße Strom entspricht dem Kondensatorstrom der Kolonne (Stickstoffstrom grün dargestellt), der bei der Kondensation Wärme abgibt. Der kalte Strom repräsentiert den Reboilerstrom, der diese Wärme aufnimmt und dadurch teilweise verdampft wird (sauerstoffreicher Strom rot dargestellt). 
 Der gekoppelte Reboiler-Kondensator wird in der Simulation explizit über einen Mehrstromwärmeübertrager (\texttt{MHeatX}) nachgebildet. Zur Abbildung identischer thermodynamischer Zustände werden die relevanten Ströme zunächst mittels \texttt{Transfer}-Funktion in Aspen Plus auf zusätzliche Stoffströme (SZ-Ströme) kopiert. Auf diese Weise werden identische thermodynamische Zustände der ursprünglichen Kolonnenströme sichergestellt. Der molare Stoffstrom des kopierten Kopfstroms (Eintritt in den Kondensator) wird anschließend über einen \texttt{Calculator}-Block exakt auf den im Kolonnenmodell eingestellten Refluxstrom skaliert. Analog wird der Bodenstrom der Kolonne über einen \texttt{Transfer} auf einen zusätzlichen Stoffstrom abgebildet, der dem Reboilerzweig des Wärmetauschers zugeführt wird. Die im \texttt{RadFrac}-Modell berechnete Wärmeleistung des gekoppelten Reboiler-Kondensators wird dem \texttt{MHeatX} entweder direkt als Wärmestrom oder über einen \texttt{Calculator}-Block vorgegeben. Dadurch bildet der Wärmetauscher exakt die thermische Kopplung zwischen Kondensation am Kolonnenkopf und Verdampfung im Kolonnensumpf ab. Die Korrektheit der Abbildung wird überprüft, indem die austretenden Ströme des \texttt{MHeatX} mit den entsprechenden Strömen aus dem ursprünglichen gekoppeltem \texttt{RadFrac} bzw. \texttt{Heater} hinsichtlich der thermodynamischen Eigenschaften des Stoffstroms verglichen werden.
 
-\subsection*{Integrierter Kältekreislauf des sauerstoffreichen Reststroms im Einkolonnenmodell}
+\subsection{Integrierter Kältekreislauf des sauerstoffreichen Reststroms im Einkolonnenmodell}
 \label{sec:modell_loop}
 
 Im Einkolonnenmodell wird die erforderliche Kälteleistung zusätzlich über einen internen Reststrom-Kältekreis bereitgestellt. Der sauerstoffreiche Reststrom wird nach der Trennung entspannt und anschließend zur Vorkühlung des Luftfeeds im Hauptwärmeübertrager genutzt. 
 Dieser interne Kältekreis ermöglicht einen stabilen Betrieb der Einkolonnenkonfiguration ohne den Einsatz externer Kältequellen. Die Entspannung des Reststroms erfolgt über eine Kombination aus Expansionsturbine und Drosselventil (Joule-Thomson-Ventil), wodurch gezielt zusätzliche Kälte erzeugt wird. Über einen vorgelagerten Splitter wird das Aufteilungsverhältnis zwischen Turbine und Drossel mittels einer \texttt{Design Specification} eingestellt, sodass der maximal mögliche Strom durch die Turbine geführt werden kann, ohne Temperaturüberschreitungen im Hauptwärmeübertrager zu verursachen. Auf diese Weise lassen sich sowohl die thermische Kopplung im Wärmeübertrager als auch die Austrittszustände des Reststroms gezielt kontrollieren.
 
-\subsection*{Luftturbine im Doppelkolonnenmodell}
+\subsection{Luftturbine im Doppelkolonnenmodell}
 \label{sec:modell_luftturbine}
 
 Zur Erzeugung zusätzlicher Kälteleistung wird im Doppelkolonnenprozess ein Teil des Luftstroms über eine Expansionsturbine (\textit{T1}) entspannt. Die Entspannung dient sowohl der Druckanpassung an die Einspeisestufe der Niederdruckkolonne als auch der Bereitstellung von Kälte zur Unterstützung des kryogenen Prozesses. Der Turbinenaustritt wird als gesättigter oder leicht überhitzter Dampf ausgelegt, um Flüssigkeitsbildung in der Turbine zu vermeiden. Bei der Auslegung der Turbine wird darauf geachtet, dass der Austrittszustand nicht zu weit in das Nassdampfgebiet verschoben wird, da ein zu hoher Flüssigkeitsanteil zu mechanischen Schäden an der Turbine führen kann. Moderne Expander tolerieren am Turbinenaustritt typischerweise einen Flüssigkeitsanteil von etwa 10--15\,\%, entsprechend einer Dampfqualität von $x \gtrsim 0{,}85$. Da die Turbine auf den Druck der Feedstufe expandiert, muss der Austrittsstrom daher in der Simulation gezielt auf gesättigter Dampf oder leicht nasser Dampf mit einer Dampfqualität im Bereich von $x = 0{,}88$--$0{,}95$ kontrolliert werden.
 
-\subsection*{Produktkompression im Doppelkolonnenmodell}
+\subsection{Produktkompression im Doppelkolonnenmodell}
 \label{sec:modell_Produktkompression}
 
 Im Doppelkolonnenmodell wird der gasförmige Stickstoffstrom aus der Niederdruckkolonne über einen Produktverdichter (\textit{PK1}) auf den gewünschten Produktdruck angehoben. 
 Der Produktverdichter dient dabei nicht der Prozessintegration, sondern der Vergleichbarkeit beider Modellvarianten, da der Stickstoff im Einkolonnenmodell bereits auf höherem Druckniveau bereitgestellt wird. Durch die zusätzliche Verdichtung wird sichergestellt, dass beide Prozesskonzepte auf denselben Produktdruck bezogen bewertet werden können, insbesondere im Hinblick auf den spezifischen Energiebedarf.
 
-\subsection*{Purge im Doppelkolonnenmodell}
+\subsection{Purge im Doppelkolonnenmodell}
 \label{sec:modell_Purge}
 
 Im Doppelkolonnenmodell wird zusätzlich ein Purge-Strom vorgesehen, der von dem zurück in den Hauptwärmetauscher geführten sauerstoffreichen Reststrom abgezweigt wird. Im Einkolonnenmodell ist ein Purge-Strom nicht erforderlich, da die Kältebereitstellung über den zuvor beschriebenen internen Reststrom-Kältekreis erfolgt und geregelt werden kann. \\
@@ -162,25 +162,45 @@ Produktdruck $p_{\mathrm{prod}}$ [bar]
 \end{table}
 
 
-
 \section{Annahmen zur Exergieanalyse}
 \label{sec:modell_basic_assumptions_exergie}
 
+Für die exergetische Bewertung wird ein einheitlicher Referenzzustand der Umgebung mit einer Temperatur von $T_0 = 298{,}15\,\mathrm{K}$ und einem Druck von $p_0 = 1{,}013\,\mathrm{bar}$ angenommen. Berücksichtigt werden ausschließlich physikalische und chemische Exergieanteile, während kinetische und potenzielle Beiträge aufgrund ihrer geringen Größenordnung vernachlässigt werden. Die Berechnung der chemischen Exergie erfolgt auf Basis des Referenzmodells nach Szargut unter Verwendung tabellierter Standardwerte der molaren chemischen Exergien der Reinstoffe. Die detaillierten Berechnungsgrundlagen werden im folgenden erläutert.
+
+\subsection{Systemgrenze und Zerlegung in Funktionszonen}
+\label{sec:modell_System_funktion}
+
+Für die exergetische Bewertung wird die betrachtete Luftzerlegungsanlage als geschlossenes Gesamtsystem definiert. Alle über die Systemgrenze ein- und austretenden Stoff- sowie Arbeitsströme werden als Exergietransporte bilanziert. Der Betrieb wird stationär angenommen, sodass keine zeitlichen Speicherterme in den Exergiebilanzen auftreten. Externe Medien wie die Umgebung oder das elektrische Versorgungsnetz werden als Randbedingungen behandelt und nicht gesondert modelliert.\\
+Zur lokalen Zuordnung von Exergieverlusten wird die Gesamtanlage in wenige funktionale Bilanzräume unterteilt. Die Zerlegung erfolgt nach verfahrenstechnischen Funktionen, um eine physikalisch sinnvolle Interpretation der Ergebnisse sowie eine Vergleichbarkeit mit Literaturdaten zu gewährleisten.
+
+Hierzu werden folgende Funktionszonen definiert:
+\begin{itemize}
+    \item Luftverdichtung einschließlich Zwischenkühlung,
+    \item Gasaufbereitung,
+    \item kryogener Wärmetauscherblock (Hauptwärmetauscher),
+    \item Kolonnenblock zur Stofftrennung.
+\end{itemize}
+
+Die detaillierte exergetische Bewertung einzelner Komponenten erfolgt im folgenden Abschnitt über die Definition von Brennstoff- und Produktexergien.
+
+\subsection{Definition von Brennstoff- und Produktexergie der Komponenten}
+\label{sec:modell_komponenten}
+
+Zur lokalen Quantifizierung von Exergievernichtungen wird für jede betrachtete Komponente eine exergetische Brennstoff- und Produktexergie definiert und die Exergievernichtung als Differenz.
+Die vollständige komponentenspezifische Zuordnung aller Stoffströme der beiden Fälle ist im Anhang dokumentiert (vgl. \ref{ANHANG}. Für Standardkomponenten mit eindeutigem energetischem Zweck werden konventionelle Definitionen verwendet.\\
+
+Die Bilanzhülle von Verdichtern und Pumpen beschränkt sich auf das Fluid. Der exergetische Brennstoff ($\dot{E}_F$) entspricht der zugeführten Wellenarbeit, das Produkt ($\dot{E}_P$) der Erhöhung der physikalischen Exergie. Mechanische und elektrische Antriebsverluste, beispielsweise in Motoren oder Getrieben, liegen außerhalb der Systemgrenze. Diese Definition wird einheitlich für alle im Modell enthaltenen Verdichtungsstufen angewendet.\\
 
 
 
+
+
+
+
+Nur für mehrstromige oder thermisch gekoppelte Apparate werden die zugrunde liegenden Gleichungen explizit angegeben. 
 
 
 Da Exergie keine reine Systemeigenschaft ist, sondern das maximale Arbeitspotential eines Systems im Übergang zum Gleichgewicht mit seiner Umgebung beschreibt, ist die Definition eines Referenzzustands (Umgebungszustand) zwingend erforderlich. In dieser Arbeit wird der Umgebungszustand durch einen Standarddruck $p_0$ von 1,013 bar und eine Umgebungstemperatur $T_0$ von 298,15 K (25 °C) festgelegt.Für die chemische Exergie wird zudem eine Referenzzusammensetzung der Umgebungsluft angenommen. Die Stoffdaten für die Berechnungen (Enthalpien, Entropien und chemische Standardexergien) beziehen sich auf diese Umgebungswerte, um eine konsistente Bilanzierung zu gewährleisten.
-
-
-
-
-
-
-
-
-
 
 
 Exergien:
