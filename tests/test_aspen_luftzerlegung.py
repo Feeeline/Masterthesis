@@ -158,11 +158,6 @@ def _build_streams_latex_table(connections: dict) -> str:
         ("p", r"$p$", "p_unit"),
         ("h", r"$h$", "h_unit"),
         ("s", r"$s$", "s_unit"),
-        ("mfn2", r"$x_{N_2}$", "mfn2_unit"),
-        ("mfo2", r"$x_{O_2}$", "mfo2_unit"),
-        ("mfco", r"$x_{CO_2}$", "mfco_unit"),
-        ("mfar", r"$x_{Ar}$", "mfar_unit"),
-        ("mfho", r"$x_{H_2O}$", "mfho_unit"),
         ("lfrac", r"$l_{frac}$", "lfrac_unit"),
         ("vfrac_out", r"$v_{frac}$", "vfrac_out_unit"),
         ("e_PH", r"$e_{PH}$", "e_PH_unit"),
@@ -176,11 +171,17 @@ def _build_streams_latex_table(connections: dict) -> str:
     ]
 
     def _sort_key(conn):
-        name = conn.get("name", "")
-        try:
-            return (0, int(str(name)))
-        except (ValueError, TypeError):
-            return (1, str(name))
+        name = str(conn.get("name", ""))
+        prefix = ""
+        digits = ""
+        for ch in name:
+            if ch.isdigit():
+                digits += ch
+            else:
+                prefix += ch
+        if digits:
+            return (prefix, int(digits), name)
+        return (prefix, float("inf"), name)
 
     material_streams.sort(key=_sort_key)
 
@@ -212,14 +213,83 @@ def _build_streams_latex_table(connections: dict) -> str:
 
     col_spec = "l" + "r" * (len(columns) - 1)
     lines = [
-        f"\\begin{{tabular}}{{{col_spec}}}",
+        f"\\begin{{longtable}}{{{col_spec}}}",
         "\\hline",
         header,
         unit_row,
         "\\hline",
         *rows,
         "\\hline",
-        "\\end{tabular}",
+        "\\end{longtable}",
+    ]
+    return "\n".join(lines)
+
+
+def _build_molar_fractions_table(connections: dict) -> str:
+    columns = [
+        ("name", "Stream", None),
+        ("mfn2", r"$x_{N_2}$", "mfn2_unit"),
+        ("mfo2", r"$x_{O_2}$", "mfo2_unit"),
+        ("mfco", r"$x_{CO_2}$", "mfco_unit"),
+        ("mfar", r"$x_{Ar}$", "mfar_unit"),
+        ("mfho", r"$x_{H_2O}$", "mfho_unit"),
+    ]
+
+    material_streams = [
+        conn for conn in connections.values() if conn.get("kind") == "material"
+    ]
+
+    def _sort_key(conn):
+        name = str(conn.get("name", ""))
+        prefix = ""
+        digits = ""
+        for ch in name:
+            if ch.isdigit():
+                digits += ch
+            else:
+                prefix += ch
+        if digits:
+            return (prefix, int(digits), name)
+        return (prefix, float("inf"), name)
+
+    material_streams.sort(key=_sort_key)
+
+    unit_lookup = {}
+    for key, _, unit_key in columns:
+        if not unit_key:
+            unit_lookup[key] = ""
+            continue
+        unit = None
+        for conn in material_streams:
+            unit = conn.get(unit_key)
+            if unit:
+                break
+        unit_lookup[key] = unit or ""
+
+    header = " & ".join(label for _, label, _ in columns) + " \\\\"
+    unit_row = " & ".join(
+        f"({ _latex_escape(unit_lookup[key]) })" if unit_lookup[key] else ""
+        for key, _, _ in columns
+    ) + " \\\\"
+
+    rows = []
+    for conn in material_streams:
+        values = []
+        for key, _, _ in columns:
+            val = conn.get(key)
+            values.append(_format_value(val))
+        rows.append(" & ".join(values) + r" \\")
+
+    col_spec = "l" + "r" * (len(columns) - 1)
+    lines = [
+        f"\\begin{{longtable}}{{{col_spec}}}",
+        "\\hline",
+        header,
+        unit_row,
+        "\\hline",
+        *rows,
+        "\\hline",
+        "\\end{longtable}",
     ]
     return "\n".join(lines)
 
@@ -350,3 +420,16 @@ components_output_path = os.path.abspath(
 components_table = _build_component_results_table(ean.components)
 with open(components_output_path, "w", encoding="utf-8") as tex_file:
     tex_file.write(components_table)
+
+molfractions_output_path = os.path.abspath(
+    os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        "Overleaf_LaTeX",
+        "tabellen",
+        "aspen_luftzerlegung_streams_molfrac.tex",
+    )
+)
+molfractions_table = _build_molar_fractions_table(connections_data)
+with open(molfractions_output_path, "w", encoding="utf-8") as tex_file:
+    tex_file.write(molfractions_table)
