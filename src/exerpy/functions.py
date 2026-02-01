@@ -282,6 +282,12 @@ def add_chemical_exergy(my_json, Tamb, pamb, chemExLib):
     # Iterate over each material connection with kind == 'material'
     for conn_name, conn_data in my_json["connections"].items():
         if conn_data["kind"] == "material":
+            # If chemical exergy already provided (e.g., from Aspen), do not override
+            if conn_data.get("e_CH") is not None:
+                logging.info(
+                    f"Connection {conn_name}: e_CH already present; skipping chemical exergy calculation."
+                )
+                continue
             # Prefer molar composition if available, otherwise use mass composition
             molar_composition = conn_data.get("molar_composition", {})
             mass_composition = conn_data.get("mass_composition", {})

@@ -214,6 +214,7 @@ def _build_streams_latex_table(connections: dict) -> str:
     col_spec = "l" + "r" * (len(columns) - 1)
     lines = [
         f"\\begin{{longtable}}{{{col_spec}}}",
+            r"\caption{Thermodynamische und exergetische Kenngrößen der simulierten Prozessströme} \\",
         "\\hline",
         header,
         unit_row,
@@ -283,6 +284,7 @@ def _build_molar_fractions_table(connections: dict) -> str:
     col_spec = "l" + "r" * (len(columns) - 1)
     lines = [
         f"\\begin{{longtable}}{{{col_spec}}}",
+            r"\caption{Stoffliche Zusammensetzung der Prozessströme} \\",
         "\\hline",
         header,
         unit_row,
@@ -298,16 +300,16 @@ def _build_component_results_table(components: dict) -> str:
     header = " & ".join([
         "Component",
         "Type",
-        r"$E_F$",
-        r"$E_P$",
-        r"$E_D$",
+        r"$\dot{E}_F$",
+        r"$\dot{E}_P$",
+        r"$\dot{E}_D$",
         r"$\varepsilon$",
     ]) + " \\\\"
     unit_row = " & ".join(["", "", "(W)", "(W)", "(W)", "(-)"]) + " \\\\"
 
     rows = []
     for comp_name, component in components.items():
-        if component.__class__.__name__ == "CycleCloser":
+        if component.__class__.__name__ in {"CycleCloser", "Mixer", "Splitter"}:
             continue
         E_F = getattr(component, "E_F", None)
         E_P = getattr(component, "E_P", None)

@@ -492,6 +492,19 @@ class AspenModelParser:
                         connection_data[f"{key}_raw"] = None
                         connection_data[f"{key}_raw_unit"] = None
 
+                # Map Aspen's chemical exergy flow (USRECH) to specific e_CH if available
+                if connection_data.get("ech") is not None and connection_data.get("e_CH") is None:
+                    m_val = connection_data.get("m") or 0.0
+                    if m_val:
+                        connection_data["E_CH"] = connection_data["ech"]
+                        connection_data["E_CH_unit"] = fluid_property_data["power"]["SI_unit"]
+                        connection_data["e_CH"] = connection_data["ech"] / m_val
+                        connection_data["e_CH_unit"] = fluid_property_data["e"]["SI_unit"]
+                    else:
+                        logging.warning(
+                            f"USRECH provided for stream {stream_name} but mass flow is zero; cannot compute e_CH."
+                        )
+
                 # Log parsed properties for visibility
                 # Build a more detailed summary including raw units and raw values when available
                 summary_parts = []
