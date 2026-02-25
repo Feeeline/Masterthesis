@@ -5101,5 +5101,19 @@
         "Tamb_unit": "K",
         "pamb": 101325.0,
         "pamb_unit": "Pa"
+    },
+    "custom_exergy": {
+        "RC": {
+            "E_F_custom": 5241364.03,
+            "E_P_custom": 5028439.44,
+            "E_D_custom": 212924.58999999985,
+            "epsilon_custom": 0.9593761111074744
+        },
+        "RC2": {
+            "E_F_custom": 6490803.829999998,
+            "E_P_custom": 6198796.799999999,
+            "E_D_custom": 292007.02999999933,
+            "epsilon_custom": 0.9550121929967494
+        }
     }
 }

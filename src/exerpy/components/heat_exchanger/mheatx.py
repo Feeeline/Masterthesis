@@ -330,11 +330,12 @@ class MHeatX(Component):
             # Compute specific efficiency
             self.epsilon_spez = self.E_P_spez / self.E_F_spez if self.E_F_spez > 0 else None
             
-            # Override main attributes with spezProdukt values for analysis integration
-            self.E_F = self.E_F_spez
-            self.E_P = self.E_P_spez
-            self.E_D = self.E_D_spez
-            self.epsilon = self.epsilon_spez
+            # NOTE: Do NOT override the main balance-mode attributes (E_F, E_P, E_D)
+            # Balance-mode is the canonical calculation for component exergy
+            # and must remain active for overall system bookkeeping. Keep the
+            # spezProdukt results in separate attributes (`E_F_spez`,
+            # `E_P_spez`, `E_D_spez`, `epsilon_spez`) so they can be inspected
+            # without changing the component's primary exergy balance.
             
             # ========== PLAUSIBILITY CHECK A: DIMENSIONAL CONSISTENCY ==========
             # For all streams, verify that m*e_part ≈ E_part (if both exist)
