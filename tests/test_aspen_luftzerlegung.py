@@ -668,194 +668,153 @@ if gw2_comp is not None:
 _log_component_custom_compare('GW2', gw2_comp)
 
 
-# ============================================================================
-# KOLLP (LP-Kolonne) custom calculation with SPECO-Mixer reference
-# ============================================================================
-kollp_comp = ean.components.get('KOLLP')
+# --- KOLLP (LP column) custom calculations per user definition
+# Gesamtbilanz:
+#   E_D_bal = sum_in m*(e_PH+e_CH) - sum_out m*(e_PH+e_CH)
+#   in: 14, 21, 18, 36, 38
+#   out: 22, 29, 35, 37
+# SPECO Produkt:
+#   E_P = E_P,ch + E_P,T + E_P,M
+#   E_P,ch = m22*(e_ch,22 - e_ch,mix) + m29*(e_ch,29 - e_ch,mix)
+#   E_P,T  = m22*(e_T,22 - e_T,mix)
+#   E_P,M  = m29*(e_M,29 - e_M,mix)
+# Brennstoff:
+#   E_F = E_F,Reboiler + E_F,Kondensator + E_F,intern
+#   E_F,Reboiler   = m38*e_PH,38 - m37*e_PH,37
+#   E_F,Kondensator= m36*e_PH,36 - m35*e_PH,35
+#   E_F,intern     = m22*(e_M,mix - e_M,22) + m29*(e_T,mix - e_T,29)
+kollp_comp = ean.components.get("KOLLP") or next((c for n, c in ean.components.items() if str(n).strip().upper() == "KOLLP"), None)
 
-# Step 1: Define SPECO-Mixer from Stoffströme (S14, S18, S21)
-# This creates a weighted reference state from the three material inlet streams
-s14 = _find_exact_stream('S14')
-s18 = _find_exact_stream('S18')
-s21 = _find_exact_stream('S21')
+def _find_exact_stream_any(*stream_names):
+    for stream_name in stream_names:
+        stream = _find_exact_stream(stream_name)
+        if stream is not None:
+            return stream
+    return None
 
-m14 = _get_val(s14, 'm')
-m18 = _get_val(s18, 'm')
-m21 = _get_val(s21, 'm')
+s14 = _find_exact_stream("S14")
+s18 = _find_exact_stream("S18")
+s21 = _find_exact_stream("S21")
+s22 = _find_exact_stream("S22")
+s29 = _find_exact_stream("S29")
+s35 = _find_exact_stream_any("S35", "SZ35")
+s36 = _find_exact_stream_any("S36", "SZ36")
+s37 = _find_exact_stream_any("S37", "SZ37")
+s38 = _find_exact_stream_any("S38", "SZ38")
 
-ech14 = _get_val(s14, 'e_CH')
-ech18 = _get_val(s18, 'e_CH')
-ech21 = _get_val(s21, 'e_CH')
-
-eT14 = _get_val(s14, 'e_T')
-eT18 = _get_val(s18, 'e_T')
-eT21 = _get_val(s21, 'e_T')
-
-eM14 = _get_val(s14, 'e_M')
-eM18 = _get_val(s18, 'e_M')
-eM21 = _get_val(s21, 'e_M')
-
-# Calculate mixer reference state
-m_mix = None
-e_ch_mix = None
-e_T_mix = None
-e_M_mix = None
-
-if all(v is not None for v in [m14, m18, m21]):
-    m_mix = m14 + m18 + m21
-    
-    if all(v is not None for v in [ech14, ech18, ech21]) and m_mix > 0:
-        e_ch_mix = (m14*ech14 + m18*ech18 + m21*ech21) / m_mix
-    
-    if all(v is not None for v in [eT14, eT18, eT21]) and m_mix > 0:
-        e_T_mix = (m14*eT14 + m18*eT18 + m21*eT21) / m_mix
-    
-    if all(v is not None for v in [eM14, eM18, eM21]) and m_mix > 0:
-        e_M_mix = (m14*eM14 + m18*eM18 + m21*eM21) / m_mix
-
-logging.info("\n" + "="*80)
-logging.info("KOLLP - SPECO-Mixer Reference State (Stoffströme S14, S18, S21)")
-logging.info("="*80)
-logging.info(f"  m_mix = {m_mix} kg/s")
-logging.info(f"  e_ch,mix = {e_ch_mix} J/kg")
-logging.info(f"  e_T,mix = {e_T_mix} J/kg")
-logging.info(f"  e_M,mix = {e_M_mix} J/kg")
-logging.info("")
-logging.info("  [Mixer reference state built]")
-logging.info("="*80)
-
-
-# Step 2: KOLLP Ed balance over full specified stream set
-# In:  S14, S21, S18, SZ36, SZ38
-# Out: S22, SZ35, S25, SZ37
-s22 = _find_exact_stream('S22')
-s25 = _find_exact_stream('S25')
-sz35 = _find_exact_stream('SZ35')
-sz36 = _find_exact_stream('SZ36')
-sz37 = _find_exact_stream('SZ37')
-sz38 = _find_exact_stream('SZ38')
-
-
-def _Ex_PH_CH(conn):
-    if conn is None:
+def _total_exergy_ph_ch(conn):
+    if not conn:
         return None
-    mass = _get_val(conn, 'm')
-    e_ph = _get_val(conn, 'e_PH')
-    e_ch = _get_val(conn, 'e_CH')
-    if mass is None or e_ph is None or e_ch is None:
+    m = _get_val(conn, "m")
+    eph = _get_val(conn, "e_PH")
+    ech = _get_val(conn, "e_CH")
+    if m is None or eph is None or ech is None:
         return None
-    return mass * (e_ph + e_ch)
+    return float(m) * (float(eph) + float(ech))
 
+def _mix_property(streams, prop):
+    masses = [_get_val(stream, "m") for stream in streams]
+    props = [_get_val(stream, prop) for stream in streams]
+    if any(v is None for v in masses + props):
+        return None
+    m_sum = sum(float(v) for v in masses)
+    if m_sum == 0:
+        return None
+    weighted_sum = sum(float(masses[idx]) * float(props[idx]) for idx in range(len(streams)))
+    return weighted_sum / m_sum
 
-in_terms = [
-    _Ex_PH_CH(s14),
-    _Ex_PH_CH(s21),
-    _Ex_PH_CH(s18),
-    _Ex_PH_CH(sz36),
-    _Ex_PH_CH(sz38),
-]
-out_terms = [
-    _Ex_PH_CH(s22),
-    _Ex_PH_CH(sz35),
-    _Ex_PH_CH(s25),
-    _Ex_PH_CH(sz37),
-]
+# 1) Gesamtbilanz (absolute Exergiestroeme m*(e_PH+e_CH))
+eintritt_streams = [s14, s21, s18, s36, s38]
+austritt_streams = [s22, s29, s35, s37]
 
-ed_kollp_bal = None
-if all(v is not None for v in in_terms + out_terms):
-    ed_kollp_bal = sum(in_terms) - sum(out_terms)
+E_in_terms = [_total_exergy_ph_ch(stream) for stream in eintritt_streams]
+E_out_terms = [_total_exergy_ph_ch(stream) for stream in austritt_streams]
 
+E_in_kollp = sum(E_in_terms) if all(v is not None for v in E_in_terms) else None
+E_out_kollp = sum(E_out_terms) if all(v is not None for v in E_out_terms) else None
+Ed_kollp_bal = (E_in_kollp - E_out_kollp) if (E_in_kollp is not None and E_out_kollp is not None) else None
 
-# Step 3: KOLLP Ep/Ef with SPECO-Mixer reference
-# Ep = Ep,ch + Ep,T + Ep,util
-# Ef = Ef,util + Ef,M
-m22 = _get_val(s22, 'm')
-m25 = _get_val(s25, 'm')
-m35 = _get_val(sz35, 'm')
-m36 = _get_val(sz36, 'm')
-m37 = _get_val(sz37, 'm')
-m38 = _get_val(sz38, 'm')
+# Mixer-Referenzzustand aus den Feedstroemen 14, 18, 21
+mix_streams = [s14, s18, s21]
+e_ch_mix = _mix_property(mix_streams, "e_CH")
+e_T_mix = _mix_property(mix_streams, "e_T")
+e_M_mix = _mix_property(mix_streams, "e_M")
 
-ech22 = _get_val(s22, 'e_CH')
-ech25 = _get_val(s25, 'e_CH')
+m22 = _get_val(s22, "m")
+m29 = _get_val(s29, "m")
+m35 = _get_val(s35, "m")
+m36 = _get_val(s36, "m")
+m37 = _get_val(s37, "m")
+m38 = _get_val(s38, "m")
 
-eT22 = _get_val(s22, 'e_T')
-eT25 = _get_val(s25, 'e_T')
+ech22 = _get_val(s22, "e_CH")
+ech29 = _get_val(s29, "e_CH")
+eT22 = _get_val(s22, "e_T")
+eT29 = _get_val(s29, "e_T")
+eM22 = _get_val(s22, "e_M")
+eM29 = _get_val(s29, "e_M")
+ePH35 = _get_val(s35, "e_PH")
+ePH36 = _get_val(s36, "e_PH")
+ePH37 = _get_val(s37, "e_PH")
+ePH38 = _get_val(s38, "e_PH")
 
-eM22 = _get_val(s22, 'e_M')
-eM25 = _get_val(s25, 'e_M')
+Ep_ch_kollp = None
+Ep_T_kollp = None
+Ep_M_kollp = None
+Ep_kollp = None
+Ef_reboiler_kollp = None
+Ef_kond_kollp = None
+Ef_intern_kollp = None
+Ef_kollp = None
+Ed_kollp_formel = None
 
-eph35 = _get_val(sz35, 'e_PH')
-eph36 = _get_val(sz36, 'e_PH')
-eph37 = _get_val(sz37, 'e_PH')
-eph38 = _get_val(sz38, 'e_PH')
+# 2) Exergie-Produkt
+if all(v is not None for v in [m22, m29, ech22, ech29, e_ch_mix]):
+    Ep_ch_kollp = float(m22) * (float(ech22) - float(e_ch_mix)) + float(m29) * (float(ech29) - float(e_ch_mix))
 
-ep_kollp = None
-ef_kollp = None
-ed_kollp_formel = None
+if all(v is not None for v in [m22, eT22, e_T_mix]):
+    Ep_T_kollp = float(m22) * (float(eT22) - float(e_T_mix))
 
-ep_ch = None
-ep_T = None
-ep_util = None
-ef_util = None
-ef_M = None
-ef_stoffstrom = None
+if all(v is not None for v in [m29, eM29, e_M_mix]):
+    Ep_M_kollp = float(m29) * (float(eM29) - float(e_M_mix))
 
-if all(v is not None for v in [m22, m25, ech22, ech25, e_ch_mix]):
-    ep_ch = m22 * (ech22 - e_ch_mix) + m25 * (ech25 - e_ch_mix)
+if Ep_ch_kollp is not None and Ep_T_kollp is not None and Ep_M_kollp is not None:
+    Ep_kollp = Ep_ch_kollp + Ep_T_kollp + Ep_M_kollp
 
-if all(v is not None for v in [m22, m25, eT22, eT25, e_T_mix]):
-    ep_T = m22 * (eT22 - e_T_mix) + m25 * (eT25 - e_T_mix)
+# 3) Exergie-Brennstoff
+if all(v is not None for v in [m38, ePH38, m37, ePH37]):
+    Ef_reboiler_kollp = float(m38) * float(ePH38) - float(m37) * float(ePH37)
 
-if all(v is not None for v in [m35, m36, eph35, eph36]):
-    ep_util = m35 * eph35 - m36 * eph36
+if all(v is not None for v in [m36, ePH36, m35, ePH35]):
+    Ef_kond_kollp = float(m36) * float(ePH36) - float(m35) * float(ePH35)
 
-if all(v is not None for v in [m38, m37, eph38, eph37]):
-    ef_util = m38 * eph38 - m37 * eph37
+if all(v is not None for v in [m22, e_M_mix, eM22, m29, e_T_mix, eT29]):
+    Ef_intern_kollp = float(m22) * (float(e_M_mix) - float(eM22)) + float(m29) * (float(e_T_mix) - float(eT29))
 
-if all(v is not None for v in [m22, m25, e_M_mix, eM22, eM25]):
-    ef_M = m22 * (e_M_mix - eM22) + m25 * (e_M_mix - eM25)
+if Ef_reboiler_kollp is not None and Ef_kond_kollp is not None and Ef_intern_kollp is not None:
+    Ef_kollp = Ef_reboiler_kollp + Ef_kond_kollp + Ef_intern_kollp
 
-if all(v is not None for v in [ep_ch, ep_T, ep_util]):
-    ep_kollp = ep_ch + ep_T + ep_util
+if Ef_kollp is not None and Ep_kollp is not None:
+    Ed_kollp_formel = Ef_kollp - Ep_kollp
 
-if all(v is not None for v in [ef_util, ef_M]):
-    ef_kollp = ef_util + ef_M
+logging.info("\nKOLLP custom calculation (strict user formulas):")
+logging.info(f"  Gesamtbilanz in  [14,21,18,36,38] = {E_in_kollp} W")
+logging.info(f"  Gesamtbilanz out [22,29,35,37]    = {E_out_kollp} W")
+logging.info(f"  Ed_kollp_bal = Ein - Aus          = {Ed_kollp_bal} W")
+logging.info(f"  mix: e_ch_mix={e_ch_mix}, e_T_mix={e_T_mix}, e_M_mix={e_M_mix}")
+logging.info(f"  Ep_ch={Ep_ch_kollp}, Ep_T={Ep_T_kollp}, Ep_M={Ep_M_kollp}, Ep={Ep_kollp}")
+logging.info(f"  Ef_reboiler={Ef_reboiler_kollp}, Ef_kondensator={Ef_kond_kollp}, Ef_intern={Ef_intern_kollp}, Ef={Ef_kollp}")
+logging.info(f"  Ed_kollp_formel = Ef - Ep         = {Ed_kollp_formel} W")
+if Ed_kollp_bal is not None and Ed_kollp_formel is not None:
+    logging.info(f"  Delta (Ed_bal - Ed_formel)        = {Ed_kollp_bal - Ed_kollp_formel} W")
 
-# Residual material-stream loss term from full balance
-# This closes Ef so that Ed_formel = Ef - Ep matches Ed_kollp_bal
-if all(v is not None for v in [ed_kollp_bal, ep_kollp, ef_kollp]):
-    ef_stoffstrom = (ed_kollp_bal + ep_kollp) - ef_kollp
-    ef_kollp = ef_kollp + ef_stoffstrom
-
-if ef_kollp is not None and ep_kollp is not None:
-    ed_kollp_formel = ef_kollp - ep_kollp
-
-
-logging.info("\nKOLLP custom calculation (SPECO with mixer reference):")
-logging.info(f"  Ed balance set In=[14,21,18,36,38], Out=[22,35,25,37]")
-logging.info(f"  Ed_kollp_bal = {ed_kollp_bal} W")
-logging.info(f"  Ep_ch = {ep_ch} W")
-logging.info(f"  Ep_T = {ep_T} W")
-logging.info(f"  Ep_util = {ep_util} W")
-logging.info(f"  Ep_kollp = {ep_kollp} W")
-logging.info(f"  Ef_util = {ef_util} W")
-logging.info(f"  Ef_M = {ef_M} W")
-logging.info(f"  Ef_stoffstrom = {ef_stoffstrom} W")
-logging.info(f"  Ef_kollp = {ef_kollp} W")
-logging.info(f"  Ed_kollp_formel = Ef - Ep = {ed_kollp_formel} W")
-if ed_kollp_bal is not None and ed_kollp_formel is not None:
-    diff_kollp = ed_kollp_bal - ed_kollp_formel
-    logging.info("  Ed balance == Ed formula: " + ("YES" if _cmp(ed_kollp_bal, ed_kollp_formel) else f"NO (diff={diff_kollp:.6g})"))
-
-
-# Attach to KOLLP component for display/export
+# Attach custom values for export/table display
 if kollp_comp is not None:
     try:
-        kollp_comp.E_P_custom = ep_kollp
-        kollp_comp.E_F_custom = ef_kollp
-        kollp_comp.E_D_custom = ed_kollp_formel
-        kollp_comp.epsilon_custom = (ep_kollp / ef_kollp) if (ef_kollp and ef_kollp != 0) else None
+        kollp_comp.E_P_custom = Ep_kollp
+        kollp_comp.E_F_custom = Ef_kollp
+        kollp_comp.E_D_custom = Ed_kollp_formel
+        kollp_comp.epsilon_custom = (Ep_kollp / Ef_kollp) if (Ef_kollp and Ef_kollp != 0) else None
     except Exception:
         pass
 
@@ -1122,7 +1081,7 @@ def _build_molar_fractions_table(connections: dict) -> str:
     return "\n".join(lines)
 
 
-def _build_component_results_table(components: dict, custom_exergy: dict | None = None) -> str:
+def _build_component_results_table(components: dict) -> str:
     # keep original column layout; we'll inject custom values into the standard columns
     header = " & ".join([
         "Component",
@@ -1134,10 +1093,6 @@ def _build_component_results_table(components: dict, custom_exergy: dict | None 
     ]) + " \\\\"
     unit_row = " & ".join(["", "", "(W)", "(W)", "(W)", "(-)"]) + " \\\\"
 
-    custom_norm = {}
-    if custom_exergy:
-        custom_norm = {str(key).strip().upper(): value for key, value in custom_exergy.items()}
-
     rows = []
     for comp_name, component in components.items():
         if component.__class__.__name__ in {"CycleCloser", "Mixer", "Splitter"}:
@@ -1148,20 +1103,11 @@ def _build_component_results_table(components: dict, custom_exergy: dict | None 
         E_D = getattr(component, "E_D", None)
         epsilon = getattr(component, "epsilon", None)
 
-        # if this component has custom values, use them for display in the standard columns
+        # if this component has custom values (e.g. RC), use them for display in the standard columns
         E_F_custom = getattr(component, "E_F_custom", None)
         E_P_custom = getattr(component, "E_P_custom", None)
         E_D_custom = getattr(component, "E_D_custom", None)
         epsilon_custom = getattr(component, "epsilon_custom", None)
-
-        # robust fallback to exported custom_exergy mapping by component name
-        if custom_norm:
-            custom_entry = custom_norm.get(str(comp_name).strip().upper())
-            if custom_entry:
-                E_F_custom = custom_entry.get("E_F_custom", E_F_custom)
-                E_P_custom = custom_entry.get("E_P_custom", E_P_custom)
-                E_D_custom = custom_entry.get("E_D_custom", E_D_custom)
-                epsilon_custom = custom_entry.get("epsilon_custom", epsilon_custom)
 
         display_E_F = E_F_custom if E_F_custom is not None else E_F
         display_E_P = E_P_custom if E_P_custom is not None else E_P
@@ -1219,7 +1165,7 @@ def _build_composition_table(connections: dict, composition_key: str, caption: s
     if not components:
         return ""
 
-        header = " & ".join(["Stream", *components]) + r" \\\\"
+    header = " & ".join(["Stream", *components]) + r" \\\\"
     rows = []
     for conn in material_streams:
         values = [conn.get("name", "-")]
@@ -1271,7 +1217,7 @@ components_output_path = os.path.abspath(
         "aspen_luftzerlegung_components.tex",
     )
 )
-components_table = _build_component_results_table(ean.components, json_payload.get("custom_exergy", {}))
+components_table = _build_component_results_table(ean.components)
 with open(components_output_path, "w", encoding="utf-8") as tex_file:
     tex_file.write(components_table)
 
