@@ -822,6 +822,132 @@ if kollp_comp is not None:
 _log_component_custom_compare('KOLLP', kollp_comp)
 
 
+# --- KOLHP (HP column) functional SPECO-style setup (per user/Tesch)
+# Overall balance (reference):
+#   Ed_bal = Ein - Aus with absolute exergy rates E = m*(e_PH + e_CH)
+# Functional formulation:
+#   Ef = (SZ34 -> SZ33 loop effort)
+#      + m13*(e_M12 - e_M13)
+#      + m15*(e_T12 - e_T15)
+#   Ep = sum_{13,15,17} m_out*(e_CH,out - e_CH,12)
+#      + [m13*(e_T13 - e_T12) + m17*(e_T17 - e_T12)]
+#      + [m15*(e_M15 - e_M12) + m17*(e_M17 - e_M12)]
+kolhp_comp = ean.components.get("KOLHP") or next((c for n, c in ean.components.items() if str(n).strip().upper() == "KOLHP"), None)
+
+s12_hp = _find_exact_stream("S12")
+s34_hp = _find_exact_stream_any("S34", "SZ34")
+s13_hp = _find_exact_stream("S13")
+s15_hp = _find_exact_stream("S15")
+s17_hp = _find_exact_stream("S17")
+s33_hp = _find_exact_stream_any("S33", "SZ33")
+
+hp_in_streams = [s12_hp, s34_hp]
+hp_out_streams = [s13_hp, s15_hp, s17_hp, s33_hp]
+
+E_in_hp_terms = [_total_exergy_ph_ch(stream) for stream in hp_in_streams]
+E_out_hp_terms = [_total_exergy_ph_ch(stream) for stream in hp_out_streams]
+
+E_in_hp = sum(E_in_hp_terms) if all(v is not None for v in E_in_hp_terms) else None
+E_out_hp = sum(E_out_hp_terms) if all(v is not None for v in E_out_hp_terms) else None
+Ed_hp_bal = (E_in_hp - E_out_hp) if (E_in_hp is not None and E_out_hp is not None) else None
+
+# --- Functional Ef / Ep for KOLHP
+m12 = _get_val(s12_hp, "m")
+m13 = _get_val(s13_hp, "m")
+m15 = _get_val(s15_hp, "m")
+m17 = _get_val(s17_hp, "m")
+
+eM12 = _get_val(s12_hp, "e_M")
+eM13 = _get_val(s13_hp, "e_M")
+eM15 = _get_val(s15_hp, "e_M")
+eM17 = _get_val(s17_hp, "e_M")
+
+eT12 = _get_val(s12_hp, "e_T")
+eT13 = _get_val(s13_hp, "e_T")
+eT15 = _get_val(s15_hp, "e_T")
+eT17 = _get_val(s17_hp, "e_T")
+
+eCH12 = _get_val(s12_hp, "e_CH")
+eCH13 = _get_val(s13_hp, "e_CH")
+eCH15 = _get_val(s15_hp, "e_CH")
+eCH17 = _get_val(s17_hp, "e_CH")
+
+E34_tot = _total_exergy_ph_ch(s34_hp)
+E33_tot = _total_exergy_ph_ch(s33_hp)
+
+Ef_n2_loop_hp = None
+Ef_druck_s13_hp = None
+Ef_therm_s15_hp = None
+Ef_hp = None
+
+Ep_ch_hp = None
+Ep_therm_hp = None
+Ep_mech_hp = None
+Ep_hp = None
+Ed_hp_formel = None
+
+# Fuel terms
+if E34_tot is not None and E33_tot is not None:
+    Ef_n2_loop_hp = E34_tot - E33_tot
+
+if all(v is not None for v in [m13, eM12, eM13]):
+    Ef_druck_s13_hp = float(m13) * (float(eM12) - float(eM13))
+
+if all(v is not None for v in [m15, eT12, eT15]):
+    Ef_therm_s15_hp = float(m15) * (float(eT12) - float(eT15))
+
+if Ef_n2_loop_hp is not None and Ef_druck_s13_hp is not None and Ef_therm_s15_hp is not None:
+    Ef_hp = Ef_n2_loop_hp + Ef_druck_s13_hp + Ef_therm_s15_hp
+
+# Product terms
+if all(v is not None for v in [m13, m15, m17, eCH12, eCH13, eCH15, eCH17]):
+    Ep_ch_hp = (
+        float(m13) * (float(eCH13) - float(eCH12))
+        + float(m15) * (float(eCH15) - float(eCH12))
+        + float(m17) * (float(eCH17) - float(eCH12))
+    )
+
+if all(v is not None for v in [m13, m17, eT12, eT13, eT17]):
+    Ep_therm_hp = float(m13) * (float(eT13) - float(eT12)) + float(m17) * (float(eT17) - float(eT12))
+
+if all(v is not None for v in [m15, m17, eM12, eM15, eM17]):
+    Ep_mech_hp = float(m15) * (float(eM15) - float(eM12)) + float(m17) * (float(eM17) - float(eM12))
+
+if Ep_ch_hp is not None and Ep_therm_hp is not None and Ep_mech_hp is not None:
+    Ep_hp = Ep_ch_hp + Ep_therm_hp + Ep_mech_hp
+
+if Ef_hp is not None and Ep_hp is not None:
+    Ed_hp_formel = Ef_hp - Ep_hp
+
+logging.info("\nKOLHP custom functional calculation (Tesch/SPECO):")
+logging.info(f"  Ein  [12,34]         = {E_in_hp} W")
+logging.info(f"  Aus  [13,15,17,33]   = {E_out_hp} W")
+logging.info(f"  Ed_hp_bal = Ein - Aus= {Ed_hp_bal} W")
+logging.info(f"  Ef_n2_loop (34->33)  = {Ef_n2_loop_hp} W")
+logging.info(f"  Ef_druck_S13         = {Ef_druck_s13_hp} W")
+logging.info(f"  Ef_therm_S15         = {Ef_therm_s15_hp} W")
+logging.info(f"  Ef_hp                = {Ef_hp} W")
+logging.info(f"  Ep_ch                = {Ep_ch_hp} W")
+logging.info(f"  Ep_therm (13,17)     = {Ep_therm_hp} W")
+logging.info(f"  Ep_mech  (15,17)     = {Ep_mech_hp} W")
+logging.info(f"  Ep_hp                = {Ep_hp} W")
+logging.info(f"  Ed_hp_formel=Ef-Ep   = {Ed_hp_formel} W")
+if Ed_hp_bal is not None and Ed_hp_formel is not None:
+    logging.info(f"  Delta (Ed_bal - Ed_formel) = {Ed_hp_bal - Ed_hp_formel} W")
+
+if kolhp_comp is not None:
+    try:
+        kolhp_comp.E_F_custom = Ef_hp
+        kolhp_comp.E_P_custom = Ep_hp
+        kolhp_comp.E_D_custom = Ed_hp_formel
+        kolhp_comp.epsilon_custom = (Ep_hp / Ef_hp) if (Ef_hp and Ef_hp != 0) else None
+    except Exception:
+        pass
+
+# Compact comparison for KOLHP
+_log_component_custom_compare('KOLHP', kolhp_comp)
+
+
 # Log calculated exergy results for all components
 logging.info("\n" + "="*100)
 logging.info("COMPONENT EXERGY RESULTS")
