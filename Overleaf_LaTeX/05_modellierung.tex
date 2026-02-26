@@ -165,30 +165,44 @@ Produktdruck $p_{\mathrm{prod}}$ [bar]
 \section{Annahmen zur Exergieanalyse}
 \label{sec:modell_basic_assumptions_exergie}
 
-Für die exergetische Bewertung wird ein einheitlicher Referenzzustand der Umgebung mit einer Temperatur von $T_0 = 298{,}15\,\mathrm{K}$ und einem Druck von $p_0 = 1{,}013\,\mathrm{bar}$ angenommen. Berücksichtigt werden ausschließlich physikalische und chemische Exergieanteile, während kinetische und potenzielle Beiträge aufgrund ihrer geringen Größenordnung vernachlässigt werden. Die Berechnung der chemischen Exergie erfolgt auf Basis des Referenzmodells nach Szargut unter Verwendung tabellierter Standardwerte der molaren chemischen Exergien der Reinstoffe. Die detaillierten Berechnungsgrundlagen werden im folgenden erläutert.
+Für die exergetische Bewertung wird ein einheitlicher Referenzzustand der Umgebung mit einer Temperatur von $T_0 = 288{,}15\,\mathrm{K}$ und einem Druck von $p_0 = 1{,}013\,\mathrm{bar}$ angenommen. Berücksichtigt werden ausschließlich physikalische und chemische Exergieanteile, während kinetische und potenzielle Beiträge aufgrund ihrer geringen Größenordnung vernachlässigt werden. Die Berechnung der chemischen Exergie erfolgt auf Basis des Referenzmodells nach Szargut unter Verwendung tabellierter Standardwerte der molaren chemischen Exergien der Reinstoffe. Die detaillierten Berechnungsgrundlagen werden im folgenden erläutert.
 
 \subsection{Systemgrenze und Zerlegung in Funktionszonen}
 \label{sec:modell_System_funktion}
 
 Für die exergetische Bewertung wird die betrachtete Luftzerlegungsanlage als geschlossenes Gesamtsystem definiert. Alle über die Systemgrenze ein- und austretenden Stoff- sowie Arbeitsströme werden als Exergietransporte bilanziert. Der Betrieb wird stationär angenommen, sodass keine zeitlichen Speicherterme in den Exergiebilanzen auftreten. Externe Medien wie die Umgebung oder das elektrische Versorgungsnetz werden als Randbedingungen behandelt und nicht gesondert modelliert.\\
-Zur lokalen Zuordnung von Exergieverlusten wird die Gesamtanlage in wenige funktionale Bilanzräume unterteilt. Die Zerlegung erfolgt nach verfahrenstechnischen Funktionen, um eine physikalisch sinnvolle Interpretation der Ergebnisse sowie eine Vergleichbarkeit mit Literaturdaten zu gewährleisten.
-
-Hierzu werden folgende Funktionszonen definiert:
-\begin{itemize}
-    \item Luftverdichtung einschließlich Zwischenkühlung,
-    \item Gasaufbereitung,
-    \item kryogener Wärmetauscherblock (Hauptwärmetauscher),
-    \item Kolonnenblock zur Stofftrennung.
-\end{itemize}
-
+Zur lokalen Zuordnung von Exergieverlusten wird die Gesamtanlage in wenige funktionale Bilanzräume unterteilt. Die Zerlegung erfolgt nach verfahrenstechnischen Funktionen, um eine physikalisch sinnvolle Interpretation der Ergebnisse sowie eine Vergleichbarkeit mit Literaturdaten zu gewährleisten und ist in Tabelle \ref{tab:block_definition} dargestellt.\\
 Die detaillierte exergetische Bewertung einzelner Komponenten erfolgt im folgenden Abschnitt über die Definition von Brennstoff- und Produktexergien.
+
+\begin{table}[h]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\caption{Zuordnung der Modellkomponenten zu Funktionsblöcken der Anlage}
+\label{tab:block_definition}
+\begin{tabular}{p{3.5cm} p{5.5cm} p{5.5cm}}
+\toprule
+Block &
+Zugeordnete Komponenten Einzelkolonnenmodell &
+Zugeordnete Komponenten Doppelkolonnenmodell\\
+\midrule
+Luftverdichtung & LK1, ZK1, LK2 & LK1, ZK1, LK2\\
+Gasaufbereitung & ZK2, GW1, GW2 & ZK2, GW1, GW2\\
+Hauptwärmeübertrager & MW & MW\\
+Rektifikation & KOL, RC, D1 & KOLHP, KOLLP, RC1, RC2, D1, D2, D3,\\
+Rest & T, D2 & T, D4 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \subsection{Definition von Brennstoff- und Produktexergie der Komponenten}
 \label{sec:modell_komponenten}
 
 Zur lokalen Quantifizierung von Exergievernichtungen wird für jede betrachtete Komponente eine exergetische Brennstoff- und Produktexergie definiert und die Exergievernichtung als Differenz.
 Die vollständige komponentenspezifische Zuordnung aller Stoffströme der beiden Fälle ist im Anhang dokumentiert (vgl. \ref{ANHANG}. Für Standardkomponenten mit eindeutigem energetischem Zweck werden konventionelle Definitionen verwendet.\\
-
+Ideale Verteiler (Splitter) verursachen definitionsgemäß keine Irreversibilitäten und werden nicht bilanziert.\\
+Mischvorgänge können grundsätzlich zu Irreversibilitäten und damit zu Exergievernichtung führen, insbesondere beim Ausgleich von Temperatur-, Druck- oder Zusammensetzungsunterschieden. 
+Die exergetische Bewertung basiert auf der Definition von Brennstoff- und Produktexergien für Apparate mit einer klaren thermodynamischen Funktion, d.\,h. einer gerichteten Umwandlung oder Übertragung von Exergie \cite{lazzaretto_speco_2006, tsatsaronis_definitions_2007}. Im vorliegenden Modell werden die betrachteten Mixer jedoch ausschließlich zur Zusammenführung von Stoffströmen verwendet, die auf gleichem Druckniveau, mit ähnlichem Temperaturniveau, sowie mit nahezu identischer Zusammensetzung (Produktqualität 5.0~Stickstoff) vorliegen. Eine eindeutige Definition von Brennstoff- und Produktexergie ist daher nicht sinnvoll möglich und die Exergievernichtung durch Mischung wird daher als vernachlässigbar klein eingestuft und nicht als eigenständiger Beitrag ausgewiesen.\\
 Die Bilanzhülle von Verdichtern und Pumpen beschränkt sich auf das Fluid. Der exergetische Brennstoff ($\dot{E}_F$) entspricht der zugeführten Wellenarbeit, das Produkt ($\dot{E}_P$) der Erhöhung der physikalischen Exergie. Mechanische und elektrische Antriebsverluste, beispielsweise in Motoren oder Getrieben, liegen außerhalb der Systemgrenze. Diese Definition wird einheitlich für alle im Modell enthaltenen Verdichtungsstufen angewendet.\\
 
 
@@ -212,3 +226,51 @@ Die Zwischenkühler werden als dissipative Komponenten modelliert, bei denen kei
 Ideale Splitter erfüllen keine eigenständige thermodynamische Funktion und verursachen keine Exergievernichtung. Sie werden daher in der Exergieanalyse nicht als separate Komponenten geführt.
 Der Mixer, in denen die Produktströme mit unterschiedlichen Drücken und minimal unterschiedlicher Zusammensetzungen zusammengeführt werden, verursacht hingegen Irreversibilitäten durch Mischung und Druckangleichung, dieser wird folglich als dissipative Komponenten betrachtet.
 Die Intercooler werden als Ein-Strom-Komponenten modelliert, bei denen die Kühlung idealisiert über ein externes Wärmereservoir erfolgt; die Bewertung basiert auf der thermischen Exergieabfuhr, ohne explizite Modellierung eines Kühlstroms.
+
+
+
+
+HIER KOLLONNE ERST NUR BEISPIELL SINGLE!!!!!!!
+
+Kolonne als eigenständiges Trennaggregat ohne Reboiler und ohne Kondensator betrachtet wird. 
+
+Die Definition des exergetischen Produkts erfolgt funktional. Als Produkt wird nur jener Strom bewertet, dessen Bereitstellung dem Zweck des Prozesses entspricht. Ströme, die zwar Exergie aus dem Kontrollvolumen tragen, jedoch nicht als Zielgröße genutzt werden, stellen keine Verluste dar, sondern werden als Neben- beziehungsweise Ko-Produkte behandelt in diesem Fall die Bottomströme. Dadurch wird verhindert, dass die Kolonne für die Nichtnutzung eines Stoffstroms künstlich exergetisch benachteiligt wird. Die Bewertung erfolgt daher in zwei Varianten.
+
+In der ersten Variante wird ausschließlich der Kopfstrom $S23$ (Stickstoff-Destillat) als Produkt betrachtet. Der exergetische Produktnutzen ergibt sich als Differenz der chemischen und thermischen Exergie relativ zum Feedstrom $S11$:
+\[
+\dot{E}_P^{(1)}
+=
+\dot{m}_{23}
+\left[
+\left(e_{23}^{CH}-e_{11}^{CH}\right)
++
+\left(e_{23}^{T}-e_{11}^{T}\right)
+\right].
+\]
+Der chemische Term beschreibt hierbei den eigentlichen Trennnutzen infolge der erhöhten Reinheit, während der thermische Term den zusätzlichen Nutzen des kryogenen Zustands erfasst. 
+In der zweiten Variante wird neben dem Destillat auch der Bottomstrom $S12$ als Ko-Produkt berücksichtigt. Dieser Strom entsteht zwangsläufig aus dem Trennprozess und trägt ebenfalls chemische sowie thermische Exergie aus dem System. Obwohl er im vorliegenden Anwendungsszenario nicht unmittelbar genutzt wird, stellt seine Exergie keinen irreversiblen Verlust dar. Die exergetische Produktleistung setzt sich daher aus Hauptprodukt und Ko-Produkt zusammen:
+\[
+\dot{E}_P^{(2)}
+=
+\dot{m}_{23}
+\left[
+\left(e_{23}^{CH}-e_{11}^{CH}\right)
++
+\left(e_{23}^{T}-e_{11}^{T}\right)
+\right],
+\]
+\[
+\dot{E}_{co}^{(2)}
+=
+\dot{m}_{12}
+\left[
+\left(e_{12}^{CH}-e_{11}^{CH}\right)
++
+\left(e_{12}^{T}-e_{11}^{T}\right)
+\right].
+\]
+Die gesamte abgeführte Produkt-Exergie ergibt sich folglich zu
+\[
+\dot{E}_{P,\mathrm{ges}}^{(2)} = \dot{E}_P^{(2)} + \dot{E}_{co}^{(2)}.
+\]
+Die erste Variante bewertet somit ausschließlich den funktionalen Zielnutzen der Stickstoffbereitstellung, während die zweite Variante die gesamte thermodynamische Trennleistung der Kolonne unabhängig von der späteren Nutzung einzelner Ströme beschreibt. Beide Definitionen sind thermodynamisch konsistent; ihre Anwendung hängt von der jeweiligen Systemgrenze und dem Bewertungsziel ab. Während Variante~(1) die prozessspezifische Zielerfüllung charakterisiert, erlaubt Variante~(2) eine faire Beurteilung der intrinsischen Effizienz des Trennapparates ohne wirtschaftliche oder funktionale Vorannahmen.
