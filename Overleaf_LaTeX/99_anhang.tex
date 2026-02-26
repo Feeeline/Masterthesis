@@ -29,189 +29,211 @@ Ozon (O$_3$)           & 0{,}003–0{,}03\,ppm \\
 \end{tabular}
 \end{table}
 
-
 \chapter{Modellierung}
 \label{ch:a_sim}
 
+\begin{landscape}
+\centering
+\input{Overleaf_LaTeX/tabellen/aspen_luftzerlegung_streams}
+\end{landscape}
+
+
+\centering
+\input{Overleaf_LaTeX/tabellen/aspen_luftzerlegung_streams_molfrac}
 
 
 \chapter{Exergieberechnungen}
 \label{ch:a_exergie}
 
-\begin{sidewaystable}
+\begin{landscape}
+\begin{table}[p]
 \centering
 \caption{Definition von Brennstoff- und Produktexergie der betrachteten Komponenten für das Einzelkolonnenmodell}
-\label{tab:exdef_components_current}
+\label{tab:exdef_components_single}
 \begin{tabular}{lll}
 \toprule
 Komponente & $\dot{E}_{F,k}$ & $\dot{E}_{P,k}$ \\
 \midrule
 LK1 &
 $\dot{W}_{LK1}$ &
-$\dot{E}^{M}_{2}-\dot{E}^{M}_{1}
-+\dot{E}^{T}_{2}-\dot{E}^{T}_{1}$ \\
+$\dot{E}^{PH}_{2}-\dot{E}^{PH}_{1}$ \\
 
 LK2 &
 $\dot{W}_{LK2}$ &
-$\dot{E}^{M}_{4}-\dot{E}^{M}_{3}
-+\dot{E}^{T}_{4}-\dot{E}^{T}_{3}$ \\
+$\dot{E}^{PH}_{4}-\dot{E}^{PH}_{3}$ \\
 
 \addlinespace
-ZK1 (Intercooler, dissipativ) &
-$\dot{E}_{D,ZK1}=\dot{E}_{2}-\dot{E}_{3}$ &
--- \\
+ZK1 (dissipativ) &
+$\dot{E}^{PH}_{2}-\dot{E}^{PH}_{3}$ &-- \\
 
-ZK2 (Intercooler, dissipativ) &
-$\dot{E}_{D,ZK2}=\dot{E}_{4}-\dot{E}_{5}$ &
--- \\
+ZK2 (dissipativ) &
+$\dot{E}^{PH}_{4}-\dot{E}^{PH}_{5}$ &-- \\
 
 \addlinespace
 GW1 (Flash, dissipativ) &
-$\dot{E}_{D,GW1}=\dot{E}_{5}-\dot{E}_{6}-\dot{E}_{7}$ &
--- \\
+$\dot{m}_{6}(e^{PH}_{5}-e^{PH}_{6}) + \dot{E}_{7} $ & $\dot{m}_{6}(e^{CH}_{6}-e^{CH}_{5})$\\
 
 GW2 (Adsorber, dissipativ) &
-$\dot{E}_{D,GW2}=\dot{E}_{6}-\dot{E}_{8}-\dot{E}_{9}-\dot{E}_{10}$ &
--- \\
+$\dot{m}_{8}(e^{PH}_{6}-e^{PH}_{8}) + \dot{E}_{9} + \dot{E}_{10} $ & $\dot{m}_{8}(e^{CH}_{8}-e^{CH}_{6})$\\
 
+\addlinespace
 MW &
-$\dot{E}_{F,MW}=(\dot{E}_{16}-\dot{E}_{15})+(\dot{E}_{28}-\dot{E}_{27})+(\dot{E}_{30}-\dot{E}_{29})$ &
-$\dot{E}_{P,MW}=(\dot{E}_{11}-\dot{E}_{12})+(\dot{E}_{19}-\dot{E}_{20})$ \\
--- \\
+$\begin{aligned}
+&(\dot{E}^{PH}_{14}-\dot{E}^{PH}_{15}) \\
+&+(\dot{E}^{PH}_{20}-\dot{E}^{PH}_{21}) \\
+&+(\dot{E}^{PH}_{23}-\dot{E}^{PH}_{24}) \\
+&+(\dot{E}^{M}_{8}-\dot{E}^{M}_{11})
++\dot{E}^{T}_{8}
+\end{aligned}$ &
+$\dot{E}^{T}_{11}$ \\
 
 \addlinespace
 KOL &
-$\dot{E}_{F,KOL}=$ &
-$\dot{E}_{P,KOL}=$ \\
--- \\
+$???$ & $???$\\
 
 \addlinespace
 RC (Reboiler/Kondensator) &
-$\dot{E}_{F,RC}=\dot{E}_{SZRC1}-\dot{E}_{SZRC2}$ &
-$\dot{E}_{P,RC}=\dot{E}_{SZRC4}-\dot{E}_{SZRC3}$ \\
--- \\
+${E}^{PH}_{35}-\dot{E}^{PH}_{36} + {E}^{M}_{33}-\dot{E}^{M}_{34}$ &
+${E}^{T}_{34}-\dot{E}^{T}_{33}$ \\
 
 \addlinespace
-D1 &
-$\dot{E}_{F,D1}=$ &
-$\dot{E}_{P,D1}=$ \\
--- \\
+D1 (dissipativ) &
+$\dot{E}^{PH}_{12}-\dot{E}^{PH}_{13}$ &-- \\
 
-D2&
-$\dot{E}_{F,D2}=$ &
-$\dot{E}_{P,D2}=$ \\
--- \\
+D2 (dissipativ) &
+$\dot{E}^{PH}_{18}-\dot{E}^{PH}_{19}$ &-- \\
 
 \addlinespace
 T &
-$\dot{E}_{F,T}=$ &
-$\dot{E}_{P,T}=$ \\
--- \\
+$\dot{E}^{PH}_{16}-\dot{E}^{PH}_{17}$ &
+$\dot{W}_{T}$ \\
 \bottomrule
 \end{tabular}
-\end{sidewaystable}
+\end{table}
+\end{landscape}
 
 
-\begin{sidewaystable}
+\begin{landscape}
+
+\begin{table}[p]
 \centering
 \caption{Definition von Brennstoff- und Produktexergie der betrachteten Komponenten für das Doppelkolonnenmodell}
-\label{tab:exdef_components_current}
+\label{tab:exdef_components_doppel}
 \begin{tabular}{lll}
 \toprule
 Komponente & $\dot{E}_{F,k}$ & $\dot{E}_{P,k}$ \\
 \midrule
 LK1 &
 $\dot{W}_{LK1}$ &
-$\dot{E}^{M}_{2}-\dot{E}^{M}_{1}
-+\dot{E}^{T}_{2}-\dot{E}^{T}_{1}$ \\
+$\dot{E}^{PH}_{2}-\dot{E}^{PH}_{1}$ \\
 
 LK2 &
 $\dot{W}_{LK2}$ &
-$\dot{E}^{M}_{4}-\dot{E}^{M}_{3}
-+\dot{E}^{T}_{4}-\dot{E}^{T}_{3}$ \\
+$\dot{E}^{PH}_{4}-\dot{E}^{PH}_{3}$ \\
 
 \addlinespace
-ZK1 (Intercooler, dissipativ) &
-$\dot{E}_{D,ZK1}=\dot{E}_{2}-\dot{E}_{3}$ &
+ZK1 (dissipativ) &
+$\dot{E}^{PH}_{2}-\dot{E}^{PH}_{3}$ &
 -- \\
 
-ZK2 (Intercooler, dissipativ) &
-$\dot{E}_{D,ZK2}=\dot{E}_{4}-\dot{E}_{5}$ &
+ZK2 (dissipativ) &
+$\dot{E}^{PH}_{4}-\dot{E}^{PH}_{5}$ &
 -- \\
 
 \addlinespace
 GW1 (Flash, dissipativ) &
-$\dot{E}_{D,GW1}=\dot{E}_{5}-\dot{E}_{6}-\dot{E}_{7}$ &
--- \\
+$\dot{m}_{6}(e^{PH}_{5}-e^{PH}_{6}) + \dot{E}_{7} $ & $\dot{m}_{6}(e^{CH}_{6}-e^{CH}_{5})$\\
 
 GW2 (Adsorber, dissipativ) &
-$\dot{E}_{D,GW2}=\dot{E}_{6}-\dot{E}_{8}-\dot{E}_{9}-\dot{E}_{10}$ &
--- \\
+$\dot{m}_{8}(e^{PH}_{6}-e^{PH}_{8}) + \dot{E}_{9} + \dot{E}_{10} $ & $\dot{m}_{8}(e^{CH}_{8}-e^{CH}_{6})$\\
 
 \addlinespace
-MW &
-$\dot{E}_{F,MW}=(\dot{E}_{16}-\dot{E}_{15})+(\dot{E}_{28}-\dot{E}_{27})+(\dot{E}_{30}-\dot{E}_{29})$ &
-$\dot{E}_{P,MW}=(\dot{E}_{11}-\dot{E}_{12})+(\dot{E}_{19}-\dot{E}_{20})$ \\
--- \\
+MW (Variante 3)&
+$\begin{aligned}
+&(\dot{E}^{PH}_{15}-\dot{E}^{PH}_{16})
++(\dot{E}^{PH}_{27}-\dot{E}^{PH}_{28})
++(\dot{E}^{PH}_{29}-\dot{E}^{PH}_{30}) \\
+&+(\dot{E}^{M}_{11}-\dot{E}^{M}_{12})
++(\dot{E}^{M}_{19}-\dot{E}^{M}_{20}) \\
+&+\dot{E}^{T}_{11}+\dot{E}^{T}_{19}
+\end{aligned}$ &
+$\dot{E}^{T}_{12}+\dot{E}^{T}_{20}$ \\
 
 \addlinespace
-KOLHP &
-$\dot{E}_{F,KOLHP}=$ &
-$\dot{E}_{P,KOLHP}=$ \\
--- \\
+KOLHP (Variante Bottom kein Co-Produkt) &
+$\dot m_{23}\Big[(e^{CH}_{23}-e^{CH}_{11})+(e^{T}_{23}-e^{T}_{11})\Big]$
+& $\left(\dot E^{PH}_{SZ26}-\dot E^{PH}_{SZ25}\right)
++\dot m_{12}\Big[(e^{CH}_{11}-e^{CH}_{12})+(e^{T}_{11}-e^{T}_{12})\Big]
++\dot m_{SZ25}\Big[(e^{CH}_{11}-e^{CH}_{SZ25})+(e^{T}_{11}-e^{T}_{SZ25})\Big]$
+\\
 
-KOLLP &
-$\dot{E}_{F,KOLLP}=$ &
-$\dot{E}_{P,KOLLP}=$ \\
--- \\
+KOLLP (Variante Bottom alsö Co-Produkt)&
+$\dot m_{23}\Big[(e^{CH}_{23}-e^{CH}_{11})+(e^{T}_{23}-e^{T}_{11})\Big]
++\dot m_{12}\Big[(e^{CH}_{12}-e^{CH}_{11})+(e^{T}_{12}-e^{T}_{11})\Big]$
+& $\left(\dot E^{PH}_{SZ26}-\dot E^{PH}_{SZ25}\right)
++\dot m_{SZ25}\Big[(e^{CH}_{11}-e^{CH}_{SZ25})+(e^{T}_{11}-e^{T}_{SZ25})\Big]$\\
 
 \addlinespace
 RC1 (Reboiler/Kondensator) &
 $\dot{E}_{F,RC}=\dot{E}_{SZRC1}-\dot{E}_{SZRC2}$ &
 $\dot{E}_{P,RC}=\dot{E}_{SZRC4}-\dot{E}_{SZRC3}$ \\
--- \\
 
 RC2 (Reboiler/Kondensator) &
 $\dot{E}_{F,RC}=$ &
 $\dot{E}_{P,RC}=$ \\
--- \\
 
 \addlinespace
-D1 &
-$\dot{E}_{F,D1}=$ &
-$\dot{E}_{P,D1}=$ \\
--- \\
+D1 (dissipativ) &
+$\dot{E}^{PH}_{13}-\dot{E}^{PH}_{14}$ &-- \\
 
-D2&
-$\dot{E}_{F,D2}=$ &
-$\dot{E}_{P,D2}=$ \\
--- \\
+D2 (dissipativ) &
+$\dot{E}^{PH}_{17}-\dot{E}^{PH}_{18}$ &-- \\
 
-D3 &
-$\dot{E}_{F,D3}=$ &
-$\dot{E}_{P,D3}=$ \\
--- \\
+D3 (dissipativ) &
+$\dot{E}^{PH}_{22}-\dot{E}^{PH}_{23}$ &-- \\
 
-D4&
-$\dot{E}_{F,D4}=$ &
-$\dot{E}_{P,D4}=$ \\
--- \\
+D4 (dissipativ) &
+$\dot{E}^{PH}_{24}-\dot{E}^{PH}_{25}$ &-- \\
 
 \addlinespace
 T &
-$\dot{E}_{F,T}=$ &
-$\dot{E}_{P,T}=$ \\
--- \\
+$\dot{E}^{PH}_{20}-\dot{E}^{PH}_{21}$ &
+$\dot{W}_{T}$ \\
 
 \addlinespace
 PK1 &
 $\dot{W}_{PK1}$ &
-$\dot{E}^{M}_{31}-\dot{E}^{M}_{30}
-+\dot{E}^{T}_{31}-\dot{E}^{T}_{30}$ \\
+$\dot{E}^{PH}_{31}-\dot{E}^{PH}_{30}$ \\
 \bottomrule
 \end{tabular}
-\end{sidewaystable}
+\end{table}
+\end{landscape}
 
+\begin{table}[p]
+\centering
+\caption{Definition von Brennstoff- und Produktexergie ausgewählter Funktionsgruppen der Verdichtungsstrecke (Einzelkolonnenmodell)}
+\label{tab:exdef_groups_single_total}
+\begin{tabular}{lll}
+\toprule
+Funktionsgruppe & $\dot{E}_{F,g}$ & $\dot{E}_{P,g}$ \\
+\midrule
+ZK1 + LK2 &
+$\dot{W}_{LK2}$ &
+$\dot{E}_{4}-\dot{E}_{2}$ \\
+
+LK1 + ZK1 + LK2 &
+$\dot{W}_{LK1}+\dot{W}_{LK2}$ &
+$\dot{E}_{4}-\dot{E}_{1}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[p]
+\centering
+\caption{Berechnete exergetische Kenngrößen der betrachteten Anlagenkomponenten}
+\label{tab:exergy-components}
+\input{Overleaf_LaTeX/tabellen/aspen_luftzerlegung_components}
+\end{table}
 
 
 \chapter{Wirtschaftlichkeitsanalyse}
