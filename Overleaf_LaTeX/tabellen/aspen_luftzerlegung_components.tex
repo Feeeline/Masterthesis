@@ -24,23 +24,3 @@ D4 & Valve & 3682.59 & 3323.86 & 358.726 & 0 & 0.902589 & 5.47871e-05 \\\\
 System Discharge & Boundary & 0 & 0 & 0 & 669810 & - & - \\\\
 \hline
 \end{tabular}
-
-\textbf{Exergetischer Global-Check}\\
-\begin{tabular}{lll}
-\hline
-Größe & Formel & Wert \\
-\hline
-$\dot E_{tot,S7}$ & $\dot m_{S7}(e_{PH,S7}+e_{CH,S7})$ & 2449.05 \\
-$\dot E_{tot,S9}$ & $\dot m_{S9}(e_{PH,S9}+e_{CH,S9})$ & 7977.23 \\
-$\dot E_{tot,S10}$ & $\dot m_{S10}(e_{PH,S10}+e_{CH,S10})$ & 10247.1 \\
-$\dot E_{tot,S25}$ & $\dot m_{S25}(e_{PH,S25}+e_{CH,S25})$ & 91491.7 \\
-$\dot E_{tot,S28}$ & $\dot m_{S28}(e_{PH,S28}+e_{CH,S28})$ & 557645 \\
-$\sum \dot E_{tot,i}$ (Discharge) & $\sum_{i \in \{S7,S9,S10,S25,S28\}} \dot E_{tot,i}$ & 669810 \\
-\hline
-Total Input ($E_{in}$) & $E_{F,\mathrm{LK1}} + E_{F,\mathrm{LK2}} + E_{F,\mathrm{PK1}} + \dot E_{S1}$ & 7.63175e+06 \\
-Total Output ($E_{out}$) & $\dot E_{S32} + E_{P,\mathrm{T}}$ & 3.15653e+06 \\
-$\sum E_D + \sum E_L$ & $\sum_k \dot E_{D,k} + \sum_k \dot E_{L,k}$ & 4.6612e+06 \\
-Bilanz-Differenz [W] & $E_{in} - (E_{out} + \sum E_D + \sum E_L)$ & -185985 \\
-Bilanz-Differenz [\%] & $100 \cdot \Delta E_{Bilanz}/E_{in}$ & -2.43699 \\
-\hline
-\end{tabular}

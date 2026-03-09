@@ -1424,8 +1424,6 @@ def _build_component_results_table(components: dict) -> str:
     E_F_tot = E_F_tot_final if isinstance(E_F_tot_final, (int, float)) else getattr(ean, "E_F", None)
 
     rows = []
-    display_by_name = {}
-
     def _find_stream_conn(stream_name: str):
         conn_direct = ean.connections.get(stream_name)
         if isinstance(conn_direct, dict):
@@ -1502,19 +1500,11 @@ def _build_component_results_table(components: dict) -> str:
                 _format_value(y_D_k),
             ]) + r" \\\\" )
 
-        display_by_name[str(comp_name)] = {
-            "E_F": display_E_F,
-            "E_P": display_E_P,
-            "E_D": display_E_D,
-            "E_L": display_E_L,
-        }
-
-    # Schritt 1: Austrittsverluste aus Stoffstromtabelle
+    # System discharge row from selected outlet streams
     discharge_streams = ["S7", "S9", "S10", "S25", "S28"]
     discharge_terms = [(_name, _stream_total_exergy_from_table(_name)) for _name in discharge_streams]
     discharge_total = sum(v for _, v in discharge_terms if isinstance(v, (int, float)))
 
-    # Schritt 2: neue Tabellenzeile "System Discharge"
     rows.append(
         " & ".join([
             "System Discharge",
@@ -1528,6 +1518,84 @@ def _build_component_results_table(components: dict) -> str:
         ]) + r" \\\\" 
     )
 
+    col_spec = "l" + "l" + "r" * 6
+    lines = [
+        f"\\begin{{tabular}}{{{col_spec}}}",
+        "\\hline",
+        header,
+        unit_row,
+        "\\hline",
+        *rows,
+        "\\hline",
+        "\\end{tabular}",
+    ]
+    return "\n".join(lines)
+
+
+def _build_global_check_table(components: dict) -> str:
+    def _find_stream_conn(stream_name: str):
+        conn_direct = ean.connections.get(stream_name)
+        if isinstance(conn_direct, dict):
+            return conn_direct
+        for key, conn in ean.connections.items():
+            if not isinstance(conn, dict):
+                continue
+            name = str(conn.get("name", key))
+            if name == stream_name or str(key) == stream_name:
+                return conn
+        return None
+
+    def _stream_total_exergy_from_table(stream_name: str):
+        conn = _find_stream_conn(stream_name)
+        if not isinstance(conn, dict):
+            return None
+        m_val = conn.get("m")
+        e_ph = conn.get("e_PH")
+        e_ch = conn.get("e_CH")
+        if all(isinstance(v, (int, float)) for v in [m_val, e_ph, e_ch]):
+            return m_val * (e_ph + e_ch)
+        return None
+
+    display_by_name = {}
+    for comp_name, component in components.items():
+        if component.__class__.__name__ in {"CycleCloser", "Splitter"}:
+            continue
+        if str(comp_name).strip().upper() == "RECON":
+            continue
+
+        E_F = getattr(component, "E_F", None)
+        E_P = getattr(component, "E_P", None)
+        E_D = getattr(component, "E_D", None)
+        E_L = getattr(component, "E_L", None)
+
+        E_F_custom = getattr(component, "E_F_custom", None)
+        E_P_custom = getattr(component, "E_P_custom", None)
+        E_D_custom = getattr(component, "E_D_custom", None)
+        E_L_custom = getattr(component, "E_L_custom", None)
+
+        use_custom = all(v is not None for v in (E_F_custom, E_P_custom, E_D_custom))
+        if use_custom:
+            display_E_F = E_F_custom
+            display_E_P = E_P_custom
+            display_E_D = E_D_custom
+            display_E_L = E_L_custom if E_L_custom is not None else 0.0
+        else:
+            display_E_F = E_F
+            display_E_P = E_P
+            display_E_D = E_D
+            display_E_L = E_L if E_L is not None else 0.0
+
+        display_by_name[str(comp_name)] = {
+            "E_F": display_E_F,
+            "E_P": display_E_P,
+            "E_D": display_E_D,
+            "E_L": display_E_L,
+        }
+
+    discharge_streams = ["S7", "S9", "S10", "S25", "S28"]
+    discharge_terms = [(_name, _stream_total_exergy_from_table(_name)) for _name in discharge_streams]
+    discharge_total = sum(v for _, v in discharge_terms if isinstance(v, (int, float)))
+
     sum_E_D_table = sum(
         data["E_D"] for data in display_by_name.values()
         if isinstance(data.get("E_D"), (int, float))
@@ -1537,7 +1605,6 @@ def _build_component_results_table(components: dict) -> str:
         if isinstance(data.get("E_L"), (int, float))
     ) + discharge_total
 
-    # Schritt 3: Exergetischer Global-Check
     E_F_LK1 = (display_by_name.get("LK1") or {}).get("E_F")
     E_F_LK2 = (display_by_name.get("LK2") or {}).get("E_F")
     E_F_PK1 = (display_by_name.get("PK1") or {}).get("E_F")
@@ -1565,23 +1632,10 @@ def _build_component_results_table(components: dict) -> str:
     if isinstance(balance_diff, (int, float)) and isinstance(E_in, (int, float)) and E_in != 0:
         balance_diff_pct = 100.0 * balance_diff / E_in
 
-    def _latex_lr_row(label: str, value):
-        return f"{label} & {_format_value(value)} \\\\"
-
     def _latex_lll_row(size_label: str, formula_label: str, value):
         return f"{size_label} & {formula_label} & {_format_value(value)} \\\\"
 
-    col_spec = "l" + "l" + "r" * 6
     lines = [
-        f"\\begin{{tabular}}{{{col_spec}}}",
-        "\\hline",
-        header,
-        unit_row,
-        "\\hline",
-        *rows,
-        "\\hline",
-        "\\end{tabular}",
-        "",
         r"\textbf{Exergetischer Global-Check}\\",
         r"\begin{tabular}{lll}",
         r"\hline",
@@ -1687,6 +1741,19 @@ components_output_path = os.path.abspath(
 components_table = _build_component_results_table(ean.components)
 with open(components_output_path, "w", encoding="utf-8") as tex_file:
     tex_file.write(components_table)
+
+global_check_output_path = os.path.abspath(
+    os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        "Overleaf_LaTeX",
+        "tabellen",
+        "aspen_luftzerlegung_global_check.tex",
+    )
+)
+global_check_table = _build_global_check_table(ean.components)
+with open(global_check_output_path, "w", encoding="utf-8") as tex_file:
+    tex_file.write(global_check_table)
 
 molfractions_output_path = os.path.abspath(
     os.path.join(
