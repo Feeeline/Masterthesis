@@ -1323,15 +1323,15 @@ def _build_component_results_table(components: dict) -> str:
 
     col_spec = "l" + "l" + "r" * 5
     lines = [
-        r"Berechnete exergetische Kennzahlen der Komponenten des Single-Kolonnenmodells\\",
-        f"\\begin{{tabular}}{{{col_spec}}}",
+        f"\\begin{{longtable}}{{{col_spec}}}",
+        r"\caption{Berechnete exergetische Kennzahlen der Komponenten des Single-Kolonnenmodells} \\",
         "\\hline",
         header,
         unit_row,
         "\\hline",
         *rows,
         "\\hline",
-        "\\end{tabular}",
+        "\\end{longtable}",
     ]
     return "\n".join(lines)
 
@@ -1484,8 +1484,8 @@ def _build_global_check_table(components: dict) -> str:
 
     row_end = r"\\"
     lines = [
-        r"\textbf{Master-Exergiebilanz des Gesamtsystems}" + row_end,
-        r"\begin{tabular}{llr | llr}",
+        r"\begin{longtable}{llr | llr}",
+        r"\caption{Exergetische Bilanz des Gesamtsystems des Single-Kolonnenmodells} " + row_end,
         r"\hline",
         r"\multicolumn{3}{l|}{\textbf{Exergetischer Aufwand ($E_{in}$)}} & \multicolumn{3}{l}{\textbf{Exergetischer Verbleib}} " + row_end,
         r"\hline",
@@ -1500,7 +1500,7 @@ def _build_global_check_table(components: dict) -> str:
         r"\hline",
         f"\\multicolumn{{3}}{{l}}{{}} & \\textbf{{Differenz ($\\Delta$)}} &  & \\textbf{{{delta_text}}} " + row_end,
         r"\hline",
-        r"\end{tabular}",
+        r"\end{longtable}",
     ]
     return "\n".join(lines)
 
