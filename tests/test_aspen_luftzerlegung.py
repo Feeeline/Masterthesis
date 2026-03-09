@@ -1471,11 +1471,10 @@ def _build_component_results_table(components: dict) -> str:
         r"$\dot{E}_F$",
         r"$\dot{E}_P$",
         r"$\dot{E}_D$",
-        r"$\dot{E}_L$",
         r"$\varepsilon$",
         r"$y_{D,k}$",
     ]) + " \\\\"
-    unit_row = " & ".join(["", "", "(W)", "(W)", "(W)", "(W)", "(-)", "(-)"]) + " \\\\" 
+    unit_row = " & ".join(["", "", "(W)", "(W)", "(W)", "(-)", "(-)"]) + " \\\\" 
 
     E_F_tot = E_F_tot_final if isinstance(E_F_tot_final, (int, float)) else getattr(ean, "E_F", None)
 
@@ -1529,12 +1528,11 @@ def _build_component_results_table(components: dict) -> str:
                 _format_value(display_E_F),
                 _format_value(display_E_P),
                 _format_value(display_E_D),
-                _format_value(display_E_L),
                 _format_value(display_epsilon),
                 _format_value(y_D_k),
             ]) + r" \\\\" )
 
-    col_spec = "l" + "l" + "r" * 6
+    col_spec = "l" + "l" + "r" * 5
     lines = [
         r"Berechnete exergetische Kennzahlen der Komponenten des Doppelkolonnenmodells\\",
         f"\\begin{{tabular}}{{{col_spec}}}",
