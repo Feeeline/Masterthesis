@@ -109,15 +109,67 @@ def _sum_boundary_exergy(flow_dict: dict, label: str):
 E_F_chk = _sum_boundary_exergy(fuel, "E_F")
 E_P_chk = _sum_boundary_exergy(product, "E_P")
 E_L_chk = _sum_boundary_exergy(loss, "E_L")
+
+# Informational: chemical exergy of inlet air stream S1
+s1_conn = ean.connections.get("S1")
+E_S1_CH = None
+if isinstance(s1_conn, dict):
+    E_S1_CH = s1_conn.get("E_CH")
+    if not isinstance(E_S1_CH, (int, float)):
+        m_s1 = s1_conn.get("m")
+        e_ch_s1 = s1_conn.get("e_CH")
+        if isinstance(m_s1, (int, float)) and isinstance(e_ch_s1, (int, float)):
+            E_S1_CH = m_s1 * e_ch_s1
+
 E_D_chk = None
 if all(isinstance(v, (int, float)) for v in [E_F_chk, E_P_chk, E_L_chk]):
     E_D_chk = E_F_chk - E_P_chk - E_L_chk
+
+def _stream_abs_exergy(stream_name: str):
+    conn = ean.connections.get(stream_name)
+    if not isinstance(conn, dict):
+        return None
+    E_val = conn.get("E")
+    if isinstance(E_val, (int, float)):
+        return E_val
+    m_val = conn.get("m")
+    e_ph = conn.get("e_PH")
+    e_ch = conn.get("e_CH")
+    if all(isinstance(v, (int, float)) for v in [m_val, e_ph, e_ch]):
+        return m_val * (e_ph + e_ch)
+    return None
+
+# Custom system-level balance (Tsatsaronis-consistent boundary definition)
+# E_F,tot = (W_LK1 + W_LK2 + W_PK1 - W_T) + E_S1_CH
+# E_P,tot = E_S32 (absolute exergy stream)
+# E_L,tot = E_S25 + E_S28 (absolute exergy streams)
+E_P_tot_final = _stream_abs_exergy("S32")
+E_S25_abs = _stream_abs_exergy("S25")
+E_S28_abs = _stream_abs_exergy("S28")
+E_L_tot_final = None
+if all(isinstance(v, (int, float)) for v in [E_S25_abs, E_S28_abs]):
+    E_L_tot_final = E_S25_abs + E_S28_abs
+
+E_F_tot_final = None
+if isinstance(E_F_chk, (int, float)):
+    E_F_tot_final = E_F_chk + (E_S1_CH if isinstance(E_S1_CH, (int, float)) else 0.0)
+
+E_D_tot_final = None
+if all(isinstance(v, (int, float)) for v in [E_F_tot_final, E_P_tot_final, E_L_tot_final]):
+    E_D_tot_final = E_F_tot_final - E_P_tot_final - E_L_tot_final
 
 logging.info("\nOVERALL SYSTEM CONSISTENCY CHECK:")
 logging.info(f"  ean.E_F={ean.E_F}, recomputed={E_F_chk}, diff={None if E_F_chk is None else ean.E_F - E_F_chk}")
 logging.info(f"  ean.E_P={ean.E_P}, recomputed={E_P_chk}, diff={None if E_P_chk is None else ean.E_P - E_P_chk}")
 logging.info(f"  ean.E_L={ean.E_L}, recomputed={E_L_chk}, diff={None if E_L_chk is None else ean.E_L - E_L_chk}")
 logging.info(f"  ean.E_D={ean.E_D}, recomputed={E_D_chk}, diff={None if E_D_chk is None else ean.E_D - E_D_chk}")
+logging.info("\nCUSTOM OVERALL BALANCE (component-compatible boundary):")
+logging.info(f"  E_S1_CH = {E_S1_CH} W")
+logging.info(f"  E_F_tot_final = E_F_boundary + E_S1_CH = {E_F_tot_final} W")
+logging.info(f"  E_P_tot_final = E_S32 = {E_P_tot_final} W")
+logging.info(f"  E_L_tot_final = E_S25 + E_S28 = {E_L_tot_final} W")
+logging.info(f"  E_D_tot_final = E_F_tot_final - E_P_tot_final - E_L_tot_final = {E_D_tot_final} W")
+logging.info(f"  Check: E_D_tot_final + E_L_tot_final = {None if not (isinstance(E_D_tot_final, (int,float)) and isinstance(E_L_tot_final, (int,float))) else E_D_tot_final + E_L_tot_final} W")
 
 # --- Additional RC re-calculation and comparison (sanity check) ---
 export_now = ean._serialize()
@@ -1049,6 +1101,8 @@ resolved_components = []
 for comp_name, component in ean.components.items():
     if component.__class__.__name__ == "CycleCloser":
         continue
+    if str(comp_name).strip().upper() == "RECON":
+        continue
 
     E_F_std = getattr(component, 'E_F', None)
     E_P_std = getattr(component, 'E_P', None)
@@ -1091,9 +1145,9 @@ logging.info(f"Sum selected E_L = {sum_E_L_sel:.2f} W")
 logging.info(f"Closure (Sum E_F - Sum E_P - Sum E_D) = {closure_sel:.2f} W")
 logging.info(f"Closure (Sum E_F - Sum E_P - Sum(E_D+E_L)) = {closure_sel_with_losses:.2f} W")
 sys_diff = None
-if isinstance(ean.E_F, (int, float)) and isinstance(ean.E_P, (int, float)):
-    sys_diff = ean.E_F - ean.E_P
-    logging.info(f"System diff (E_F_tot - E_P_tot) = {sys_diff:.2f} W")
+if isinstance(E_F_tot_final, (int, float)) and isinstance(E_P_tot_final, (int, float)):
+    sys_diff = E_F_tot_final - E_P_tot_final
+    logging.info(f"System diff (E_F_tot_final - E_P_tot_final) = {sys_diff:.2f} W")
     logging.info(f"Check vs Sum(E_D+E_L): diff = {sys_diff - (sum_E_D_sel + sum_E_L_sel):.2f} W")
 logging.info("="*100)
 
@@ -1101,11 +1155,48 @@ logging.info("\n" + "="*100)
 logging.info("OVERALL SYSTEM RESULTS")
 logging.info("="*100)
 logging.info(f"Total E_F = {ean.E_F:.2f} W")
+logging.info(f"Total E_F (custom final) = {E_F_tot_final:.2f} W" if isinstance(E_F_tot_final, (int, float)) else "Total E_F (custom final) = N/A")
+logging.info(f"Total E_P (custom final) = {E_P_tot_final:.2f} W" if isinstance(E_P_tot_final, (int, float)) else "Total E_P (custom final) = N/A")
+logging.info(f"Total E_L (custom final) = {E_L_tot_final:.2f} W" if isinstance(E_L_tot_final, (int, float)) else "Total E_L (custom final) = N/A")
+logging.info(f"Total E_D (custom final) = {E_D_tot_final:.2f} W" if isinstance(E_D_tot_final, (int, float)) else "Total E_D (custom final) = N/A")
 logging.info(f"Total E_P = {ean.E_P:.2f} W")
 logging.info(f"Total E_D = {ean.E_D:.2f} W")
 logging.info(f"Total E_L = {ean.E_L:.2f} W")
 epsilon_total = f"{ean.epsilon:.4f}" if ean.epsilon is not None else "N/A"
 logging.info(f"System Efficiency eps = {epsilon_total}")
+logging.info("="*100 + "\n")
+
+# --- Automatic validation check (requested residual closure) ---
+logging.info("\n" + "="*100)
+logging.info("VALIDIERUNG (RESIDUUM-CHECK)")
+logging.info("="*100)
+
+Summe_Teile = None
+System_Diff = None
+Residuum = None
+
+if isinstance(sum_E_D_sel, (int, float)) and isinstance(sum_E_L_sel, (int, float)):
+    Summe_Teile = sum_E_D_sel + sum_E_L_sel
+
+if isinstance(E_F_tot_final, (int, float)) and isinstance(E_P_tot_final, (int, float)):
+    System_Diff = E_F_tot_final - E_P_tot_final
+
+if isinstance(Summe_Teile, (int, float)) and isinstance(System_Diff, (int, float)):
+    Residuum = System_Diff - Summe_Teile
+
+logging.info(f"Summe_Teile = sum(E_D_k) + sum(E_L_k) = {Summe_Teile} W")
+logging.info(f"System_Diff = E_F_tot - E_P_tot = {System_Diff} W")
+logging.info(f"Residuum = System_Diff - Summe_Teile = {Residuum} W")
+
+if isinstance(Residuum, (int, float)):
+    logging.info(f"|Residuum| = {abs(Residuum):.2f} W")
+    if abs(Residuum) <= 1e5:
+        logging.info("Bewertung: nahezu geschlossen (<= 0.1 MW).")
+    else:
+        logging.info("Bewertung: nicht geschlossen (> 0.1 MW).")
+else:
+    logging.info("Bewertung: nicht berechenbar (fehlende Groessen).")
+
 logging.info("="*100 + "\n")
 
 # Export JSON in the same structure as examples/json_example/example.json
@@ -1330,11 +1421,38 @@ def _build_component_results_table(components: dict) -> str:
     ]) + " \\\\"
     unit_row = " & ".join(["", "", "(W)", "(W)", "(W)", "(W)", "(-)", "(-)"]) + " \\\\" 
 
-    E_F_tot = getattr(ean, "E_F", None)
+    E_F_tot = E_F_tot_final if isinstance(E_F_tot_final, (int, float)) else getattr(ean, "E_F", None)
 
     rows = []
+    display_by_name = {}
+
+    def _find_stream_conn(stream_name: str):
+        conn_direct = ean.connections.get(stream_name)
+        if isinstance(conn_direct, dict):
+            return conn_direct
+        for key, conn in ean.connections.items():
+            if not isinstance(conn, dict):
+                continue
+            name = str(conn.get("name", key))
+            if name == stream_name or str(key) == stream_name:
+                return conn
+        return None
+
+    def _stream_total_exergy_from_table(stream_name: str):
+        conn = _find_stream_conn(stream_name)
+        if not isinstance(conn, dict):
+            return None
+        m_val = conn.get("m")
+        e_ph = conn.get("e_PH")
+        e_ch = conn.get("e_CH")
+        if all(isinstance(v, (int, float)) for v in [m_val, e_ph, e_ch]):
+            return m_val * (e_ph + e_ch)
+        return None
+
     for comp_name, component in components.items():
-        if component.__class__.__name__ in {"CycleCloser", "Mixer", "Splitter"}:
+        if component.__class__.__name__ in {"CycleCloser", "Splitter"}:
+            continue
+        if str(comp_name).strip().upper() == "RECON":
             continue
         # standard values
         E_F = getattr(component, "E_F", None)
@@ -1384,6 +1502,75 @@ def _build_component_results_table(components: dict) -> str:
                 _format_value(y_D_k),
             ]) + r" \\\\" )
 
+        display_by_name[str(comp_name)] = {
+            "E_F": display_E_F,
+            "E_P": display_E_P,
+            "E_D": display_E_D,
+            "E_L": display_E_L,
+        }
+
+    # Schritt 1: Austrittsverluste aus Stoffstromtabelle
+    discharge_streams = ["S7", "S9", "S10", "S25", "S28"]
+    discharge_terms = [(_name, _stream_total_exergy_from_table(_name)) for _name in discharge_streams]
+    discharge_total = sum(v for _, v in discharge_terms if isinstance(v, (int, float)))
+
+    # Schritt 2: neue Tabellenzeile "System Discharge"
+    rows.append(
+        " & ".join([
+            "System Discharge",
+            "Boundary",
+            _format_value(0.0),
+            _format_value(0.0),
+            _format_value(0.0),
+            _format_value(discharge_total),
+            _format_value(None),
+            _format_value(None),
+        ]) + r" \\\\" 
+    )
+
+    sum_E_D_table = sum(
+        data["E_D"] for data in display_by_name.values()
+        if isinstance(data.get("E_D"), (int, float))
+    )
+    sum_E_L_table = sum(
+        data["E_L"] for data in display_by_name.values()
+        if isinstance(data.get("E_L"), (int, float))
+    ) + discharge_total
+
+    # Schritt 3: Exergetischer Global-Check
+    E_F_LK1 = (display_by_name.get("LK1") or {}).get("E_F")
+    E_F_LK2 = (display_by_name.get("LK2") or {}).get("E_F")
+    E_F_PK1 = (display_by_name.get("PK1") or {}).get("E_F")
+    E_P_T = (display_by_name.get("T") or {}).get("E_P")
+    E_S1 = _stream_total_exergy_from_table("S1")
+    E_S32 = _stream_total_exergy_from_table("S32")
+
+    E_in = None
+    if all(isinstance(v, (int, float)) for v in [E_F_LK1, E_F_LK2, E_F_PK1, E_S1]):
+        E_in = E_F_LK1 + E_F_LK2 + E_F_PK1 + E_S1
+
+    E_out = None
+    if all(isinstance(v, (int, float)) for v in [E_S32, E_P_T]):
+        E_out = E_S32 + E_P_T
+
+    sum_losses_total = None
+    if all(isinstance(v, (int, float)) for v in [sum_E_D_table, sum_E_L_table]):
+        sum_losses_total = sum_E_D_table + sum_E_L_table
+
+    balance_diff = None
+    if all(isinstance(v, (int, float)) for v in [E_in, E_out, sum_losses_total]):
+        balance_diff = E_in - (E_out + sum_losses_total)
+
+    balance_diff_pct = None
+    if isinstance(balance_diff, (int, float)) and isinstance(E_in, (int, float)) and E_in != 0:
+        balance_diff_pct = 100.0 * balance_diff / E_in
+
+    def _latex_lr_row(label: str, value):
+        return f"{label} & {_format_value(value)} \\\\"
+
+    def _latex_lll_row(size_label: str, formula_label: str, value):
+        return f"{size_label} & {formula_label} & {_format_value(value)} \\\\"
+
     col_spec = "l" + "l" + "r" * 6
     lines = [
         f"\\begin{{tabular}}{{{col_spec}}}",
@@ -1394,6 +1581,26 @@ def _build_component_results_table(components: dict) -> str:
         *rows,
         "\\hline",
         "\\end{tabular}",
+        "",
+        r"\textbf{Exergetischer Global-Check}\\",
+        r"\begin{tabular}{lll}",
+        r"\hline",
+        r"Größe & Formel & Wert \\",
+        r"\hline",
+        _latex_lll_row(r"$\dot E_{tot,S7}$", r"$\dot m_{S7}(e_{PH,S7}+e_{CH,S7})$", discharge_terms[0][1]),
+        _latex_lll_row(r"$\dot E_{tot,S9}$", r"$\dot m_{S9}(e_{PH,S9}+e_{CH,S9})$", discharge_terms[1][1]),
+        _latex_lll_row(r"$\dot E_{tot,S10}$", r"$\dot m_{S10}(e_{PH,S10}+e_{CH,S10})$", discharge_terms[2][1]),
+        _latex_lll_row(r"$\dot E_{tot,S25}$", r"$\dot m_{S25}(e_{PH,S25}+e_{CH,S25})$", discharge_terms[3][1]),
+        _latex_lll_row(r"$\dot E_{tot,S28}$", r"$\dot m_{S28}(e_{PH,S28}+e_{CH,S28})$", discharge_terms[4][1]),
+        _latex_lll_row(r"$\sum \dot E_{tot,i}$ (Discharge)", r"$\sum_{i \in \{S7,S9,S10,S25,S28\}} \dot E_{tot,i}$", discharge_total),
+        r"\hline",
+        _latex_lll_row(r"Total Input ($E_{in}$)", r"$E_{F,\mathrm{LK1}} + E_{F,\mathrm{LK2}} + E_{F,\mathrm{PK1}} + \dot E_{S1}$", E_in),
+        _latex_lll_row(r"Total Output ($E_{out}$)", r"$\dot E_{S32} + E_{P,\mathrm{T}}$", E_out),
+        _latex_lll_row(r"$\sum E_D + \sum E_L$", r"$\sum_k \dot E_{D,k} + \sum_k \dot E_{L,k}$", sum_losses_total),
+        _latex_lll_row(r"Bilanz-Differenz [W]", r"$E_{in} - (E_{out} + \sum E_D + \sum E_L)$", balance_diff),
+        _latex_lll_row(r"Bilanz-Differenz [\%]", r"$100 \cdot \Delta E_{Bilanz}/E_{in}$", balance_diff_pct),
+        r"\hline",
+        r"\end{tabular}",
     ]
     return "\n".join(lines)
 
