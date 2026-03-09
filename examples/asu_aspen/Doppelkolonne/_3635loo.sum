@@ -1,0 +1,8 @@
+ DSET CALCULATOR MOLZ33 BLKSTAT @BLKSTAT (0 0)                                  
+ DSET CALCULATOR MOLZ33 COMPSTAT @L_1 (0)                                       
+ IDSET ID_105 (NPOINT) (#3)                                                     
+ IDSET ID_106 (PROPERTIES) (257 *6 106 *2 107 *2 108 *2 109 *2 262 *6)          
+ LSET L_69 ( %ID_106 & %ID_105)                                                 
+ DSET CALCULATOR MOLZ33 DEFV_SUM @L_69 ("MOLZ1" 3.16778911D-01 5.36856892D-01 * 
+ * "KMOL/SEC" "HPRR" 5.20184318D-01 * * * "KMOL/SEC" "HPLIQDES" 1.66725743D-02  
+ * * * "KMOL/SEC" )                                                             

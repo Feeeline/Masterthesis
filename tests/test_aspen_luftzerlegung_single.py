@@ -6,15 +6,15 @@ import math
 
 from exerpy import ExergyAnalysis
 
-# Get the log file path
-log_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'parser_run.log'))
+# Get the log file path (single-column run)
+log_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'parser_run_single.log'))
 
 """
 Logging setup note:
-- We avoid opening parser_run.log via FileHandler because shell redirection
-    (e.g. `python tests/test_aspen_luftzerlegung.py > parser_run.log 2>&1`) already
+- We avoid opening parser_run_single.log via FileHandler because shell redirection
+    (e.g. `python tests/test_aspen_luftzerlegung_single.py > parser_run_single.log 2>&1`) already
     owns the file handle and causes PermissionError on Windows.
-- Instead, emit logs to stdout only; the shell captures them into parser_run.log.
+- Instead, emit logs to stdout only; the shell captures them into parser_run_single.log.
 """
 
 # Reset existing handlers and configure stdout-only logging
@@ -27,8 +27,8 @@ console_handler.setFormatter(logging.Formatter('%(message)s'))
 logging.root.addHandler(console_handler)
 logging.root.setLevel(logging.INFO)
 
-#model_path = r'C:\Users\Felin\Documents\Masterthesis\Code\Exerpy\exerpy\examples\asu_aspen\Doppelkolonne.bkp'
-model_path = r"C:\Users\Felin\Documents\Masterthesis\Simulation_Code\GIT\examples\asu_aspen\Doppelkolonne\Doppelkolonne_Simulation_Final.bkp"
+#model_path = r'C:\Users\Felin\Documents\Masterthesis\Code\Exerpy\exerpy\examples\asu_aspen\Singekolonne\Single_Column_Simulation_Final.bkp'
+model_path = r"C:\Users\Felin\Documents\Masterthesis\Simulation_Code\GIT\examples\asu_aspen\Singekolonne\Single_Column_Simulation_Final.bkp"
 
 
 ean = ExergyAnalysis.from_aspen(model_path, chemExLib='Ahrendts', split_physical_exergy=True)
@@ -134,6 +134,18 @@ def _get_val(conn, key_name: str):
     if not conn:
         return None
     return conn.get(key_name)
+
+def _get_eph_effective(conn):
+    if not conn:
+        return None
+    eph = conn.get("e_PH")
+    if eph is not None:
+        return eph
+    e_t = conn.get("e_T")
+    e_m = conn.get("e_M")
+    if e_t is not None and e_m is not None:
+        return e_t + e_m
+    return None
 
 # Try to locate streams 33..36 by suffix (best-effort)
 s33 = _find_conn_by_suffix("33")
@@ -344,63 +356,6 @@ if rc_comp is not None:
     except Exception:
         pass
 
-# --- Repeat the same custom-calculation workflow for RC2 using streams SZ37..SZ40
-s37 = _find_conn_by_suffix("37")
-s38 = _find_conn_by_suffix("38")
-s39 = _find_conn_by_suffix("39")
-s40 = _find_conn_by_suffix("40")
-
-# Recompute condensation thermal exergy for RC2 (E_T difference between 37 and 38)
-ep_condens_tot_rc2 = None
-et37_tot = _total_from_permass(s37, "e_T")
-et38_tot = _total_from_permass(s38, "e_T")
-if et37_tot is not None and et38_tot is not None:
-    larger = et37_tot if et37_tot >= et38_tot else et38_tot
-    smaller = et38_tot if et37_tot >= et38_tot else et37_tot
-    ep_condens_tot_rc2 = larger - smaller
-
-# Ef for RC2: phys diff of reboiler streams (39/40) + mech diff of 37/38
-eph39_tot = _total_from_permass(s39, "e_PH")
-eph40_tot = _total_from_permass(s40, "e_PH")
-em37_tot = _total_from_permass(s37, "e_M")
-em38_tot = _total_from_permass(s38, "e_M")
-
-phys_diff_rc2 = None
-mech_diff_rc2 = None
-ef_custom_rc2 = None
-
-if eph39_tot is not None and eph40_tot is not None:
-    phys_diff_rc2 = abs(eph39_tot - eph40_tot)
-
-if em37_tot is not None and em38_tot is not None:
-    mech_diff_rc2 = abs(em37_tot - em38_tot)
-
-if phys_diff_rc2 is not None and mech_diff_rc2 is not None:
-    ef_custom_rc2 = phys_diff_rc2 + mech_diff_rc2
-
-ed_custom_rc2 = None
-if ef_custom_rc2 is not None and ep_condens_tot_rc2 is not None:
-    ed_custom_rc2 = ef_custom_rc2 - ep_condens_tot_rc2
-
-logging.info("\nRC2 custom calculation (streams 37..40):")
-logging.info(f"  E_T37 = {et37_tot}, E_T38 = {et38_tot}, Ep_cond_RC2 = {ep_condens_tot_rc2}")
-logging.info(f"  phys | E_PH39 = {eph39_tot}, E_PH40 = {eph40_tot}, phys_diff = {phys_diff_rc2}")
-logging.info(f"  mech | E_M37 = {em37_tot}, E_M38 = {em38_tot}, mech_diff = {mech_diff_rc2}")
-logging.info(f"  Ef_custom_RC2 = {ef_custom_rc2}")
-logging.info(f"  Ed_custom_RC2 = {ed_custom_rc2}")
-
-# Attach custom values to RC2 component for display/export
-rc2_comp = ean.components.get("RC2") or next((c for n, c in ean.components.items() if str(n).upper().startswith("RC2")), None)
-if rc2_comp is not None:
-    try:
-        rc2_comp.E_P_custom = ep_condens_tot_rc2
-        rc2_comp.E_F_custom = ef_custom_rc2
-        rc2_comp.E_D_custom = ed_custom_rc2
-        rc2_comp.epsilon_custom = (ep_condens_tot_rc2 / ef_custom_rc2) if (ef_custom_rc2 and ef_custom_rc2 != 0) else None
-    except Exception:
-        pass
-
-
 # Helper: concise comparison log for a component and its custom values
 def _log_component_custom_compare(name: str, comp):
     if comp is None:
@@ -424,147 +379,116 @@ def _log_component_custom_compare(name: str, comp):
         logging.info("Ed equal: N/A")
 
 
-# Emit compact comparison blocks for RC and RC2
+# Emit compact comparison block for RC
 _log_component_custom_compare('RC', rc_comp)
-_log_component_custom_compare('RC2', rc2_comp)
 
-# --- Repeat same custom-formula process for RC2 using streams 37..40
-rc2_comp = ean.components.get("RC2") or next((c for n, c in ean.components.items() if str(n).upper().startswith("RC2")), None)
+# --- Custom calculation for MH/MW (MultiHeat) using provided formulas
+# Ep = ET11
+# Ef = EPH14 - EPH15 + EPH20 - EPH21 + EPH25 - EPH24 + EM8 - EM11 + ET8
+mh_comp = (
+    ean.components.get("MH")
+    or ean.components.get("MW")
+    or next((c for n, c in ean.components.items() if str(n).upper().startswith(("MH", "MW"))), None)
+)
 
-# locate streams 37..40
-s37 = _find_conn_by_suffix("37")
-s38 = _find_conn_by_suffix("38")
-s39 = _find_conn_by_suffix("39")
-s40 = _find_conn_by_suffix("40")
-
-ep_condens2_tot = None
-ef_custom2 = None
-ed_custom2 = None
-
-# Ep as difference of E_T totals for streams 37 and 38
-et37_tot = _total_from_permass(s37, "e_T")
-et38_tot = _total_from_permass(s38, "e_T")
-if et37_tot is not None and et38_tot is not None:
-    larger = et37_tot if et37_tot >= et38_tot else et38_tot
-    smaller = et38_tot if et37_tot >= et38_tot else et37_tot
-    ep_condens2_tot = larger - smaller
-
-# Ef: physical difference of reboiler streams 39/40 + mechanical difference of 37/38
-eph39_tot = _total_from_permass(s39, "e_PH")
-eph40_tot = _total_from_permass(s40, "e_PH")
-em37_tot = _total_from_permass(s37, "e_M")
-em38_tot = _total_from_permass(s38, "e_M")
-
-phys_diff2 = None
-mech_diff2 = None
-
-if eph39_tot is not None and eph40_tot is not None:
-    phys_diff2 = abs(eph39_tot - eph40_tot)
-
-if em37_tot is not None and em38_tot is not None:
-    mech_diff2 = abs(em37_tot - em38_tot)
-
-if phys_diff2 is not None and mech_diff2 is not None:
-    ef_custom2 = phys_diff2 + mech_diff2
-
-if ef_custom2 is not None and ep_condens2_tot is not None:
-    ed_custom2 = ef_custom2 - ep_condens2_tot
-
-logging.info("\nRC2 custom check (streams 37..40):")
-logging.info(f"  Ep_cond2 = {ep_condens2_tot}")
-logging.info(f"  Ef_custom2 = {ef_custom2}")
-logging.info(f"  Ed_custom2 = {ed_custom2}")
-if getattr(rc2_comp, 'E_D', None) is not None and ed_custom2 is not None:
-    logging.info("  Ed match (RC2 component vs custom): " + ("YES" if _cmp(getattr(rc2_comp, 'E_D', None), ed_custom2) else f"NO (diff={getattr(rc2_comp, 'E_D', None) - ed_custom2:.6g})"))
-else:
-    logging.info("  Ed match (RC2): N/A (missing values)")
-
-# Attach custom values to RC2 component object for display/export
-if rc2_comp is not None:
-    try:
-        rc2_comp.E_P_custom = ep_condens2_tot
-        rc2_comp.E_F_custom = ef_custom2
-        rc2_comp.E_D_custom = ed_custom2
-        rc2_comp.epsilon_custom = (ep_condens2_tot / ef_custom2) if (ef_custom2 and ef_custom2 != 0) else None
-    except Exception:
-        pass
-
-# --- Custom calculation for MW using provided formulas
-# EP = ET12 + ET20
-# EF = |EPH15 - EPH16| + |EPH29 - EPH30| + |EPH27 - EPH28| + ET11 + ET19
-mw_comp = ean.components.get("MW") or next((c for n, c in ean.components.items() if str(n).upper().startswith("MW")), None)
-
-# find streams
+# find required streams
+s8 = _find_conn_by_suffix("8")
 s11 = _find_conn_by_suffix("11")
-s12 = _find_conn_by_suffix("12")
+s14 = _find_conn_by_suffix("14")
 s15 = _find_conn_by_suffix("15")
-s16 = _find_conn_by_suffix("16")
-s19 = _find_conn_by_suffix("19")
 s20 = _find_conn_by_suffix("20")
-s27 = _find_conn_by_suffix("27")
-s28 = _find_conn_by_suffix("28")
-s29 = _find_conn_by_suffix("29")
-s30 = _find_conn_by_suffix("30")
+s21 = _find_conn_by_suffix("21")
+s24 = _find_conn_by_suffix("24")
+s25 = _find_conn_by_suffix("25")
 
+def _total_eph_effective(conn):
+    if not conn:
+        return None
+    eph_tot = _total_from_permass(conn, "e_PH")
+    if eph_tot is not None:
+        return eph_tot
+    et_tot = _total_from_permass(conn, "e_T")
+    em_tot = _total_from_permass(conn, "e_M")
+    if et_tot is not None and em_tot is not None:
+        return et_tot + em_tot
+    return None
+
+et8_tot = _total_from_permass(s8, "e_T")
 et11_tot = _total_from_permass(s11, "e_T")
-et12_tot = _total_from_permass(s12, "e_T")
-et19_tot = _total_from_permass(s19, "e_T")
-et20_tot = _total_from_permass(s20, "e_T")
 
-eph15_tot = _total_from_permass(s15, "e_PH")
-eph16_tot = _total_from_permass(s16, "e_PH")
-eph27_tot = _total_from_permass(s27, "e_PH")
-eph28_tot = _total_from_permass(s28, "e_PH")
-eph29_tot = _total_from_permass(s29, "e_PH")
-eph30_tot = _total_from_permass(s30, "e_PH")
+eph14_tot = _total_eph_effective(s14)
+eph15_tot = _total_eph_effective(s15)
+eph20_tot = _total_eph_effective(s20)
+eph21_tot = _total_eph_effective(s21)
+eph24_tot = _total_eph_effective(s24)
+eph25_tot = _total_eph_effective(s25)
 
+em8_tot = _total_from_permass(s8, "e_M")
 em11_tot = _total_from_permass(s11, "e_M")
-em12_tot = _total_from_permass(s12, "e_M")
-em19_tot = _total_from_permass(s19, "e_M")
-em20_tot = _total_from_permass(s20, "e_M")
 
-ep_mw = None
-ef_mw = None
-ed_mw = None
+ep_mh = None
+ef_mh = None
+ed_mh = None
 
-if et12_tot is not None and et20_tot is not None:
-    ep_mw = et12_tot + et20_tot
+if et11_tot is not None:
+    ep_mh = et11_tot
 
-phys15_16 = abs(eph15_tot - eph16_tot) if (eph15_tot is not None and eph16_tot is not None) else None
-phys29_30 = abs(eph29_tot - eph30_tot) if (eph29_tot is not None and eph30_tot is not None) else None
-phys27_28 = abs(eph27_tot - eph28_tot) if (eph27_tot is not None and eph28_tot is not None) else None
+required_ef_terms = [
+    eph14_tot,
+    eph15_tot,
+    eph20_tot,
+    eph21_tot,
+    eph25_tot,
+    eph24_tot,
+    em8_tot,
+    em11_tot,
+    et8_tot,
+]
+if all(v is not None for v in required_ef_terms):
+    ef_mh = (
+        (eph14_tot - eph15_tot)
+        + (eph20_tot - eph21_tot)
+        + (eph25_tot - eph24_tot)
+        + (em8_tot - em11_tot)
+        + et8_tot
+    )
 
-# include mechanical exergy differences per user's formula: EM11 - EM12 + EM19 - EM20
-mech_term = None
-if em11_tot is not None and em12_tot is not None and em19_tot is not None and em20_tot is not None:
-    mech_term = (em11_tot - em12_tot) + (em19_tot - em20_tot)
+if ef_mh is not None and ep_mh is not None:
+    ed_mh = ef_mh - ep_mh
 
-if phys15_16 is not None and phys29_30 is not None and phys27_28 is not None and et11_tot is not None and et19_tot is not None and mech_term is not None:
-    ef_mw = phys15_16 + phys29_30 + phys27_28 + et11_tot + et19_tot + mech_term
+logging.info("\nMH custom calculation (user total balance):")
+logging.info(f"  ET11={et11_tot} -> Ep_mh={ep_mh}")
+logging.info(
+    f"  Ef terms: (EPH14-EPH15)=({eph14_tot}-{eph15_tot}), "
+    f"(EPH20-EPH21)=({eph20_tot}-{eph21_tot}), "
+    f"(EPH25-EPH24)=({eph25_tot}-{eph24_tot}), "
+    f"(EM8-EM11)=({em8_tot}-{em11_tot}), ET8={et8_tot}"
+)
+logging.info(f"  Ef_mh = {ef_mh}")
+logging.info(f"  Ed_mh = Ef_mh - Ep_mh = {ed_mh}")
 
-if ef_mw is not None and ep_mw is not None:
-    ed_mw = ef_mw - ep_mw
+if mh_comp is not None:
+    comp_ed = getattr(mh_comp, "E_D", None)
+    if comp_ed is not None and ed_mh is not None:
+        logging.info(
+            "  Ed match (component vs custom): "
+            + ("YES" if _cmp(comp_ed, ed_mh) else f"NO (diff={comp_ed - ed_mh:.6g})")
+        )
+    else:
+        logging.info("  Ed match (component vs custom): N/A")
 
-logging.info("\nMW custom calculation:")
-logging.info(f"  ET11={et11_tot}, ET12={et12_tot}, ET19={et19_tot}, ET20={et20_tot}")
-logging.info(f"  EPH15={eph15_tot}, EPH16={eph16_tot}, EPH27={eph27_tot}, EPH28={eph28_tot}, EPH29={eph29_tot}, EPH30={eph30_tot}")
-logging.info(f"  EM11={em11_tot}, EM12={em12_tot}, EM19={em19_tot}, EM20={em20_tot}")
-logging.info(f"  Ep_mw = {ep_mw}")
-logging.info(f"  Ef_mw = {ef_mw}")
-logging.info(f"  Ed_mw = {ed_mw}")
-
-# Attach to MW component for display/export
-if mw_comp is not None:
+# Attach to MH component for display/export
+if mh_comp is not None:
     try:
-        mw_comp.E_P_custom = ep_mw
-        mw_comp.E_F_custom = ef_mw
-        mw_comp.E_D_custom = ed_mw
-        mw_comp.epsilon_custom = (ep_mw / ef_mw) if (ef_mw and ef_mw != 0) else None
+        mh_comp.E_P_custom = ep_mh
+        mh_comp.E_F_custom = ef_mh
+        mh_comp.E_D_custom = ed_mh
+        mh_comp.epsilon_custom = (ep_mh / ef_mh) if (ef_mh and ef_mh != 0) else None
     except Exception:
         pass
 
-# Compact comparison for MW
-_log_component_custom_compare('MW', mw_comp)
+# Compact comparison for MH
+_log_component_custom_compare('MH', mh_comp)
 
 # --- Custom calculation for GW1 (Flash) using user formulas
 # Ep = m6 * (ech6 - ech5)
@@ -591,9 +515,9 @@ s7 = _find_exact_stream("S7")
 m5 = _get_val(s5, "m")
 m6 = _get_val(s6, "m")
 m7 = _get_val(s7, "m")
-eph5 = _get_val(s5, "e_PH")
-eph6 = _get_val(s6, "e_PH")
-eph7 = _get_val(s7, "e_PH")
+eph5 = _get_eph_effective(s5)
+eph6 = _get_eph_effective(s6)
+eph7 = _get_eph_effective(s7)
 ech5 = _get_val(s5, "e_CH")
 ech6 = _get_val(s6, "e_CH")
 ech7 = _get_val(s7, "e_CH")
@@ -655,10 +579,10 @@ m8 = _get_val(s8, "m")
 m9 = _get_val(s9, "m")
 m10 = _get_val(s10, "m")
 
-eph6 = _get_val(s6, "e_PH")
-eph8 = _get_val(s8, "e_PH")
-eph9 = _get_val(s9, "e_PH")
-eph10 = _get_val(s10, "e_PH")
+eph6 = _get_eph_effective(s6)
+eph8 = _get_eph_effective(s8)
+eph9 = _get_eph_effective(s9)
+eph10 = _get_eph_effective(s10)
 
 ech6 = _get_val(s6, "e_CH")
 ech8 = _get_val(s8, "e_CH")
@@ -709,284 +633,180 @@ if gw2_comp is not None:
 _log_component_custom_compare('GW2', gw2_comp)
 
 
-# --- KOLLP (LP column) custom calculations per user definition
-# Gesamtbilanz:
-#   E_D_bal = sum_in m*(e_PH+e_CH) - sum_out m*(e_PH+e_CH)
-#   in: 14, 21, 18, 36, 38
-#   out: 22, 29, 35, 37
-# SPECO Produkt:
-#   E_P = E_P,ch + E_P,T + E_P,M
-#   E_P,ch = m22*(e_ch,22 - e_ch,mix) + m29*(e_ch,29 - e_ch,mix)
-#   E_P,T  = m22*(e_T,22 - e_T,mix)
-#   E_P,M  = m29*(e_M,29 - e_M,mix)
+# --- RECO custom calculations using streams SZ25, SZ26, SZ27, SZ28
+# Ep = ETSZ26 - ETSZ25
+# Ef = EPHSZ27 - EPHSZ28 + EMSZ25 - EMSZ26
+
+reco_comp = ean.components.get("RECO") or next((c for n, c in ean.components.items() if str(n).upper().startswith("RECO")), None)
+
+sz25 = _find_exact_stream("SZ25")
+sz26 = _find_exact_stream("SZ26")
+sz27 = _find_exact_stream("SZ27")
+sz28 = _find_exact_stream("SZ28")
+
+etsz25 = _total_from_permass(sz25, "e_T")
+etsz26 = _total_from_permass(sz26, "e_T")
+ephsz27 = _total_eph_effective(sz27)
+ephsz28 = _total_eph_effective(sz28)
+emsz25 = _total_from_permass(sz25, "e_M")
+emsz26 = _total_from_permass(sz26, "e_M")
+
+ep_reco = None
+ef_reco = None
+ed_reco = None
+
+if etsz26 is not None and etsz25 is not None:
+    ep_reco = etsz26 - etsz25
+
+if all(v is not None for v in [ephsz27, ephsz28, emsz25, emsz26]):
+    ef_reco = ephsz27 - ephsz28 + emsz25 - emsz26
+
+if ef_reco is not None and ep_reco is not None:
+    ed_reco = ef_reco - ep_reco
+
+logging.info("\nRECO custom calculation (user formula):")
+logging.info(f"  Ep_reco = ETSZ26 - ETSZ25 = {etsz26} - {etsz25} = {ep_reco} W")
+logging.info(
+    f"  Ef_reco = EPHSZ27 - EPHSZ28 + EMSZ25 - EMSZ26 = "
+    f"{ephsz27} - {ephsz28} + {emsz25} - {emsz26} = {ef_reco} W"
+)
+logging.info(f"  Ed_reco = Ef - Ep = {ed_reco} W")
+
+if reco_comp is not None:
+    try:
+        reco_comp.E_P_custom = ep_reco
+        reco_comp.E_F_custom = ef_reco
+        reco_comp.E_D_custom = ed_reco
+        reco_comp.epsilon_custom = (ep_reco / ef_reco) if (ef_reco and ef_reco != 0) else None
+    except Exception:
+        pass
+
+_log_component_custom_compare('RECO', reco_comp)
+
+
+# --- KOL custom calculations (single column) using user formulas
+# Produkt:
+#   Ep = sum_{i in [23,12]} m_i*(e_CH,i - e_CH,11) + sum_{i in [23,12]} m_i*(e_T,i - e_T,11)
 # Brennstoff:
-#   E_F = E_F,Reboiler + E_F,Kondensator + E_F,intern
-#   E_F,Reboiler   = m38*e_PH,38 - m37*e_PH,37
-#   E_F,Kondensator= m36*e_PH,36 - m35*e_PH,35
-#   E_F,intern     = m22*(e_M,mix - e_M,22) + m29*(e_T,mix - e_T,29)
-kollp_comp = ean.components.get("KOLLP") or next((c for n, c in ean.components.items() if str(n).strip().upper() == "KOLLP"), None)
+#   Ef = (E_SZ26,liq - E_SZ26,gas) + sum_{i in [23,12]} m_i*(e_M,11 - e_M,i)
+# Hinweis: im vorliegenden Modell wird der gasfoermige Kondensatorzweig als SZ25 gefuehrt,
+#          daher: E_SZ26,gas -> E_SZ25.
 
-def _find_exact_stream_any(*stream_names):
-    for stream_name in stream_names:
-        stream = _find_exact_stream(stream_name)
-        if stream is not None:
-            return stream
-    return None
+kol_comp = ean.components.get("KOL") or next((c for n, c in ean.components.items() if str(n).strip().upper() == "KOL"), None)
 
-s14 = _find_exact_stream("S14")
-s18 = _find_exact_stream("S18")
-s21 = _find_exact_stream("S21")
-s22 = _find_exact_stream("S22")
-s29 = _find_exact_stream("S29")
-s35 = _find_exact_stream_any("S35", "SZ35")
-s36 = _find_exact_stream_any("S36", "SZ36")
-s37 = _find_exact_stream_any("S37", "SZ37")
-s38 = _find_exact_stream_any("S38", "SZ38")
+s11_kol = _find_exact_stream("S11")
+s12_kol = _find_exact_stream("S12")
+s23_kol = _find_exact_stream("S23")
+sz25_kol = _find_exact_stream("SZ25")
+sz26_kol = _find_exact_stream("SZ26")
 
-def _total_exergy_ph_ch(conn):
-    if not conn:
-        return None
-    m = _get_val(conn, "m")
-    eph = _get_val(conn, "e_PH")
-    ech = _get_val(conn, "e_CH")
-    if m is None or eph is None or ech is None:
-        return None
-    return float(m) * (float(eph) + float(ech))
+m12_kol = _get_val(s12_kol, "m")
+m23_kol = _get_val(s23_kol, "m")
 
-def _mix_property(streams, prop):
-    masses = [_get_val(stream, "m") for stream in streams]
-    props = [_get_val(stream, prop) for stream in streams]
-    if any(v is None for v in masses + props):
-        return None
-    m_sum = sum(float(v) for v in masses)
-    if m_sum == 0:
-        return None
-    weighted_sum = sum(float(masses[idx]) * float(props[idx]) for idx in range(len(streams)))
-    return weighted_sum / m_sum
+ech11_kol = _get_val(s11_kol, "e_CH")
+ech12_kol = _get_val(s12_kol, "e_CH")
+ech23_kol = _get_val(s23_kol, "e_CH")
 
-# 1) Gesamtbilanz (absolute Exergiestroeme m*(e_PH+e_CH))
-eintritt_streams = [s14, s21, s18, s36, s38]
-austritt_streams = [s22, s29, s35, s37]
+et11_kol = _get_val(s11_kol, "e_T")
+et12_kol = _get_val(s12_kol, "e_T")
+et23_kol = _get_val(s23_kol, "e_T")
 
-E_in_terms = [_total_exergy_ph_ch(stream) for stream in eintritt_streams]
-E_out_terms = [_total_exergy_ph_ch(stream) for stream in austritt_streams]
+em11_kol = _get_val(s11_kol, "e_M")
+em12_kol = _get_val(s12_kol, "e_M")
+em23_kol = _get_val(s23_kol, "e_M")
 
-E_in_kollp = sum(E_in_terms) if all(v is not None for v in E_in_terms) else None
-E_out_kollp = sum(E_out_terms) if all(v is not None for v in E_out_terms) else None
-Ed_kollp_bal = (E_in_kollp - E_out_kollp) if (E_in_kollp is not None and E_out_kollp is not None) else None
+esz26_liq = _total_eph_effective(sz26_kol)
+esz26_gas = _total_eph_effective(sz25_kol)
 
-# Mixer-Referenzzustand aus den Feedstroemen 14, 18, 21
-mix_streams = [s14, s18, s21]
-e_ch_mix = _mix_property(mix_streams, "e_CH")
-e_T_mix = _mix_property(mix_streams, "e_T")
-e_M_mix = _mix_property(mix_streams, "e_M")
+ep_ch_kol = None
+ep_t_kol = None
+ep_kol = None
+ef_kond_kol = None
+ef_mech_kol = None
+ef_kol = None
+ed_kol = None
 
-m22 = _get_val(s22, "m")
-m29 = _get_val(s29, "m")
-m35 = _get_val(s35, "m")
-m36 = _get_val(s36, "m")
-m37 = _get_val(s37, "m")
-m38 = _get_val(s38, "m")
+if all(v is not None for v in [m12_kol, m23_kol, ech11_kol, ech12_kol, ech23_kol]):
+    ep_ch_kol = float(m12_kol) * (float(ech12_kol) - float(ech11_kol)) + float(m23_kol) * (float(ech23_kol) - float(ech11_kol))
 
-ech22 = _get_val(s22, "e_CH")
-ech29 = _get_val(s29, "e_CH")
-eT22 = _get_val(s22, "e_T")
-eT29 = _get_val(s29, "e_T")
-eM22 = _get_val(s22, "e_M")
-eM29 = _get_val(s29, "e_M")
-ePH35 = _get_val(s35, "e_PH")
-ePH36 = _get_val(s36, "e_PH")
-ePH37 = _get_val(s37, "e_PH")
-ePH38 = _get_val(s38, "e_PH")
+if all(v is not None for v in [m12_kol, m23_kol, et11_kol, et12_kol, et23_kol]):
+    ep_t_kol = float(m12_kol) * (float(et12_kol) - float(et11_kol)) + float(m23_kol) * (float(et23_kol) - float(et11_kol))
 
-Ep_ch_kollp = None
-Ep_T_kollp = None
-Ep_M_kollp = None
-Ep_kollp = None
-Ef_reboiler_kollp = None
-Ef_kond_kollp = None
-Ef_intern_kollp = None
-Ef_kollp = None
-Ed_kollp_formel = None
+if ep_ch_kol is not None and ep_t_kol is not None:
+    ep_kol = ep_ch_kol + ep_t_kol
 
-# 2) Exergie-Produkt
-if all(v is not None for v in [m22, m29, ech22, ech29, e_ch_mix]):
-    Ep_ch_kollp = float(m22) * (float(ech22) - float(e_ch_mix)) + float(m29) * (float(ech29) - float(e_ch_mix))
+if esz26_liq is not None and esz26_gas is not None:
+    ef_kond_kol = esz26_liq - esz26_gas
 
-if all(v is not None for v in [m22, eT22, e_T_mix]):
-    Ep_T_kollp = float(m22) * (float(eT22) - float(e_T_mix))
+if all(v is not None for v in [m12_kol, m23_kol, em11_kol, em12_kol, em23_kol]):
+    ef_mech_kol = float(m12_kol) * (float(em11_kol) - float(em12_kol)) + float(m23_kol) * (float(em11_kol) - float(em23_kol))
 
-if all(v is not None for v in [m29, eM29, e_M_mix]):
-    Ep_M_kollp = float(m29) * (float(eM29) - float(e_M_mix))
+if ef_kond_kol is not None and ef_mech_kol is not None:
+    ef_kol = ef_kond_kol + ef_mech_kol
 
-if Ep_ch_kollp is not None and Ep_T_kollp is not None and Ep_M_kollp is not None:
-    Ep_kollp = Ep_ch_kollp + Ep_T_kollp + Ep_M_kollp
+if ef_kol is not None and ep_kol is not None:
+    ed_kol = ef_kol - ep_kol
 
-# 3) Exergie-Brennstoff
-if all(v is not None for v in [m38, ePH38, m37, ePH37]):
-    Ef_reboiler_kollp = float(m38) * float(ePH38) - float(m37) * float(ePH37)
+e11_tot_kol = None
+e12_tot_kol = None
+e23_tot_kol = None
+e25_tot_kol = None
+e26_tot_kol = None
+ed_kol_bal = None
 
-if all(v is not None for v in [m36, ePH36, m35, ePH35]):
-    Ef_kond_kollp = float(m36) * float(ePH36) - float(m35) * float(ePH35)
+if all(v is not None for v in [s11_kol, _get_val(s11_kol, "m"), _get_eph_effective(s11_kol), _get_val(s11_kol, "e_CH")]):
+    e11_tot_kol = float(_get_val(s11_kol, "m")) * (float(_get_eph_effective(s11_kol)) + float(_get_val(s11_kol, "e_CH")))
 
-if all(v is not None for v in [m22, e_M_mix, eM22, m29, e_T_mix, eT29]):
-    Ef_intern_kollp = float(m22) * (float(e_M_mix) - float(eM22)) + float(m29) * (float(e_T_mix) - float(eT29))
+if all(v is not None for v in [s12_kol, _get_val(s12_kol, "m"), _get_eph_effective(s12_kol), _get_val(s12_kol, "e_CH")]):
+    e12_tot_kol = float(_get_val(s12_kol, "m")) * (float(_get_eph_effective(s12_kol)) + float(_get_val(s12_kol, "e_CH")))
 
-if Ef_reboiler_kollp is not None and Ef_kond_kollp is not None and Ef_intern_kollp is not None:
-    Ef_kollp = Ef_reboiler_kollp + Ef_kond_kollp + Ef_intern_kollp
+if all(v is not None for v in [s23_kol, _get_val(s23_kol, "m"), _get_eph_effective(s23_kol), _get_val(s23_kol, "e_CH")]):
+    e23_tot_kol = float(_get_val(s23_kol, "m")) * (float(_get_eph_effective(s23_kol)) + float(_get_val(s23_kol, "e_CH")))
 
-if Ef_kollp is not None and Ep_kollp is not None:
-    Ed_kollp_formel = Ef_kollp - Ep_kollp
+if all(v is not None for v in [sz25_kol, _get_val(sz25_kol, "m"), _get_eph_effective(sz25_kol), _get_val(sz25_kol, "e_CH")]):
+    e25_tot_kol = float(_get_val(sz25_kol, "m")) * (float(_get_eph_effective(sz25_kol)) + float(_get_val(sz25_kol, "e_CH")))
 
-logging.info("\nKOLLP custom calculation (strict user formulas):")
-logging.info(f"  Gesamtbilanz in  [14,21,18,36,38] = {E_in_kollp} W")
-logging.info(f"  Gesamtbilanz out [22,29,35,37]    = {E_out_kollp} W")
-logging.info(f"  Ed_kollp_bal = Ein - Aus          = {Ed_kollp_bal} W")
-logging.info(f"  mix: e_ch_mix={e_ch_mix}, e_T_mix={e_T_mix}, e_M_mix={e_M_mix}")
-logging.info(f"  Ep_ch={Ep_ch_kollp}, Ep_T={Ep_T_kollp}, Ep_M={Ep_M_kollp}, Ep={Ep_kollp}")
-logging.info(f"  Ef_reboiler={Ef_reboiler_kollp}, Ef_kondensator={Ef_kond_kollp}, Ef_intern={Ef_intern_kollp}, Ef={Ef_kollp}")
-logging.info(f"  Ed_kollp_formel = Ef - Ep         = {Ed_kollp_formel} W")
-if Ed_kollp_bal is not None and Ed_kollp_formel is not None:
-    logging.info(f"  Delta (Ed_bal - Ed_formel)        = {Ed_kollp_bal - Ed_kollp_formel} W")
+if all(v is not None for v in [sz26_kol, _get_val(sz26_kol, "m"), _get_eph_effective(sz26_kol), _get_val(sz26_kol, "e_CH")]):
+    e26_tot_kol = float(_get_val(sz26_kol, "m")) * (float(_get_eph_effective(sz26_kol)) + float(_get_val(sz26_kol, "e_CH")))
 
-# Attach custom values for export/table display
-if kollp_comp is not None:
+if all(v is not None for v in [e11_tot_kol, e12_tot_kol, e23_tot_kol, e25_tot_kol, e26_tot_kol]):
+    ed_kol_bal = (e11_tot_kol + e26_tot_kol) - (e12_tot_kol + e23_tot_kol + e25_tot_kol)
+
+logging.info("\nKOL custom calculation (user formula):")
+logging.info(f"  Ep_ch = m12*(eCH12-eCH11) + m23*(eCH23-eCH11) = {ep_ch_kol} W")
+logging.info(f"  Ep_T  = m12*(eT12-eT11) + m23*(eT23-eT11) = {ep_t_kol} W")
+logging.info(f"  Ep_kol = Ep_ch + Ep_T = {ep_kol} W")
+logging.info(f"  Ef_kond = E_SZ26_liq - E_SZ26_gas(=SZ25) = {esz26_liq} - {esz26_gas} = {ef_kond_kol} W")
+logging.info(f"  Ef_mech = m12*(eM11-eM12) + m23*(eM11-eM23) = {ef_mech_kol} W")
+logging.info(f"  Ef_kol = Ef_kond + Ef_mech = {ef_kol} W")
+logging.info(f"  Ed_kol = Ef - Ep = {ed_kol} W")
+logging.info(f"  Gesamtbilanz Ed_kol_bal = (E11 + E26) - (E12 + E23 + E25) = {ed_kol_bal} W")
+if ed_kol is not None and ed_kol_bal is not None:
+    logging.info(f"  Delta (Ed_formel - Ed_bal) = {ed_kol - ed_kol_bal} W")
+
+if kol_comp is not None:
+    comp_ed = getattr(kol_comp, "E_D", None)
+    if comp_ed is not None and ed_kol is not None:
+        logging.info(
+            "  Ed match (component vs custom): "
+            + ("YES" if _cmp(comp_ed, ed_kol) else f"NO (diff={comp_ed - ed_kol:.6g})")
+        )
+    else:
+        logging.info("  Ed match (component vs custom): N/A")
+
+if kol_comp is not None:
     try:
-        kollp_comp.E_P_custom = Ep_kollp
-        kollp_comp.E_F_custom = Ef_kollp
-        kollp_comp.E_D_custom = Ed_kollp_formel
-        kollp_comp.epsilon_custom = (Ep_kollp / Ef_kollp) if (Ef_kollp and Ef_kollp != 0) else None
+        kol_comp.E_P_custom = ep_kol
+        kol_comp.E_F_custom = ef_kol
+        kol_comp.E_D_custom = ed_kol
+        kol_comp.epsilon_custom = (ep_kol / ef_kol) if (ef_kol and ef_kol != 0) else None
     except Exception:
         pass
 
-# Compact comparison for KOLLP
-_log_component_custom_compare('KOLLP', kollp_comp)
+_log_component_custom_compare('KOL', kol_comp)
 
 
-# --- KOLHP (HP column) functional SPECO-style setup (per user/Tesch)
-# Overall balance (reference):
-#   Ed_bal = Ein - Aus with absolute exergy rates E = m*(e_PH + e_CH)
-# Functional formulation:
-#   Ef = (SZ34 -> SZ33 loop effort)
-#      + m13*(e_M12 - e_M13)
-#      + m15*(e_T12 - e_T15)
-#   Ep = sum_{13,15,17} m_out*(e_CH,out - e_CH,12)
-#      + [m13*(e_T13 - e_T12) + m17*(e_T17 - e_T12)]
-#      + [m15*(e_M15 - e_M12) + m17*(e_M17 - e_M12)]
-kolhp_comp = ean.components.get("KOLHP") or next((c for n, c in ean.components.items() if str(n).strip().upper() == "KOLHP"), None)
-
-s12_hp = _find_exact_stream("S12")
-s34_hp = _find_exact_stream_any("S34", "SZ34")
-s13_hp = _find_exact_stream("S13")
-s15_hp = _find_exact_stream("S15")
-s17_hp = _find_exact_stream("S17")
-s33_hp = _find_exact_stream_any("S33", "SZ33")
-
-hp_in_streams = [s12_hp, s34_hp]
-hp_out_streams = [s13_hp, s15_hp, s17_hp, s33_hp]
-
-E_in_hp_terms = [_total_exergy_ph_ch(stream) for stream in hp_in_streams]
-E_out_hp_terms = [_total_exergy_ph_ch(stream) for stream in hp_out_streams]
-
-E_in_hp = sum(E_in_hp_terms) if all(v is not None for v in E_in_hp_terms) else None
-E_out_hp = sum(E_out_hp_terms) if all(v is not None for v in E_out_hp_terms) else None
-Ed_hp_bal = (E_in_hp - E_out_hp) if (E_in_hp is not None and E_out_hp is not None) else None
-
-# --- Functional Ef / Ep for KOLHP
-m12 = _get_val(s12_hp, "m")
-m13 = _get_val(s13_hp, "m")
-m15 = _get_val(s15_hp, "m")
-m17 = _get_val(s17_hp, "m")
-
-eM12 = _get_val(s12_hp, "e_M")
-eM13 = _get_val(s13_hp, "e_M")
-eM15 = _get_val(s15_hp, "e_M")
-eM17 = _get_val(s17_hp, "e_M")
-
-eT12 = _get_val(s12_hp, "e_T")
-eT13 = _get_val(s13_hp, "e_T")
-eT15 = _get_val(s15_hp, "e_T")
-eT17 = _get_val(s17_hp, "e_T")
-
-eCH12 = _get_val(s12_hp, "e_CH")
-eCH13 = _get_val(s13_hp, "e_CH")
-eCH15 = _get_val(s15_hp, "e_CH")
-eCH17 = _get_val(s17_hp, "e_CH")
-
-E34_tot = _total_exergy_ph_ch(s34_hp)
-E33_tot = _total_exergy_ph_ch(s33_hp)
-
-Ef_n2_loop_hp = None
-Ef_druck_s13_hp = None
-Ef_therm_s15_hp = None
-Ef_hp = None
-
-Ep_ch_hp = None
-Ep_therm_hp = None
-Ep_mech_hp = None
-Ep_hp = None
-Ed_hp_formel = None
-
-# Fuel terms
-if E34_tot is not None and E33_tot is not None:
-    Ef_n2_loop_hp = E34_tot - E33_tot
-
-if all(v is not None for v in [m13, eM12, eM13]):
-    Ef_druck_s13_hp = float(m13) * (float(eM12) - float(eM13))
-
-if all(v is not None for v in [m15, eT12, eT15]):
-    Ef_therm_s15_hp = float(m15) * (float(eT12) - float(eT15))
-
-if Ef_n2_loop_hp is not None and Ef_druck_s13_hp is not None and Ef_therm_s15_hp is not None:
-    Ef_hp = Ef_n2_loop_hp + Ef_druck_s13_hp + Ef_therm_s15_hp
-
-# Product terms
-if all(v is not None for v in [m13, m15, m17, eCH12, eCH13, eCH15, eCH17]):
-    Ep_ch_hp = (
-        float(m13) * (float(eCH13) - float(eCH12))
-        + float(m15) * (float(eCH15) - float(eCH12))
-        + float(m17) * (float(eCH17) - float(eCH12))
-    )
-
-if all(v is not None for v in [m13, m17, eT12, eT13, eT17]):
-    Ep_therm_hp = float(m13) * (float(eT13) - float(eT12)) + float(m17) * (float(eT17) - float(eT12))
-
-if all(v is not None for v in [m15, m17, eM12, eM15, eM17]):
-    Ep_mech_hp = float(m15) * (float(eM15) - float(eM12)) + float(m17) * (float(eM17) - float(eM12))
-
-if Ep_ch_hp is not None and Ep_therm_hp is not None and Ep_mech_hp is not None:
-    Ep_hp = Ep_ch_hp + Ep_therm_hp + Ep_mech_hp
-
-if Ef_hp is not None and Ep_hp is not None:
-    Ed_hp_formel = Ef_hp - Ep_hp
-
-logging.info("\nKOLHP custom functional calculation (Tesch/SPECO):")
-logging.info(f"  Ein  [12,34]         = {E_in_hp} W")
-logging.info(f"  Aus  [13,15,17,33]   = {E_out_hp} W")
-logging.info(f"  Ed_hp_bal = Ein - Aus= {Ed_hp_bal} W")
-logging.info(f"  Ef_n2_loop (34->33)  = {Ef_n2_loop_hp} W")
-logging.info(f"  Ef_druck_S13         = {Ef_druck_s13_hp} W")
-logging.info(f"  Ef_therm_S15         = {Ef_therm_s15_hp} W")
-logging.info(f"  Ef_hp                = {Ef_hp} W")
-logging.info(f"  Ep_ch                = {Ep_ch_hp} W")
-logging.info(f"  Ep_therm (13,17)     = {Ep_therm_hp} W")
-logging.info(f"  Ep_mech  (15,17)     = {Ep_mech_hp} W")
-logging.info(f"  Ep_hp                = {Ep_hp} W")
-logging.info(f"  Ed_hp_formel=Ef-Ep   = {Ed_hp_formel} W")
-if Ed_hp_bal is not None and Ed_hp_formel is not None:
-    logging.info(f"  Delta (Ed_bal - Ed_formel) = {Ed_hp_bal - Ed_hp_formel} W")
-
-if kolhp_comp is not None:
-    try:
-        kolhp_comp.E_F_custom = Ef_hp
-        kolhp_comp.E_P_custom = Ep_hp
-        kolhp_comp.E_D_custom = Ed_hp_formel
-        kolhp_comp.epsilon_custom = (Ep_hp / Ef_hp) if (Ef_hp and Ef_hp != 0) else None
-    except Exception:
-        pass
-
-# Compact comparison for KOLHP
-_log_component_custom_compare('KOLHP', kolhp_comp)
+# KOLLP, KOLHP and RC2 custom blocks are intentionally omitted for single-column mode.
 
 
 # Log calculated exergy results for all components
@@ -1085,7 +905,7 @@ logging.info("="*100 + "\n")
 
 # Export JSON in the same structure as examples/json_example/example.json
 output_path = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..", "examples", "json_example", "aspen_luftzerlegung.json")
+    os.path.join(os.path.dirname(__file__), "..", "examples", "json_example", "aspen_luftzerlegung_single.json")
 )
 os.makedirs(os.path.dirname(output_path), exist_ok=True)
 export_data = ean._serialize()
@@ -1426,7 +1246,7 @@ latex_output_path = os.path.abspath(
         "..",
         "Overleaf_LaTeX",
         "tabellen",
-        "aspen_luftzerlegung_streams.tex",
+        "aspen_luftzerlegung_streams_single.tex",
     )
 )
 os.makedirs(os.path.dirname(latex_output_path), exist_ok=True)
@@ -1441,7 +1261,7 @@ components_output_path = os.path.abspath(
         "..",
         "Overleaf_LaTeX",
         "tabellen",
-        "aspen_luftzerlegung_components.tex",
+        "aspen_luftzerlegung_components_single.tex",
     )
 )
 components_table = _build_component_results_table(ean.components)
@@ -1454,7 +1274,7 @@ molfractions_output_path = os.path.abspath(
         "..",
         "Overleaf_LaTeX",
         "tabellen",
-        "aspen_luftzerlegung_streams_molfrac.tex",
+        "aspen_luftzerlegung_streams_molfrac_single.tex",
     )
 )
 molfractions_table = _build_molar_fractions_table(connections_data)

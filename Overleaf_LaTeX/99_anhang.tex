@@ -67,17 +67,16 @@ $\dot{E}_{D,ZK2}=\dot{E}_{4}-\dot{E}_{5}$ &
 
 \addlinespace
 GW1 (Flash, dissipativ) &
-$\dot{E}_{D,GW1}=\dot{E}_{5}-\dot{E}_{6}-\dot{E}_{7}$ &
--- \\
+$\dot{E}_{F,GW1}=\dot{E}^{PH}_{5}-\dot{E}^{PH}_{6}-\dot{E}^{PH}_{7}+\dot{m}_{7}\,(e^{CH}_{5}-e^{CH}_{7})$ &
+$\dot{E}_{P,GW1}=\dot{m}_{6}\,(e^{CH}_{6}-e^{CH}_{5})$ \\
 
 GW2 (Adsorber, dissipativ) &
-$\dot{E}_{D,GW2}=\dot{E}_{6}-\dot{E}_{8}-\dot{E}_{9}-\dot{E}_{10}$ &
--- \\
+$\dot{E}_{F,GW2}=\dot{E}_{6}-\dot{E}_{9}-\dot{E}_{10}-\dot{E}^{PH}_{8}-\dot{m}_{8}\,e^{CH}_{6}$ &
+$\dot{E}_{P,GW2}=\dot{m}_{8}\,(e^{CH}_{8}-e^{CH}_{6})$ \\
 
 MW &
-$\dot{E}_{F,MW}=(\dot{E}_{16}-\dot{E}_{15})+(\dot{E}_{28}-\dot{E}_{27})+(\dot{E}_{30}-\dot{E}_{29})$ &
-$\dot{E}_{P,MW}=(\dot{E}_{11}-\dot{E}_{12})+(\dot{E}_{19}-\dot{E}_{20})$ \\
--- \\
+$\dot{E}_{F,MW}=|\dot{E}^{PH}_{15}-\dot{E}^{PH}_{16}|+|\dot{E}^{PH}_{29}-\dot{E}^{PH}_{30}|+|\dot{E}^{PH}_{27}-\dot{E}^{PH}_{28}|+\dot{E}^{T}_{11}+\dot{E}^{T}_{19}+(\dot{E}^{M}_{11}-\dot{E}^{M}_{12})+(\dot{E}^{M}_{19}-\dot{E}^{M}_{20})$ &
+$\dot{E}_{P,MW}=\dot{E}^{T}_{12}+\dot{E}^{T}_{20}$ \\
 
 \addlinespace
 KOL &
@@ -141,67 +140,57 @@ $\dot{E}_{D,ZK2}=\dot{E}_{4}-\dot{E}_{5}$ &
 
 \addlinespace
 GW1 (Flash, dissipativ) &
-$\dot{E}_{D,GW1}=\dot{E}_{5}-\dot{E}_{6}-\dot{E}_{7}$ &
--- \\
+$\dot{E}_{F,GW1}=\dot{E}^{PH}_{5}-\dot{E}^{PH}_{6}-\dot{E}^{PH}_{7}+\dot{m}_{7}\,(e^{CH}_{5}-e^{CH}_{7})$ &
+$\dot{E}_{P,GW1}=\dot{m}_{6}\,(e^{CH}_{6}-e^{CH}_{5})$ \\
 
 GW2 (Adsorber, dissipativ) &
-$\dot{E}_{D,GW2}=\dot{E}_{6}-\dot{E}_{8}-\dot{E}_{9}-\dot{E}_{10}$ &
--- \\
+$\dot{E}_{F,GW2}=\dot{E}_{6}-\dot{E}_{9}-\dot{E}_{10}-\dot{E}^{PH}_{8}-\dot{m}_{8}\,e^{CH}_{6}$ &
+$\dot{E}_{P,GW2}=\dot{m}_{8}\,(e^{CH}_{8}-e^{CH}_{6})$ \\
 
 \addlinespace
 MW &
-$\dot{E}_{F,MW}=(\dot{E}_{16}-\dot{E}_{15})+(\dot{E}_{28}-\dot{E}_{27})+(\dot{E}_{30}-\dot{E}_{29})$ &
-$\dot{E}_{P,MW}=(\dot{E}_{11}-\dot{E}_{12})+(\dot{E}_{19}-\dot{E}_{20})$ \\
--- \\
+$\dot{E}_{F,MW}=|\dot{E}^{PH}_{15}-\dot{E}^{PH}_{16}|+|\dot{E}^{PH}_{29}-\dot{E}^{PH}_{30}|+|\dot{E}^{PH}_{27}-\dot{E}^{PH}_{28}|+\dot{E}^{T}_{11}+\dot{E}^{T}_{19}+(\dot{E}^{M}_{11}-\dot{E}^{M}_{12})+(\dot{E}^{M}_{19}-\dot{E}^{M}_{20})$ &
+$\dot{E}_{P,MW}=\dot{E}^{T}_{12}+\dot{E}^{T}_{20}$ \\
 
 \addlinespace
 KOLHP &
-$\dot{E}_{F,KOLHP}=$ &
-$\dot{E}_{P,KOLHP}=$ \\
--- \\
+$\dot{E}_{F,KOLHP}=(\dot{E}_{34}-\dot{E}_{33})+\dot{m}_{13}(e^{M}_{12}-e^{M}_{13})+\dot{m}_{15}(e^{T}_{12}-e^{T}_{15})$ &
+$\dot{E}_{P,KOLHP}=\left[\dot{m}_{13}(e^{CH}_{13}-e^{CH}_{12})+\dot{m}_{15}(e^{CH}_{15}-e^{CH}_{12})+\dot{m}_{17}(e^{CH}_{17}-e^{CH}_{12})\right]+\left[\dot{m}_{13}(e^{T}_{13}-e^{T}_{12})+\dot{m}_{17}(e^{T}_{17}-e^{T}_{12})\right]+\left[\dot{m}_{15}(e^{M}_{15}-e^{M}_{12})+\dot{m}_{17}(e^{M}_{17}-e^{M}_{12})\right]$ \\
 
 KOLLP &
-$\dot{E}_{F,KOLLP}=$ &
-$\dot{E}_{P,KOLLP}=$ \\
--- \\
+$\dot{E}_{F,KOLLP}=\left(\dot{m}_{38}e^{PH}_{38}-\dot{m}_{37}e^{PH}_{37}\right)+\left(\dot{m}_{36}e^{PH}_{36}-\dot{m}_{35}e^{PH}_{35}\right)+\left[\dot{m}_{22}(e^{M}_{mix}-e^{M}_{22})+\dot{m}_{29}(e^{T}_{mix}-e^{T}_{29})\right]$ &
+$\dot{E}_{P,KOLLP}=\left[\dot{m}_{22}(e^{CH}_{22}-e^{CH}_{mix})+\dot{m}_{29}(e^{CH}_{29}-e^{CH}_{mix})\right]+\dot{m}_{22}(e^{T}_{22}-e^{T}_{mix})+\dot{m}_{29}(e^{M}_{29}-e^{M}_{mix})$ \\
 
 \addlinespace
 RC1 (Reboiler/Kondensator) &
-$\dot{E}_{F,RC}=\dot{E}_{SZRC1}-\dot{E}_{SZRC2}$ &
-$\dot{E}_{P,RC}=\dot{E}_{SZRC4}-\dot{E}_{SZRC3}$ \\
--- \\
+$\dot{E}_{F,RC1}=|\dot{E}^{PH}_{35}-\dot{E}^{PH}_{36}|+|\dot{E}^{M}_{33}-\dot{E}^{M}_{34}|$ &
+$\dot{E}_{P,RC1}=|\dot{E}^{T}_{33}-\dot{E}^{T}_{34}|$ \\
 
 RC2 (Reboiler/Kondensator) &
-$\dot{E}_{F,RC}=$ &
-$\dot{E}_{P,RC}=$ \\
--- \\
+$\dot{E}_{F,RC2}=|\dot{E}^{PH}_{39}-\dot{E}^{PH}_{40}|+|\dot{E}^{M}_{37}-\dot{E}^{M}_{38}|$ &
+$\dot{E}_{P,RC2}=|\dot{E}^{T}_{37}-\dot{E}^{T}_{38}|$ \\
 
 \addlinespace
 D1 &
-$\dot{E}_{F,D1}=$ &
-$\dot{E}_{P,D1}=$ \\
--- \\
+$\dot{E}_{F,D1}=\dot{E}^{M}_{13}-\dot{E}^{M}_{14}$ &
+$\dot{E}_{P,D1}=\dot{E}^{T}_{14}-\dot{E}^{T}_{13}$ \\
 
 D2&
-$\dot{E}_{F,D2}=$ &
-$\dot{E}_{P,D2}=$ \\
--- \\
+$\dot{E}_{F,D2}=\dot{E}^{M}_{17}-\dot{E}^{M}_{18}$ &
+$\dot{E}_{P,D2}=\dot{E}^{T}_{18}-\dot{E}^{T}_{17}$ \\
 
 D3 &
-$\dot{E}_{F,D3}=$ &
-$\dot{E}_{P,D3}=$ \\
--- \\
+$\dot{E}_{F,D3}=\dot{E}^{M}_{22}-\dot{E}^{M}_{23}$ &
+$\dot{E}_{P,D3}=\dot{E}^{T}_{23}-\dot{E}^{T}_{22}$ \\
 
 D4&
-$\dot{E}_{F,D4}=$ &
-$\dot{E}_{P,D4}=$ \\
--- \\
+$\dot{E}_{F,D4}=\dot{E}^{M}_{24}-\dot{E}^{M}_{25}$ &
+$\dot{E}_{P,D4}=\dot{E}^{T}_{25}-\dot{E}^{T}_{24}$ \\
 
 \addlinespace
 T &
-$\dot{E}_{F,T}=$ &
-$\dot{E}_{P,T}=$ \\
--- \\
+$\dot{E}_{F,T}=\dot{E}^{M}_{20}-\dot{E}^{M}_{21}$ &
+$\dot{E}_{P,T}=\dot{W}_{T}+\dot{E}^{T}_{21}-\dot{E}^{T}_{20}$ \\
 
 \addlinespace
 PK1 &

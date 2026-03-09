@@ -120,15 +120,34 @@ class Mixer(Component):
         if len(self.inl) < 2 or len(self.outl) < 1:
             raise ValueError("Mixer requires at least two inlets and one outlet.")
 
+        def _effective_e_ph(stream: dict):
+            e_ph = stream.get("e_PH")
+            if e_ph is not None:
+                return e_ph
+            e_t = stream.get("e_T")
+            e_m = stream.get("e_M")
+            if e_t is not None and e_m is not None:
+                return e_t + e_m
+            return None
+
         # Compute effective outlet state by aggregating all outlet streams.
         # Assume that all outlets share the same thermodynamic state.
         outlet_list = list(self.outl.values())
         first_outlet = outlet_list[0]
         T_out = first_outlet["T"]
-        e_out_PH = first_outlet["e_PH"]
+        e_out_PH = _effective_e_ph(first_outlet)
+        if e_out_PH is None:
+            msg = f"Mixer {self.name}: outlet physical exergy missing (e_PH and e_T/e_M unavailable)."
+            logging.error(msg)
+            raise ValueError(msg)
         # Verify that all outlets have the same thermodynamic state.
         for outlet in outlet_list:
-            if outlet["T"] != T_out or outlet["e_PH"] != e_out_PH:
+            outlet_e_ph = _effective_e_ph(outlet)
+            if outlet_e_ph is None:
+                msg = f"Mixer {self.name}: outlet physical exergy missing (e_PH and e_T/e_M unavailable)."
+                logging.error(msg)
+                raise ValueError(msg)
+            if outlet["T"] != T_out or outlet_e_ph != e_out_PH:
                 msg = "All outlets in Mixer must have the same thermodynamic state."
                 logging.error(msg)
                 raise ValueError(msg)
@@ -142,34 +161,49 @@ class Mixer(Component):
         # Case 1: Outlet temperature is greater than ambient.
         if T_out > T0:
             for _, inlet in self.inl.items():
+                e_in_PH = _effective_e_ph(inlet)
+                if e_in_PH is None:
+                    msg = f"Mixer {self.name}: inlet physical exergy missing (e_PH and e_T/e_M unavailable)."
+                    logging.error(msg)
+                    raise ValueError(msg)
                 # Case when inlet temperature is lower than outlet temperature.
                 if inlet["T"] < T_out:
                     if inlet["T"] >= T0:
                         # Contribution to exergy product from inlets above ambient.
-                        self.E_P += inlet["m"] * (e_out_PH - inlet["e_PH"])
+                        self.E_P += inlet["m"] * (e_out_PH - e_in_PH)
                     else:  # inlet['T'] < T0
                         self.E_P += inlet["m"] * e_out_PH
-                        self.E_F += inlet["m"] * inlet["e_PH"]
+                        self.E_F += inlet["m"] * e_in_PH
                 else:  # inlet['T'] > T_out
-                    self.E_F += inlet["m"] * (inlet["e_PH"] - e_out_PH)
+                    self.E_F += inlet["m"] * (e_in_PH - e_out_PH)
 
         # Case 2: Outlet temperature equals ambient.
         elif T_out == T0:
             self.E_P = np.nan
             for _, inlet in self.inl.items():
-                self.E_F += inlet["m"] * inlet["e_PH"]
+                e_in_PH = _effective_e_ph(inlet)
+                if e_in_PH is None:
+                    msg = f"Mixer {self.name}: inlet physical exergy missing (e_PH and e_T/e_M unavailable)."
+                    logging.error(msg)
+                    raise ValueError(msg)
+                self.E_F += inlet["m"] * e_in_PH
 
         # Case 3: Outlet temperature is less than ambient.
         else:  # T_out < T0
             for _, inlet in self.inl.items():
+                e_in_PH = _effective_e_ph(inlet)
+                if e_in_PH is None:
+                    msg = f"Mixer {self.name}: inlet physical exergy missing (e_PH and e_T/e_M unavailable)."
+                    logging.error(msg)
+                    raise ValueError(msg)
                 if inlet["T"] > T_out:
                     if inlet["T"] >= T0:
                         self.E_P += inlet["m"] * e_out_PH
-                        self.E_F += inlet["m"] * inlet["e_PH"]
+                        self.E_F += inlet["m"] * e_in_PH
                     else:  # inlet['T'] < T0
-                        self.E_P += inlet["m"] * (e_out_PH - inlet["e_PH"])
+                        self.E_P += inlet["m"] * (e_out_PH - e_in_PH)
                 else:  # inlet['T'] <= T_out
-                    self.E_F += inlet["m"] * (inlet["e_PH"] - e_out_PH)
+                    self.E_F += inlet["m"] * (e_in_PH - e_out_PH)
 
         # Calculate exergy destruction and efficiency.
         self.E_D = self.E_F - self.E_P
@@ -178,8 +212,11 @@ class Mixer(Component):
         # Prepare concise inlet summary for logging
         inlet_summaries = []
         for i, inlet in self.inl.items():
+            inlet_e_ph = _effective_e_ph(inlet)
+            inlet_T = inlet.get('T')
+            inlet_T_str = f"{inlet_T:.2f}" if isinstance(inlet_T, (int, float)) else str(inlet_T)
             inlet_summaries.append(
-                f"{inlet.get('name','in'+str(i))}:T={inlet.get('T'):.2f}K,m={inlet.get('m')},e_PH={inlet.get('e_PH')}"
+                f"{inlet.get('name','in'+str(i))}:T={inlet_T_str}K,m={inlet.get('m')},e_PH={inlet_e_ph}"
             )
         inlet_summary = ", ".join(inlet_summaries)
 

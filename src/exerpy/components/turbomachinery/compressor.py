@@ -117,6 +117,16 @@ class Compressor(Component):
         else:
             self.P = self.outl[0]["m"] * (self.outl[0]["h"] - self.inl[0]["h"])
 
+        def _effective_e_ph(stream: dict):
+            e_ph = stream.get("e_PH")
+            if isinstance(e_ph, (int, float, np.floating)) and not np.isnan(e_ph):
+                return e_ph
+            e_t = stream.get("e_T")
+            e_m = stream.get("e_M")
+            if isinstance(e_t, (int, float, np.floating)) and not np.isnan(e_t) and isinstance(e_m, (int, float, np.floating)) and not np.isnan(e_m):
+                return e_t + e_m
+            return None
+
         # First, check for the invalid case: outlet temperature smaller than inlet temperature.
         if self.inl[0]["T"] > self.outl[0]["T"]:
             logging.warning(
@@ -128,8 +138,8 @@ class Compressor(Component):
 
         # Case 1: Both temperatures above ambient
         elif round(self.inl[0]["T"], 5) >= T0 and round(self.outl[0]["T"], 5) > T0:
-            e_PH_out = self.outl[0].get("e_PH")
-            e_PH_in = self.inl[0].get("e_PH")
+            e_PH_out = _effective_e_ph(self.outl[0])
+            e_PH_in = _effective_e_ph(self.inl[0])
             m_out = self.outl[0].get("m")
             if e_PH_out is None or e_PH_in is None or m_out is None:
                 logging.warning(
@@ -162,8 +172,8 @@ class Compressor(Component):
                     "While dealing with compressor below ambient, "
                     "physical exergy should be split into thermal and mechanical components!"
                 )
-                e_PH_out = self.outl[0].get("e_PH")
-                e_PH_in = self.inl[0].get("e_PH")
+                e_PH_out = _effective_e_ph(self.outl[0])
+                e_PH_in = _effective_e_ph(self.inl[0])
                 m_out = self.outl[0].get("m")
                 if e_PH_out is None or e_PH_in is None or m_out is None:
                     logging.warning(
@@ -197,8 +207,8 @@ class Compressor(Component):
                     "While dealing with compressor below ambient, "
                     "physical exergy should be split into thermal and mechanical components!"
                 )
-                e_PH_out = self.outl[0].get("e_PH")
-                e_PH_in = self.inl[0].get("e_PH")
+                e_PH_out = _effective_e_ph(self.outl[0])
+                e_PH_in = _effective_e_ph(self.inl[0])
                 m_out = self.outl[0].get("m")
                 if e_PH_out is None or e_PH_in is None or m_out is None:
                     logging.warning(

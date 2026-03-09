@@ -66,8 +66,18 @@ class SimpleHeatExchanger(Component):
 
         m_in = inlet.get("m", 0.0) or 0.0
         m_out = outlet.get("m", 0.0) or 0.0
-        e_PH_in = inlet.get("e_PH")
-        e_PH_out = outlet.get("e_PH")
+        def _effective_e_ph(stream: dict):
+            e_ph = stream.get("e_PH")
+            if e_ph is not None and is_number(e_ph):
+                return e_ph
+            e_t = stream.get("e_T")
+            e_m = stream.get("e_M")
+            if e_t is not None and e_m is not None and is_number(e_t) and is_number(e_m):
+                return e_t + e_m
+            return None
+
+        e_PH_in = _effective_e_ph(inlet)
+        e_PH_out = _effective_e_ph(outlet)
 
         if e_PH_in is None or e_PH_out is None:
             logging.warning(
@@ -96,10 +106,13 @@ class SimpleHeatExchanger(Component):
         self.E_D = E_D
         self.epsilon = None
 
+        e_ph_in_str = f"{e_PH_in:.2f}" if is_number(e_PH_in) else "None"
+        e_ph_out_str = f"{e_PH_out:.2f}" if is_number(e_PH_out) else "None"
+
         logging.info(
             f"SimpleHeatExchanger {self.name} (dissipative) | "
-            f"m_in={m_in:.6f} kg/s, e_PH_in={e_PH_in:.2f} J/kg, E_in={E_in:.2f} W | "
-            f"m_out={m_out:.6f} kg/s, e_PH_out={e_PH_out:.2f} J/kg, E_out={E_out:.2f} W | E_D={self.E_D:.2f} W"
+            f"m_in={m_in:.6f} kg/s, e_PH_in={e_ph_in_str} J/kg, E_in={E_in:.2f} W | "
+            f"m_out={m_out:.6f} kg/s, e_PH_out={e_ph_out_str} J/kg, E_out={E_out:.2f} W | E_D={self.E_D:.2f} W"
         )
 
     def aux_eqs(self, A, b, counter, T0, equations, chemical_exergy_enabled):

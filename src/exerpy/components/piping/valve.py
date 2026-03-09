@@ -125,6 +125,27 @@ class Valve(Component):
         p_in = self.inl[0]["p"]
         p_out = self.outl[0]["p"]
 
+        def _effective_e_ph(stream: dict):
+            e_ph = stream.get("e_PH")
+            if isinstance(e_ph, (int, float, np.floating)) and not np.isnan(e_ph):
+                return e_ph
+            e_t = stream.get("e_T")
+            e_m = stream.get("e_M")
+            if isinstance(e_t, (int, float, np.floating)) and not np.isnan(e_t) and isinstance(e_m, (int, float, np.floating)) and not np.isnan(e_m):
+                return e_t + e_m
+            return None
+
+        e_ph_in = _effective_e_ph(self.inl[0])
+        e_ph_out = _effective_e_ph(self.outl[0])
+
+        if e_ph_in is None or e_ph_out is None:
+            logging.warning(
+                f"Valve {self.name}: missing physical exergy values | "
+                f"e_PH_in={self.inl[0].get('e_PH')}, e_PH_out={self.outl[0].get('e_PH')}, "
+                f"e_T_in={self.inl[0].get('e_T')}, e_T_out={self.outl[0].get('e_T')}, "
+                f"e_M_in={self.inl[0].get('e_M')}, e_M_out={self.outl[0].get('e_M')}"
+            )
+
         # Check for zero mass flow
         if abs(self.inl[0]["m"]) < 1e-10:
             logging.info(f"Valve {self.name} has zero mass flow: exergy balance not considered.")
@@ -150,8 +171,8 @@ class Valve(Component):
 
         # Case 1: Both temperatures above ambient
         if T_in > T0 and T_out > T0:
-            self.E_P = np.nan
-            self.E_F = self.inl[0]["m"] * (self.inl[0]["e_PH"] - self.outl[0]["e_PH"])
+            self.E_P = 0.0
+            self.E_F = self.inl[0]["m"] * (e_ph_in - e_ph_out) if (e_ph_in is not None and e_ph_out is not None) else np.nan
 
         # Case 2: Inlet above ambient, outlet below or equal to ambient
         elif T_in > T0 and T_out <= T0:
@@ -165,7 +186,7 @@ class Valve(Component):
                     "Valve is treated as dissipative."
                 )
                 self.E_P = np.nan
-                self.E_F = self.inl[0]["m"] * (self.inl[0]["e_PH"] - self.outl[0]["e_PH"])
+                self.E_F = self.inl[0]["m"] * (e_ph_in - e_ph_out) if (e_ph_in is not None and e_ph_out is not None) else np.nan
 
         # Case 3: Both temperatures below ambient
         elif T_in <= T0 and T_out <= T0:
@@ -179,7 +200,7 @@ class Valve(Component):
                     "Valve is treated as dissipative."
                 )
                 self.E_P = np.nan
-                self.E_F = self.inl[0]["m"] * (self.inl[0]["e_PH"] - self.outl[0]["e_PH"])
+                self.E_F = self.inl[0]["m"] * (e_ph_in - e_ph_out) if (e_ph_in is not None and e_ph_out is not None) else np.nan
 
         # Case 4: Inlet below or at ambient, outlet above ambient
         elif T_in <= T0 and T_out > T0:
@@ -188,7 +209,7 @@ class Valve(Component):
                 "non-physical behavior. Treated as dissipative."
             )
             self.E_P = np.nan
-            self.E_F = self.inl[0]["m"] * (self.inl[0]["e_PH"] - self.outl[0]["e_PH"])
+            self.E_F = self.inl[0]["m"] * (e_ph_in - e_ph_out) if (e_ph_in is not None and e_ph_out is not None) else np.nan
 
         else:
             logging.error(

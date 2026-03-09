@@ -1,0 +1,20 @@
+
+ CALCULATOR BLOCK:   MOLZ33              
+ --------------------------
+
+   SAMPLED VARIABLES:
+     MOLZ1    : TOTAL MOLEFLOW IN STREAM SZ33 SUBSTREAM MIXED   
+     HPRR     : SENTENCE=COL-RESULTS VARIABLE=L1 IN UOS BLOCK KOLHP 
+     HPLIQDES : TOTAL MOLEFLOW IN STREAM S17 SUBSTREAM MIXED    
+
+   FORTRAN STATEMENTS:
+         MOLZ1 = HPLIQDES + HPRR   
+
+   EXECUTE AFTER BLOCK HP-D
+
+   VALUES OF ACCESSED FORTRAN VARIABLES ON MOST RECENT SIMULATION PASS:
+     VARIABLE        VALUE READ      VALUE WRITTEN    UNITS
+     --------        ----------      -------------    -----
+     MOLZ1           0.316779         0.536857        KMOL/SEC        
+     HPRR            0.520184                         KMOL/SEC        
+     HPLIQDES        0.166726E-01                     KMOL/SEC        

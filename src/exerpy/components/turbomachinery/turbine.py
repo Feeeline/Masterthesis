@@ -165,11 +165,17 @@ class Turbine(Component):
 
         # Block log: minimal but explicit
         out_m_sum = sum(outlet.get('m', 0) for outlet in self.outl.values() if outlet and outlet.get('kind', 'material') != 'power' and outlet.get('m') is not None)
+        e_ph_in = self.inl[0].get('e_PH')
+        e_t_in = self.inl[0].get('e_T')
+        e_ph_in_str = f"{e_ph_in:.2f}" if isinstance(e_ph_in, (int, float, np.floating)) and not np.isnan(e_ph_in) else "None"
+        e_t_in_str = f"{e_t_in:.2f}" if isinstance(e_t_in, (int, float, np.floating)) and not np.isnan(e_t_in) else "None"
+        e_ph_out_total = self._total_outlet('m', 'e_PH')
+        e_t_out_total = self._total_outlet('m', 'e_T')
         logging.info(
             f"Turbine {self.name} | branch={branch} | T_in={Tin:.2f}K T_out={Tout:.2f}K | P={self.P:.2f} W | "
             f"in_m={self.inl[0].get('m')}, out_m_sum={out_m_sum:.6f} kg/s | "
-            f"e_PH_in={self.inl[0].get('e_PH'):.2f} J/kg, E_PH_out={self._total_outlet('m','e_PH'):.2f} W | "
-            f"e_T_in={self.inl[0].get('e_T'):.2f} J/kg, E_T_out={self._total_outlet('m','e_T'):.2f} W | "
+            f"e_PH_in={e_ph_in_str} J/kg, E_PH_out={e_ph_out_total:.2f} W | "
+            f"e_T_in={e_t_in_str} J/kg, E_T_out={e_t_out_total:.2f} W | "
             f"E_F={self.E_F:.2f} W, E_P={self.E_P if np.isnan(self.E_P) else f'{self.E_P:.2f}'} W, "
             f"E_D={self.E_D:.2f} W, eps={self.epsilon:.2%}"
         )
@@ -194,7 +200,11 @@ class Turbine(Component):
         for outlet in self.outl.values():
             # Skip power connections; treat missing "kind" as material for backward compatibility
             if outlet and outlet.get("kind", "material") != "power" and mass_flow in outlet and property_name in outlet:
-                total += outlet[mass_flow] * outlet[property_name]
+                m_val = outlet.get(mass_flow)
+                prop_val = outlet.get(property_name)
+                if m_val is None or prop_val is None:
+                    continue
+                total += m_val * prop_val
         return total
 
     def aux_eqs(self, A, b, counter, T0, equations, chemical_exergy_enabled):
