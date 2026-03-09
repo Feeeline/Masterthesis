@@ -45,12 +45,26 @@ Ozon (O$_3$)           & 0{,}003–0{,}03\,ppm \\
 \chapter{Exergieberechnungen}
 \label{ch:a_exergie}
 
+Für die in KOLLP verwendeten Mischgrößen $e^{CH}_{mix}$, $e^{T}_{mix}$ und $e^{M}_{mix}$ wird ein massenstromgewichteter Mischzustand aus den Feedströmen 14, 18 und 21 angesetzt:
+\[
+e^{x}_{mix}
+=
+\frac{\sum\limits_{i\in\{14,18,21\}} \dot{m}_{i}\, e^{x}_{i}}
+{\sum\limits_{i\in\{14,18,21\}} \dot{m}_{i}},
+\qquad
+x \in \{CH, T, M\}.
+\]
+
+
 \begin{landscape}
 \begin{table}[p]
 \centering
 \caption{Definition von Brennstoff- und Produktexergie der betrachteten Komponenten für das Einzelkolonnenmodell}
 \label{tab:exdef_components_single}
 \begin{tabular}{lll}
+\toprule
+Komponente & $\dot{E}_{F,k}$ & $\dot{E}_{P,k}$ \\
+\midrule
 LK2 &
 $\dot{W}_{LK2}$ &
 $\dot{E}^{PH}_{4}-\dot{E}^{PH}_{3}$ \\
@@ -140,12 +154,6 @@ $\dot{E}_{P,TURB}=\dot{W}_{T}+\dot{E}^{T}_{17}-\dot{E}^{T}_{16}$ \\
 \caption{Definition von Brennstoff- und Produktexergie der betrachteten Komponenten für das Doppelkolonnenmodell}
 \label{tab:exdef_components_doppel}
 \vspace{0.2em}
-{\footnotesize
-Für die in KOLLP verwendeten Mischgrößen $e_{mix}^{CH}$, $e_{mix}^{T}$ und $e_{mix}^{M}$ wird ein massenstromgewichteter Mischzustand aus den Feedströmen 14, 18 und 21 angesetzt:
-\[
-e_{mix}^{x}=\frac{\sum\limits_{i\in\{14,18,21\}} \dot m_i\,e_i^{x}}{\sum\limits_{i\in\{14,18,21\}} \dot m_i},\qquad x\in\{CH,T,M\}.
-\]
-}
 \begin{tabular}{lll}
 \toprule
 Komponente & $\dot{E}_{F,k}$ & $\dot{E}_{P,k}$ \\
@@ -295,6 +303,13 @@ $\dot{E}_{4}-\dot{E}_{1}$ \\
 \caption{Berechnete exergetische Kenngrößen der betrachteten Anlagenkomponenten}
 \label{tab:exergy-components}
 \input{Overleaf_LaTeX/tabellen/aspen_luftzerlegung_components}
+\end{table}
+
+\begin{table}[p]
+\centering
+\caption{Gesamtexergiebilanz}
+\label{tab:exergy-tot_doppel}
+\input{Overleaf_LaTeX/tabellen/aspen_luftzerlegung_global_check}
 \end{table}
 
 
