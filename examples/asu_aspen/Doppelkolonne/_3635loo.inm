@@ -1,5 +1,5 @@
 ;
-;Input file created by Aspen Plus Rel. 40.0 at 10:38:02 Mon Mar 9, 2026
+;Input file created by Aspen Plus Rel. 40.0 at 12:10:48 Mon Mar 9, 2026
 ;Directory   Runid doppelkolonne_simulation_final
 ;
 
@@ -139,7 +139,7 @@ BLOCK SPLIT2 FSPLIT
     FRAC S26 0.99 
 
 BLOCK GW2 SEP 
-    PARAM PRES=-0.05 <bar> 
+    PARAM PRES=-0.1 <bar> 
     FRAC STREAM=S9 SUBSTREAM=MIXED COMPS=CO2 H2O FRACS=0.  &
         1. 
     FRAC STREAM=S8 SUBSTREAM=MIXED COMPS=N2 O2 AR CO2 H2O  &
@@ -155,7 +155,7 @@ BLOCK ZK2 HEATER
     PARAM TEMP=35. <C> PRES=-0.1 <bar> DPPARMOPT=NO 
 
 BLOCK GW1 FLASH2 
-    PARAM PRES=-0.05 <bar> DUTY=0. 
+    PARAM PRES=-0.1 <bar> DUTY=0. 
 
 BLOCK MW MHEATX 
     HOT-SIDE IN=S11 OUT=S12 VFRAC=0.9 PRES=-0.1 <bar>  &
@@ -344,7 +344,7 @@ CALCULATOR PFEEDHP
         SENTENCE=PARAM UOM="bar" 
     DEFINE PHP BLOCK-VAR BLOCK=KOLHP VARIABLE=PRES  &
         SENTENCE=P-SPEC ID1=1 UOM="bar" 
-F     PLK2 = PHP + 50 * 0.0008 + 0.3 
+F     PLK2 = PHP + 50 * 0.0008 + 0.4 
     READ-VARS PHP 
     WRITE-VARS PLK2 
     EXECUTE FIRST 

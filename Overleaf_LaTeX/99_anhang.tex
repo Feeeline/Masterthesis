@@ -71,38 +71,53 @@ $\dot{E}^{PH}_{4}-\dot{E}^{PH}_{5}$ &-- \\
 
 \addlinespace
 GW1 (Flash, dissipativ) &
-$\dot{E}_{F,GW1}=\dot{E}^{PH}_{5}-\dot{E}^{PH}_{6}-\dot{E}^{PH}_{7}+\dot{m}_{7}\,(e^{CH}_{5}-e^{CH}_{7})$ &
+$\dot{E}_{F,GW1}=\dot{E}^{PH}_{5}-\dot{E}^{PH}_{6}-\dot{E}^{PH}_{7}$ &
 $\dot{E}_{P,GW1}=\dot{m}_{6}\,(e^{CH}_{6}-e^{CH}_{5})$ \\
 
+GW1 (Zusatz) &
+$\dot{E}_{L,GW1}=\dot{E}_{7}$ &
+$\dot{E}_{D,GW1}=\dot{E}_{F,GW1}-\dot{E}_{P,GW1}-\dot{E}_{L,GW1}$ \\
+
 GW2 (Adsorber, dissipativ) &
-$\dot{E}_{F,GW2}=\dot{E}_{6}-\dot{E}_{9}-\dot{E}_{10}-\dot{E}^{PH}_{8}-\dot{m}_{8}\,e^{CH}_{6}$ &
+$\dot{E}_{F,GW2}=\dot{E}^{PH}_{6}-\dot{E}^{PH}_{8}-\dot{E}^{PH}_{9}-\dot{E}^{PH}_{10}$ &
 $\dot{E}_{P,GW2}=\dot{m}_{8}\,(e^{CH}_{8}-e^{CH}_{6})$ \\
 
+GW2 (Zusatz) &
+$\dot{E}_{L,GW2}=\dot{E}_{9}+\dot{E}_{10}$ &
+$\dot{E}_{D,GW2}=\dot{E}_{F,GW2}-\dot{E}_{P,GW2}-\dot{E}_{L,GW2}$ \\
+
 \addlinespace
-MW &
-$\dot{E}_{F,MW}=|\dot{E}^{PH}_{15}-\dot{E}^{PH}_{16}|+|\dot{E}^{PH}_{29}-\dot{E}^{PH}_{30}|+|\dot{E}^{PH}_{27}-\dot{E}^{PH}_{28}|+\dot{E}^{T}_{11}+\dot{E}^{T}_{19}+(\dot{E}^{M}_{11}-\dot{E}^{M}_{12})+(\dot{E}^{M}_{19}-\dot{E}^{M}_{20})$ &
-$\dot{E}_{P,MW}=\dot{E}^{T}_{12}+\dot{E}^{T}_{20}$ \\
+MH &
+$\dot{E}_{F,MH}=(\dot{E}^{PH}_{14}-\dot{E}^{PH}_{15})+(\dot{E}^{PH}_{20}-\dot{E}^{PH}_{21})+(\dot{E}^{PH}_{25}-\dot{E}^{PH}_{24})+(\dot{E}^{M}_{8}-\dot{E}^{M}_{11})+\dot{E}^{T}_{8}$ &
+$\dot{E}_{P,MH}=\dot{E}^{T}_{11}$ \\
+
+RECO &
+$\dot{E}_{F,RECO}=\dot{E}^{PH}_{SZ27}-\dot{E}^{PH}_{SZ28}+\dot{E}^{M}_{SZ25}-\dot{E}^{M}_{SZ26}$ &
+$\dot{E}_{P,RECO}=\dot{E}^{T}_{SZ26}-\dot{E}^{T}_{SZ25}$ \\
 
 \addlinespace
 KOL &
-$???$ & $???$\\
+$\dot{E}_{F,KOL}=(\dot{E}^{PH}_{SZ26,liq}-\dot{E}^{PH}_{SZ25})+\dot{m}_{12}(e^{M}_{11}-e^{M}_{12})+\dot{m}_{23}(e^{M}_{11}-e^{M}_{23})$ &
+$\dot{E}_{P,KOL}=\dot{m}_{12}(e^{CH}_{12}-e^{CH}_{11})+\dot{m}_{23}(e^{CH}_{23}-e^{CH}_{11})+\dot{m}_{12}(e^{T}_{12}-e^{T}_{11})+\dot{m}_{23}(e^{T}_{23}-e^{T}_{11})$\\
 
 \addlinespace
 RC (Reboiler/Kondensator) &
-${E}^{PH}_{35}-\dot{E}^{PH}_{36} + {E}^{M}_{33}-\dot{E}^{M}_{34}$ &
-${E}^{T}_{34}-\dot{E}^{T}_{33}$ \\
+$\dot{E}_{F,RC}=|\dot{E}^{PH}_{35}-\dot{E}^{PH}_{36}|+|\dot{E}^{M}_{33}-\dot{E}^{M}_{34}|$ &
+$\dot{E}_{P,RC}=|\dot{E}^{T}_{33}-\dot{E}^{T}_{34}|$ \\
 
 \addlinespace
-D1 (dissipativ) &
-$\dot{E}^{PH}_{12}-\dot{E}^{PH}_{13}$ &-- \\
+D1 &
+$\dot{E}_{F,D1}=\dot{E}^{M}_{12}-\dot{E}^{M}_{13}$ &
+$\dot{E}_{P,D1}=\dot{E}^{T}_{13}-\dot{E}^{T}_{12}$ \\
 
-D2 (dissipativ) &
-$\dot{E}^{PH}_{18}-\dot{E}^{PH}_{19}$ &-- \\
+D2 &
+$\dot{E}_{F,D2}=\dot{E}^{PH}_{18}-\dot{E}^{PH}_{19}$ &
+$\dot{E}_{P,D2}=0$ \\
 
 \addlinespace
-T &
-$\dot{E}^{PH}_{16}-\dot{E}^{PH}_{17}$ &
-$\dot{W}_{T}$ \\
+TURB &
+$\dot{E}_{F,TURB}=\dot{E}^{M}_{16}-\dot{E}^{M}_{17}$ &
+$\dot{E}_{P,TURB}=\dot{W}_{T}+\dot{E}^{T}_{17}-\dot{E}^{T}_{16}$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -115,6 +130,13 @@ $\dot{W}_{T}$ \\
 \centering
 \caption{Definition von Brennstoff- und Produktexergie der betrachteten Komponenten für das Doppelkolonnenmodell}
 \label{tab:exdef_components_doppel}
+\vspace{0.2em}
+{\footnotesize
+Für die in KOLLP verwendeten Mischgrößen $e_{mix}^{CH}$, $e_{mix}^{T}$ und $e_{mix}^{M}$ wird ein massenstromgewichteter Mischzustand aus den Feedströmen 14, 18 und 21 angesetzt:
+\[
+e_{mix}^{x}=\frac{\sum\limits_{i\in\{14,18,21\}} \dot m_i\,e_i^{x}}{\sum\limits_{i\in\{14,18,21\}} \dot m_i},\qquad x\in\{CH,T,M\}.
+\]
+}
 \begin{tabular}{lll}
 \toprule
 Komponente & $\dot{E}_{F,k}$ & $\dot{E}_{P,k}$ \\
@@ -138,12 +160,20 @@ $\dot{E}^{PH}_{4}-\dot{E}^{PH}_{5}$ &
 
 \addlinespace
 GW1 (Flash, dissipativ) &
-$\dot{E}_{F,GW1}=\dot{E}^{PH}_{5}-\dot{E}^{PH}_{6}-\dot{E}^{PH}_{7}+\dot{m}_{7}\,(e^{CH}_{5}-e^{CH}_{7})$ &
+$\dot{E}_{F,GW1}=\dot{E}^{PH}_{5}-\dot{E}^{PH}_{6}-\dot{E}^{PH}_{7}$ &
 $\dot{E}_{P,GW1}=\dot{m}_{6}\,(e^{CH}_{6}-e^{CH}_{5})$ \\
 
+GW1 (Zusatz) &
+$\dot{E}_{L,GW1}=\dot{E}_{7}$ &
+$\dot{E}_{D,GW1}=\dot{E}_{F,GW1}-\dot{E}_{P,GW1}-\dot{E}_{L,GW1}$ \\
+
 GW2 (Adsorber, dissipativ) &
-$\dot{E}_{F,GW2}=\dot{E}_{6}-\dot{E}_{9}-\dot{E}_{10}-\dot{E}^{PH}_{8}-\dot{m}_{8}\,e^{CH}_{6}$ &
+$\dot{E}_{F,GW2}=\dot{E}^{PH}_{6}-\dot{E}^{PH}_{8}-\dot{E}^{PH}_{9}-\dot{E}^{PH}_{10}$ &
 $\dot{E}_{P,GW2}=\dot{m}_{8}\,(e^{CH}_{8}-e^{CH}_{6})$ \\
+
+GW2 (Zusatz) &
+$\dot{E}_{L,GW2}=\dot{E}_{9}+\dot{E}_{10}$ &
+$\dot{E}_{D,GW2}=\dot{E}_{F,GW2}-\dot{E}_{P,GW2}-\dot{E}_{L,GW2}$ \\
 
 \addlinespace
 MW &

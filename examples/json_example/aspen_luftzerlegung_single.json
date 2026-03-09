@@ -3458,34 +3458,39 @@
     },
     "custom_exergy": {
         "GW1": {
-            "E_F_custom": 35948.880643316494,
+            "E_F_custom": 39484.096434000065,
             "E_P_custom": 7850.004877125547,
-            "E_D_custom": 28098.875766190948,
-            "epsilon_custom": 0.21836576651754513
+            "E_D_custom": 27527.136740874517,
+            "E_L_custom": 4106.954816,
+            "epsilon_custom": 0.198814347701923
         },
         "MH": {
             "E_F_custom": 9519875.191611001,
             "E_P_custom": 8563083.27,
             "E_D_custom": 956791.9216110017,
+            "E_L_custom": null,
             "epsilon_custom": 0.8994953292608148
         },
         "RECO": {
             "E_F_custom": 11935550.739999998,
             "E_P_custom": 11493910.990000002,
             "E_D_custom": 441639.7499999963,
+            "E_L_custom": null,
             "epsilon_custom": 0.9629979579811164
         },
         "KOL": {
             "E_F_custom": 11499730.700000001,
             "E_P_custom": 11143775.889000002,
             "E_D_custom": 355954.8109999988,
+            "E_L_custom": null,
             "epsilon_custom": 0.9690466828931917
         },
         "GW2": {
-            "E_F_custom": 71346.60640265123,
+            "E_F_custom": 98354.49758990132,
             "E_P_custom": 68458.6748127486,
-            "E_D_custom": 2887.931589902626,
-            "epsilon_custom": 0.9595225094014379
+            "E_D_custom": -2488.7276329472843,
+            "E_L_custom": 32384.5504101,
+            "epsilon_custom": 0.6960401048276789
         }
     }
 }

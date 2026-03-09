@@ -1,20 +1,25 @@
+ ASPEN PLUS   PLAT: WIN-X64   VER: 40.0                   03/09/2026  PAGE 1       
+                           AIR SEPARATION NITROGEN                              
+                             PROBLEM STATUS SECTION                             
+                 BLOCK STATUS......................................  1
 
- CALCULATOR BLOCK:   MOLZ33              
- --------------------------
+ BLOCK STATUS                            
+ ------------
 
-   SAMPLED VARIABLES:
-     MOLZ1    : TOTAL MOLEFLOW IN STREAM SZ33 SUBSTREAM MIXED   
-     HPRR     : SENTENCE=COL-RESULTS VARIABLE=L1 IN UOS BLOCK KOLHP 
-     HPLIQDES : TOTAL MOLEFLOW IN STREAM S17 SUBSTREAM MIXED    
-
-   FORTRAN STATEMENTS:
-         MOLZ1 = HPLIQDES + HPRR   
-
-   EXECUTE AFTER BLOCK HP-D
-
-   VALUES OF ACCESSED FORTRAN VARIABLES ON MOST RECENT SIMULATION PASS:
-     VARIABLE        VALUE READ      VALUE WRITTEN    UNITS
-     --------        ----------      -------------    -----
-     MOLZ1           0.316779         0.536857        KMOL/SEC        
-     HPRR            0.520184                         KMOL/SEC        
-     HPLIQDES        0.166726E-01                     KMOL/SEC        
+ ****************************************************************************
+ *                                                                          *
+ * Calculations were completed normally                                     *
+ *                                                                          *
+ * All Unit Operation blocks were completed normally                        *
+ *                                                                          *
+ * All Transfer blocks were completed normally                              *
+ *                                                                          *
+ * All streams were flashed normally                                        *
+ *                                                                          *
+ * All Convergence blocks were completed normally                           *
+ *                                                                          *
+ * All Sensitivity blocks were completed normally                           *
+ *                                                                          *
+ * All Calculator blocks were completed normally                            *
+ *                                                                          *
+ ****************************************************************************

@@ -364,15 +364,17 @@ def _log_component_custom_compare(name: str, comp):
     E_F = getattr(comp, 'E_F', None)
     E_P = getattr(comp, 'E_P', None)
     E_D = getattr(comp, 'E_D', None)
+    E_L = getattr(comp, 'E_L', None)
     E_F_c = getattr(comp, 'E_F_custom', None)
     E_P_c = getattr(comp, 'E_P_custom', None)
     E_D_c = getattr(comp, 'E_D_custom', None)
+    E_L_c = getattr(comp, 'E_L_custom', None)
     eps = getattr(comp, 'epsilon', None)
     eps_c = getattr(comp, 'epsilon_custom', None)
 
     logging.info("\n--- Compact comparison for %s ---" % name)
-    logging.info(f"component | E_F={E_F} W | E_P={E_P} W | E_D={E_D} W | eps={eps}")
-    logging.info(f"custom    | E_F={E_F_c} W | E_P={E_P_c} W | E_D={E_D_c} W | eps={eps_c}")
+    logging.info(f"component | E_F={E_F} W | E_P={E_P} W | E_D={E_D} W | E_L={E_L} W | eps={eps}")
+    logging.info(f"custom    | E_F={E_F_c} W | E_P={E_P_c} W | E_D={E_D_c} W | E_L={E_L_c} W | eps={eps_c}")
     if E_D is not None and E_D_c is not None:
         logging.info("Ed equal: " + ("YES" if _cmp(E_D, E_D_c) else f"NO (diff={E_D - E_D_c:.6g})"))
     else:
@@ -509,8 +511,9 @@ s7 = _find_exact_stream("S7")
 
 # GW1 Flash: Complete exergy balance
 # Ep = m6 * (ech6 - ech5)  -- chemical exergy change in gas stream
-# Ef = m5*ePH5 - m6*ePH6 - m7*ePH7 + m7*(eCH5 - eCH7)  -- complete balance
-# Ed = Ef - Ep
+# Ef = EPH5 - EPH6 - EPH7  -- physical exergy fuel term
+# El = E7 = m7*(ePH7 + eCH7) -- exergy loss stream
+# Ed = Ef - Ep - El
 
 m5 = _get_val(s5, "m")
 m6 = _get_val(s6, "m")
@@ -525,26 +528,32 @@ ech7 = _get_val(s7, "e_CH")
 ep_gw1 = None
 ef_gw1 = None
 ed_gw1 = None
+el_gw1 = None
 
 # Ep = product (chemical exergy increase in gas stream)
 if m6 is not None and ech6 is not None and ech5 is not None:
     ep_gw1 = m6 * (ech6 - ech5)
 
-# Ef = fuel (complete exergy balance formula)
-if all(v is not None for v in [m5, m6, m7, eph5, eph6, eph7, ech5, ech7]):
-    ef_gw1 = m5*eph5 - m6*eph6 - m7*eph7 + m7*(ech5 - ech7)
+# Ef = fuel (physical exergy formulation)
+if all(v is not None for v in [m5, m6, m7, eph5, eph6, eph7]):
+    ef_gw1 = m5*eph5 - m6*eph6 - m7*eph7
 
-# Ed = destruction
-if ef_gw1 is not None and ep_gw1 is not None:
-    ed_gw1 = ef_gw1 - ep_gw1
+# El = exergy loss in stream 7 (total exergy)
+if all(v is not None for v in [m7, eph7, ech7]):
+    el_gw1 = m7 * (eph7 + ech7)
+
+# Ed = destruction (separate from losses)
+if ef_gw1 is not None and ep_gw1 is not None and el_gw1 is not None:
+    ed_gw1 = ef_gw1 - ep_gw1 - el_gw1
 
 logging.info("\nGW1 custom calculation (complete exergy balance):")
 logging.info(f"  Streams: m5={m5}, m6={m6}, m7={m7} kg/s")
 logging.info(f"  Physical: eph5={eph5}, eph6={eph6}, eph7={eph7} J/kg")
 logging.info(f"  Chemical: ech5={ech5}, ech6={ech6}, ech7={ech7} J/kg")
 logging.info(f"  Ep_gw1 = m6*(ech6-ech5) = {ep_gw1} W")
-logging.info(f"  Ef_gw1 = m5*eph5 - m6*eph6 - m7*eph7 + m7*(ech5-ech7) = {ef_gw1} W")
-logging.info(f"  Ed_gw1 = Ef - Ep = {ed_gw1} W")
+logging.info(f"  Ef_gw1 = m5*eph5 - m6*eph6 - m7*eph7 = {ef_gw1} W")
+logging.info(f"  El_gw1 = m7*(eph7+ech7) = {el_gw1} W")
+logging.info(f"  Ed_gw1 = Ef - Ep - El = {ed_gw1} W")
 
 # Attach to GW1 component for display/export
 if gw1_comp is not None:
@@ -552,6 +561,7 @@ if gw1_comp is not None:
         gw1_comp.E_P_custom = ep_gw1
         gw1_comp.E_F_custom = ef_gw1
         gw1_comp.E_D_custom = ed_gw1
+        gw1_comp.E_L_custom = el_gw1
         gw1_comp.epsilon_custom = (ep_gw1 / ef_gw1) if (ef_gw1 and ef_gw1 != 0) else None
     except Exception:
         pass
@@ -563,8 +573,9 @@ _log_component_custom_compare('GW1', gw1_comp)
 # --- GW2 custom calculations using streams 6, 8, 9, 10
 # GW2 Separator: Complete exergy balance
 # Ep = m8 * (ech8 - ech6)  -- chemical exergy gain in product stream 8
-# Ef = E6 - E9 - E10 - Eph8 - m8*ech6  -- fuel exergy consistent with product definition
-# Ed = Ef - Ep
+# Ef = EPH6 - EPH8 - EPH9 - EPH10  -- physical exergy fuel term
+# El = E9 + E10 (total exergy losses)
+# Ed = Ef - Ep - El
 
 gw2_comp = ean.components.get("GW2") or next((c for n, c in ean.components.items() if str(n).upper().startswith("GW2")), None)
 
@@ -592,32 +603,31 @@ ech10 = _get_val(s10, "e_CH")
 ep_gw2 = None
 ef_gw2 = None
 ed_gw2 = None
+el_gw2 = None
 
 # Ep = product (chemical exergy gain in main product stream S8)
 if m8 is not None and ech8 is not None and ech6 is not None:
     ep_gw2 = m8 * (ech8 - ech6)
 
-# Ef = fuel (complete balance formula)
-# E6, E9, E10 are total exergies (physical + chemical)
-# Eph8 is only physical part of S8
+# Ef = fuel (physical exergy formulation)
 if all(v is not None for v in [m6, m8, m9, m10, eph6, eph8, eph9, eph10, ech6, ech8, ech9, ech10]):
-    E6_total = m6 * (eph6 + ech6)
     E9_total = m9 * (eph9 + ech9)
     E10_total = m10 * (eph10 + ech10)
-    Eph8 = m8 * eph8
-    ef_gw2 = E6_total - E9_total - E10_total - Eph8 - m8*ech6
+    ef_gw2 = m6 * eph6 - m8 * eph8 - m9 * eph9 - m10 * eph10
+    el_gw2 = E9_total + E10_total
 
-# Ed = destruction
-if ef_gw2 is not None and ep_gw2 is not None:
-    ed_gw2 = ef_gw2 - ep_gw2
+# Ed = destruction (separate from losses)
+if ef_gw2 is not None and ep_gw2 is not None and el_gw2 is not None:
+    ed_gw2 = ef_gw2 - ep_gw2 - el_gw2
 
 logging.info("\nGW2 custom calculation (complete exergy balance):")
 logging.info(f"  Streams: m6={m6}, m8={m8}, m9={m9}, m10={m10} kg/s")
 logging.info(f"  Physical [J/kg]: eph6={eph6}, eph8={eph8}, eph9={eph9}, eph10={eph10}")
 logging.info(f"  Chemical [J/kg]: ech6={ech6}, ech8={ech8}, ech9={ech9}, ech10={ech10}")
 logging.info(f"  Ep_gw2 = m8*(ech8-ech6) = {ep_gw2} W")
-logging.info(f"  Ef_gw2 = E6 - E9 - E10 - Eph8 - m8*ech6 = {ef_gw2} W")
-logging.info(f"  Ed_gw2 = Ef - Ep = {ed_gw2} W")
+logging.info(f"  Ef_gw2 = m6*eph6 - m8*eph8 - m9*eph9 - m10*eph10 = {ef_gw2} W")
+logging.info(f"  El_gw2 = E9 + E10 = {el_gw2} W")
+logging.info(f"  Ed_gw2 = Ef - Ep - El = {ed_gw2} W")
 
 # Attach to GW2 component for display/export
 if gw2_comp is not None:
@@ -625,6 +635,7 @@ if gw2_comp is not None:
         gw2_comp.E_P_custom = ep_gw2
         gw2_comp.E_F_custom = ef_gw2
         gw2_comp.E_D_custom = ed_gw2
+        gw2_comp.E_L_custom = el_gw2
         gw2_comp.epsilon_custom = (ep_gw2 / ef_gw2) if (ef_gw2 and ef_gw2 != 0) else None
     except Exception:
         pass
@@ -853,6 +864,7 @@ for comp_name, component in ean.components.items():
 
 # No-mix overall aggregation: for each component use either full custom triplet
 # (E_F_custom, E_P_custom, E_D_custom) or full standard triplet (E_F, E_P, E_D).
+# E_L is handled as additional additive term (custom if available, else standard, else 0).
 resolved_components = []
 for comp_name, component in ean.components.items():
     if component.__class__.__name__ == "CycleCloser":
@@ -861,24 +873,30 @@ for comp_name, component in ean.components.items():
     E_F_std = getattr(component, 'E_F', None)
     E_P_std = getattr(component, 'E_P', None)
     E_D_std = getattr(component, 'E_D', None)
+    E_L_std = getattr(component, 'E_L', None)
     E_F_custom = getattr(component, 'E_F_custom', None)
     E_P_custom = getattr(component, 'E_P_custom', None)
     E_D_custom = getattr(component, 'E_D_custom', None)
+    E_L_custom = getattr(component, 'E_L_custom', None)
 
     use_custom = all(v is not None for v in (E_F_custom, E_P_custom, E_D_custom))
     if use_custom:
         source = "custom"
         E_F_sel, E_P_sel, E_D_sel = E_F_custom, E_P_custom, E_D_custom
+        E_L_sel = E_L_custom if E_L_custom is not None else 0.0
     else:
         source = "standard"
         E_F_sel, E_P_sel, E_D_sel = E_F_std, E_P_std, E_D_std
+        E_L_sel = E_L_std if E_L_std is not None else 0.0
 
-    resolved_components.append((str(comp_name), source, E_F_sel, E_P_sel, E_D_sel))
+    resolved_components.append((str(comp_name), source, E_F_sel, E_P_sel, E_D_sel, E_L_sel))
 
-sum_E_F_sel = sum(v for _, _, v, _, _ in resolved_components if isinstance(v, (int, float)) and math.isfinite(v))
-sum_E_P_sel = sum(v for _, _, _, v, _ in resolved_components if isinstance(v, (int, float)) and math.isfinite(v))
-sum_E_D_sel = sum(v for _, _, _, _, v in resolved_components if isinstance(v, (int, float)) and math.isfinite(v))
+sum_E_F_sel = sum(v for _, _, v, _, _, _ in resolved_components if isinstance(v, (int, float)) and math.isfinite(v))
+sum_E_P_sel = sum(v for _, _, _, v, _, _ in resolved_components if isinstance(v, (int, float)) and math.isfinite(v))
+sum_E_D_sel = sum(v for _, _, _, _, v, _ in resolved_components if isinstance(v, (int, float)) and math.isfinite(v))
+sum_E_L_sel = sum(v for _, _, _, _, _, v in resolved_components if isinstance(v, (int, float)) and math.isfinite(v))
 closure_sel = sum_E_F_sel - sum_E_P_sel - sum_E_D_sel
+closure_sel_with_losses = sum_E_F_sel - sum_E_P_sel - (sum_E_D_sel + sum_E_L_sel)
 
 logging.info("\n" + "="*100)
 logging.info("NO-MIX OVERALL (DISPLAY CONSISTENT)")
@@ -889,7 +907,14 @@ logging.info(
 logging.info(f"Sum selected E_F = {sum_E_F_sel:.2f} W")
 logging.info(f"Sum selected E_P = {sum_E_P_sel:.2f} W")
 logging.info(f"Sum selected E_D = {sum_E_D_sel:.2f} W")
+logging.info(f"Sum selected E_L = {sum_E_L_sel:.2f} W")
 logging.info(f"Closure (Sum E_F - Sum E_P - Sum E_D) = {closure_sel:.2f} W")
+logging.info(f"Closure (Sum E_F - Sum E_P - Sum(E_D+E_L)) = {closure_sel_with_losses:.2f} W")
+sys_diff = None
+if isinstance(ean.E_F, (int, float)) and isinstance(ean.E_P, (int, float)):
+    sys_diff = ean.E_F - ean.E_P
+    logging.info(f"System diff (E_F_tot - E_P_tot) = {sys_diff:.2f} W")
+    logging.info(f"Check vs Sum(E_D+E_L): diff = {sys_diff - (sum_E_D_sel + sum_E_L_sel):.2f} W")
 logging.info("="*100)
 
 logging.info("\n" + "="*100)
@@ -921,12 +946,14 @@ for comp_name, comp in ean.components.items():
     E_F_custom = getattr(comp, 'E_F_custom', None)
     E_P_custom = getattr(comp, 'E_P_custom', None)
     E_D_custom = getattr(comp, 'E_D_custom', None)
+    E_L_custom = getattr(comp, 'E_L_custom', None)
     eps_custom = getattr(comp, 'epsilon_custom', None)
-    if any(v is not None for v in (E_F_custom, E_P_custom, E_D_custom, eps_custom)):
+    if any(v is not None for v in (E_F_custom, E_P_custom, E_D_custom, E_L_custom, eps_custom)):
         custom_exergy[str(comp_name)] = {
             "E_F_custom": E_F_custom,
             "E_P_custom": E_P_custom,
             "E_D_custom": E_D_custom,
+            "E_L_custom": E_L_custom,
             "epsilon_custom": eps_custom,
         }
 
@@ -1117,10 +1144,11 @@ def _build_component_results_table(components: dict) -> str:
         r"$\dot{E}_F$",
         r"$\dot{E}_P$",
         r"$\dot{E}_D$",
+        r"$\dot{E}_L$",
         r"$\varepsilon$",
         r"$y_{D,k}$",
     ]) + " \\\\"
-    unit_row = " & ".join(["", "", "(W)", "(W)", "(W)", "(-)", "(-)"]) + " \\\\" 
+    unit_row = " & ".join(["", "", "(W)", "(W)", "(W)", "(W)", "(-)", "(-)"]) + " \\\\" 
 
     E_F_tot = getattr(ean, "E_F", None)
 
@@ -1132,12 +1160,14 @@ def _build_component_results_table(components: dict) -> str:
         E_F = getattr(component, "E_F", None)
         E_P = getattr(component, "E_P", None)
         E_D = getattr(component, "E_D", None)
+        E_L = getattr(component, "E_L", None)
         epsilon = getattr(component, "epsilon", None)
 
         # if this component has custom values (e.g. RC), use them for display in the standard columns
         E_F_custom = getattr(component, "E_F_custom", None)
         E_P_custom = getattr(component, "E_P_custom", None)
         E_D_custom = getattr(component, "E_D_custom", None)
+        E_L_custom = getattr(component, "E_L_custom", None)
         epsilon_custom = getattr(component, "epsilon_custom", None)
 
         use_custom = all(v is not None for v in (E_F_custom, E_P_custom, E_D_custom))
@@ -1145,6 +1175,7 @@ def _build_component_results_table(components: dict) -> str:
             display_E_F = E_F_custom
             display_E_P = E_P_custom
             display_E_D = E_D_custom
+            display_E_L = E_L_custom if E_L_custom is not None else 0.0
             if epsilon_custom is not None:
                 display_epsilon = epsilon_custom
             else:
@@ -1153,6 +1184,7 @@ def _build_component_results_table(components: dict) -> str:
             display_E_F = E_F
             display_E_P = E_P
             display_E_D = E_D
+            display_E_L = E_L if E_L is not None else 0.0
             display_epsilon = epsilon
         y_D_k = (display_E_D / E_F_tot) if (
             isinstance(display_E_D, (int, float))
@@ -1167,11 +1199,12 @@ def _build_component_results_table(components: dict) -> str:
                 _format_value(display_E_F),
                 _format_value(display_E_P),
                 _format_value(display_E_D),
+                _format_value(display_E_L),
                 _format_value(display_epsilon),
                 _format_value(y_D_k),
             ]) + r" \\\\" )
 
-    col_spec = "l" + "l" + "r" * 5
+    col_spec = "l" + "l" + "r" * 6
     lines = [
         f"\\begin{{tabular}}{{{col_spec}}}",
         "\\hline",
