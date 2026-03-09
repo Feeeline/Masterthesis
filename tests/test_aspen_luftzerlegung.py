@@ -772,6 +772,62 @@ if gw2_comp is not None:
 _log_component_custom_compare('GW2', gw2_comp)
 
 
+# --- MIX1 custom calculation with total exergy (physical + chemical)
+# Use complete stream exergy rates to include mixing effects represented in stream states.
+mix1_comp = ean.components.get("MIX1") or next((c for n, c in ean.components.items() if str(n).strip().upper() == "MIX1"), None)
+s16_mix = _find_exact_stream("S16")
+s31_mix = _find_exact_stream("S31")
+s32_mix = _find_exact_stream("S32")
+
+def _total_exergy_ph_ch_mix(conn):
+    if not conn:
+        return None
+    m = _get_val(conn, "m")
+    eph = _get_val(conn, "e_PH")
+    ech = _get_val(conn, "e_CH")
+    if m is None or eph is None or ech is None:
+        return None
+    return float(m) * (float(eph) + float(ech))
+
+E16_tot = _total_exergy_ph_ch_mix(s16_mix)
+E31_tot = _total_exergy_ph_ch_mix(s31_mix)
+E32_tot = _total_exergy_ph_ch_mix(s32_mix)
+
+mix1_E_F_custom = None
+mix1_E_P_custom = None
+mix1_E_D_custom = None
+mix1_E_L_custom = 0.0
+
+if all(isinstance(v, (int, float)) for v in [E16_tot, E31_tot, E32_tot]):
+    mix1_E_F_custom = E16_tot + E31_tot
+    mix1_E_P_custom = E32_tot
+    mix1_E_D_custom = mix1_E_F_custom - mix1_E_P_custom
+
+logging.info("\nMIX1 custom calculation (total exergy based):")
+logging.info(f"  E16_tot = m16*(e_PH16+e_CH16) = {E16_tot} W")
+logging.info(f"  E31_tot = m31*(e_PH31+e_CH31) = {E31_tot} W")
+logging.info(f"  E32_tot = m32*(e_PH32+e_CH32) = {E32_tot} W")
+logging.info(f"  E_F_custom = E16_tot + E31_tot = {mix1_E_F_custom} W")
+logging.info(f"  E_P_custom = E32_tot = {mix1_E_P_custom} W")
+logging.info(f"  E_D_custom = E_F_custom - E_P_custom = {mix1_E_D_custom} W")
+
+if mix1_comp is not None:
+    try:
+        mix1_comp.E_F_custom = mix1_E_F_custom
+        mix1_comp.E_P_custom = mix1_E_P_custom
+        mix1_comp.E_D_custom = mix1_E_D_custom
+        mix1_comp.E_L_custom = mix1_E_L_custom
+        mix1_comp.epsilon_custom = (
+            mix1_E_P_custom / mix1_E_F_custom
+            if (isinstance(mix1_E_P_custom, (int, float)) and isinstance(mix1_E_F_custom, (int, float)) and mix1_E_F_custom != 0)
+            else None
+        )
+    except Exception:
+        pass
+
+_log_component_custom_compare('MIX1', mix1_comp)
+
+
 # --- KOLLP (LP column) custom calculations per user definition
 # Gesamtbilanz:
 #   E_D_bal = sum_in m*(e_PH+e_CH) - sum_out m*(e_PH+e_CH)
@@ -1424,28 +1480,6 @@ def _build_component_results_table(components: dict) -> str:
     E_F_tot = E_F_tot_final if isinstance(E_F_tot_final, (int, float)) else getattr(ean, "E_F", None)
 
     rows = []
-    def _find_stream_conn(stream_name: str):
-        conn_direct = ean.connections.get(stream_name)
-        if isinstance(conn_direct, dict):
-            return conn_direct
-        for key, conn in ean.connections.items():
-            if not isinstance(conn, dict):
-                continue
-            name = str(conn.get("name", key))
-            if name == stream_name or str(key) == stream_name:
-                return conn
-        return None
-
-    def _stream_total_exergy_from_table(stream_name: str):
-        conn = _find_stream_conn(stream_name)
-        if not isinstance(conn, dict):
-            return None
-        m_val = conn.get("m")
-        e_ph = conn.get("e_PH")
-        e_ch = conn.get("e_CH")
-        if all(isinstance(v, (int, float)) for v in [m_val, e_ph, e_ch]):
-            return m_val * (e_ph + e_ch)
-        return None
 
     for comp_name, component in components.items():
         if component.__class__.__name__ in {"CycleCloser", "Splitter"}:
@@ -1499,24 +1533,6 @@ def _build_component_results_table(components: dict) -> str:
                 _format_value(display_epsilon),
                 _format_value(y_D_k),
             ]) + r" \\\\" )
-
-    # System discharge row from selected outlet streams
-    discharge_streams = ["S7", "S9", "S10", "S25", "S28"]
-    discharge_terms = [(_name, _stream_total_exergy_from_table(_name)) for _name in discharge_streams]
-    discharge_total = sum(v for _, v in discharge_terms if isinstance(v, (int, float)))
-
-    rows.append(
-        " & ".join([
-            "System Discharge",
-            "Boundary",
-            _format_value(0.0),
-            _format_value(0.0),
-            _format_value(0.0),
-            _format_value(discharge_total),
-            _format_value(None),
-            _format_value(None),
-        ]) + r" \\\\" 
-    )
 
     col_spec = "l" + "l" + "r" * 6
     lines = [
@@ -1595,20 +1611,34 @@ def _build_global_check_table(components: dict) -> str:
     discharge_streams = ["S7", "S9", "S10", "S25", "S28"]
     discharge_terms = [(_name, _stream_total_exergy_from_table(_name)) for _name in discharge_streams]
     discharge_total = sum(v for _, v in discharge_terms if isinstance(v, (int, float)))
+    boundary_discharge_streams = ["S25", "S28"]
+    boundary_discharge_terms = [(_name, _stream_total_exergy_from_table(_name)) for _name in boundary_discharge_streams]
+    discharge_total_boundary = sum(v for _, v in boundary_discharge_terms if isinstance(v, (int, float)))
 
     sum_E_D_table = sum(
         data["E_D"] for data in display_by_name.values()
         if isinstance(data.get("E_D"), (int, float))
     )
-    sum_E_L_table = sum(
+    sum_E_L_components = sum(
         data["E_L"] for data in display_by_name.values()
         if isinstance(data.get("E_L"), (int, float))
-    ) + discharge_total
+    )
+    sum_E_L_table = sum_E_L_components + discharge_total_boundary
 
     E_F_LK1 = (display_by_name.get("LK1") or {}).get("E_F")
     E_F_LK2 = (display_by_name.get("LK2") or {}).get("E_F")
     E_F_PK1 = (display_by_name.get("PK1") or {}).get("E_F")
-    E_P_T = (display_by_name.get("T") or {}).get("E_P")
+    turbine_component = components.get("T") or next(
+        (comp for name, comp in components.items() if str(name).strip().upper() == "T"),
+        None,
+    )
+    W_T = None
+    if turbine_component is not None:
+        P_val = getattr(turbine_component, "P", None)
+        if isinstance(P_val, (int, float)):
+            W_T = abs(P_val)
+    if W_T is None:
+        W_T = (display_by_name.get("T") or {}).get("E_P")
     E_S1 = _stream_total_exergy_from_table("S1")
     E_S32 = _stream_total_exergy_from_table("S32")
 
@@ -1617,8 +1647,8 @@ def _build_global_check_table(components: dict) -> str:
         E_in = E_F_LK1 + E_F_LK2 + E_F_PK1 + E_S1
 
     E_out = None
-    if all(isinstance(v, (int, float)) for v in [E_S32, E_P_T]):
-        E_out = E_S32 + E_P_T
+    if all(isinstance(v, (int, float)) for v in [E_S32, W_T]):
+        E_out = E_S32 + W_T
 
     sum_losses_total = None
     if all(isinstance(v, (int, float)) for v in [sum_E_D_table, sum_E_L_table]):
@@ -1632,27 +1662,45 @@ def _build_global_check_table(components: dict) -> str:
     if isinstance(balance_diff, (int, float)) and isinstance(E_in, (int, float)) and E_in != 0:
         balance_diff_pct = 100.0 * balance_diff / E_in
 
-    def _latex_lll_row(size_label: str, formula_label: str, value):
-        return f"{size_label} & {formula_label} & {_format_value(value)} \\\\"
+    E_F_LKPK = None
+    if all(isinstance(v, (int, float)) for v in [E_F_LK1, E_F_LK2, E_F_PK1]):
+        E_F_LKPK = E_F_LK1 + E_F_LK2 + E_F_PK1
 
+    sum_out = None
+    if all(isinstance(v, (int, float)) for v in [E_out, sum_losses_total]):
+        sum_out = E_out + sum_losses_total
+
+    def _format_int_de(value):
+        if not isinstance(value, (int, float)):
+            return "-"
+        return f"{int(round(value)):,}".replace(",", ".")
+
+    def _format_pct_de(value):
+        if not isinstance(value, (int, float)):
+            return "-"
+        return f"{value:.2f}".replace(".", ",")
+
+    delta_text = "-"
+    if isinstance(balance_diff, (int, float)) and isinstance(balance_diff_pct, (int, float)):
+        delta_text = f"{_format_int_de(balance_diff)} ({_format_pct_de(balance_diff_pct)} \\%)"
+
+    row_end = r"\\"
     lines = [
-        r"\textbf{Exergetischer Global-Check}\\",
-        r"\begin{tabular}{lll}",
+        r"\textbf{Master-Exergiebilanz des Gesamtsystems}" + row_end,
+        r"\begin{tabular}{llr | llr}",
         r"\hline",
-        r"Größe & Formel & Wert \\",
+        r"\multicolumn{3}{l|}{\textbf{Exergetischer Aufwand ($E_{in}$)}} & \multicolumn{3}{l}{\textbf{Exergetischer Verbleib}} " + row_end,
         r"\hline",
-        _latex_lll_row(r"$\dot E_{tot,S7}$", r"$\dot m_{S7}(e_{PH,S7}+e_{CH,S7})$", discharge_terms[0][1]),
-        _latex_lll_row(r"$\dot E_{tot,S9}$", r"$\dot m_{S9}(e_{PH,S9}+e_{CH,S9})$", discharge_terms[1][1]),
-        _latex_lll_row(r"$\dot E_{tot,S10}$", r"$\dot m_{S10}(e_{PH,S10}+e_{CH,S10})$", discharge_terms[2][1]),
-        _latex_lll_row(r"$\dot E_{tot,S25}$", r"$\dot m_{S25}(e_{PH,S25}+e_{CH,S25})$", discharge_terms[3][1]),
-        _latex_lll_row(r"$\dot E_{tot,S28}$", r"$\dot m_{S28}(e_{PH,S28}+e_{CH,S28})$", discharge_terms[4][1]),
-        _latex_lll_row(r"$\sum \dot E_{tot,i}$ (Discharge)", r"$\sum_{i \in \{S7,S9,S10,S25,S28\}} \dot E_{tot,i}$", discharge_total),
+        r"Posten & Quelle & Wert (W) & Posten & Typ & Wert (W) " + row_end,
         r"\hline",
-        _latex_lll_row(r"Total Input ($E_{in}$)", r"$E_{F,\mathrm{LK1}} + E_{F,\mathrm{LK2}} + E_{F,\mathrm{PK1}} + \dot E_{S1}$", E_in),
-        _latex_lll_row(r"Total Output ($E_{out}$)", r"$\dot E_{S32} + E_{P,\mathrm{T}}$", E_out),
-        _latex_lll_row(r"$\sum E_D + \sum E_L$", r"$\sum_k \dot E_{D,k} + \sum_k \dot E_{L,k}$", sum_losses_total),
-        _latex_lll_row(r"Bilanz-Differenz [W]", r"$E_{in} - (E_{out} + \sum E_D + \sum E_L)$", balance_diff),
-        _latex_lll_row(r"Bilanz-Differenz [\%]", r"$100 \cdot \Delta E_{Bilanz}/E_{in}$", balance_diff_pct),
+        f"Strom 1 & $\\dot{{E}}_{{S1}}$ & {_format_int_de(E_S1)} & Produkt N2 & $\\dot{{E}}_{{S32}}$ & {_format_int_de(E_S32)} " + row_end,
+        f"Verdichtung & $E_{{F,LK+PK}}$ & {_format_int_de(E_F_LKPK)} & Turbinenarbeit & $\\dot{{W}}_{{T}}$ & {_format_int_de(W_T)} " + row_end,
+        f" &  &  & Exerget. Vernichtung & $\\sum \\dot{{E}}_{{D,k}}$ & {_format_int_de(sum_E_D_table)} " + row_end,
+        f" &  &  & Austrittsverluste & $\\sum \\dot{{E}}_{{L,ges}}$ & {_format_int_de(sum_E_L_table)} " + row_end,
+        r"\hline",
+        f"\\textbf{{Summe Ein}} &  & \\textbf{{{_format_int_de(E_in)}}} & \\textbf{{Summe Aus}} &  & \\textbf{{{_format_int_de(sum_out)}}} " + row_end,
+        r"\hline",
+        f"\\multicolumn{{3}}{{l}}{{}} & \\textbf{{Differenz ($\\Delta$)}} &  & \\textbf{{{delta_text}}} " + row_end,
         r"\hline",
         r"\end{tabular}",
     ]

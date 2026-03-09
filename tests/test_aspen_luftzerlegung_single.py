@@ -644,6 +644,72 @@ if gw2_comp is not None:
 _log_component_custom_compare('GW2', gw2_comp)
 
 
+# --- MIX custom calculation with total exergy (physical + chemical)
+# Ef = sum(E_tot,in), Ep = sum(E_tot,out), Ed = Ef - Ep, El = 0
+
+mix_comp = ean.components.get("MIX") or next(
+    (c for n, c in ean.components.items() if str(n).strip().upper() == "MIX"),
+    None,
+)
+
+def _conn_total_exergy(conn):
+    if not isinstance(conn, dict):
+        return None
+    m_val = conn.get("m")
+    if not isinstance(m_val, (int, float)):
+        return None
+    e_ph_eff = _get_eph_effective(conn)
+    e_ch = conn.get("e_CH")
+    if isinstance(e_ph_eff, (int, float)) and isinstance(e_ch, (int, float)):
+        return float(m_val) * (float(e_ph_eff) + float(e_ch))
+    return None
+
+mix_E_F_custom = None
+mix_E_P_custom = None
+mix_E_D_custom = None
+mix_E_L_custom = 0.0
+
+if mix_comp is not None:
+    inlet_terms = [
+        _conn_total_exergy(conn)
+        for conn in mix_comp.inl.values()
+        if isinstance(conn, dict) and conn.get("kind", "material") != "power"
+    ]
+    outlet_terms = [
+        _conn_total_exergy(conn)
+        for conn in mix_comp.outl.values()
+        if isinstance(conn, dict) and conn.get("kind", "material") != "power"
+    ]
+
+    if inlet_terms and all(isinstance(v, (int, float)) for v in inlet_terms):
+        mix_E_F_custom = sum(inlet_terms)
+    if outlet_terms and all(isinstance(v, (int, float)) for v in outlet_terms):
+        mix_E_P_custom = sum(outlet_terms)
+    if isinstance(mix_E_F_custom, (int, float)) and isinstance(mix_E_P_custom, (int, float)):
+        mix_E_D_custom = mix_E_F_custom - mix_E_P_custom
+
+logging.info("\nMIX custom calculation (total exergy based):")
+logging.info(f"  E_F_custom = sum(E_tot,in) = {mix_E_F_custom} W")
+logging.info(f"  E_P_custom = sum(E_tot,out) = {mix_E_P_custom} W")
+logging.info(f"  E_D_custom = E_F_custom - E_P_custom = {mix_E_D_custom} W")
+
+if mix_comp is not None:
+    try:
+        mix_comp.E_F_custom = mix_E_F_custom
+        mix_comp.E_P_custom = mix_E_P_custom
+        mix_comp.E_D_custom = mix_E_D_custom
+        mix_comp.E_L_custom = mix_E_L_custom
+        mix_comp.epsilon_custom = (
+            mix_E_P_custom / mix_E_F_custom
+            if (isinstance(mix_E_P_custom, (int, float)) and isinstance(mix_E_F_custom, (int, float)) and mix_E_F_custom != 0)
+            else None
+        )
+    except Exception:
+        pass
+
+_log_component_custom_compare('MIX', mix_comp)
+
+
 # --- RECO custom calculations using streams SZ25, SZ26, SZ27, SZ28
 # Ep = ETSZ26 - ETSZ25
 # Ef = EPHSZ27 - EPHSZ28 + EMSZ25 - EMSZ26
@@ -825,7 +891,7 @@ logging.info("\n" + "="*100)
 logging.info("COMPONENT EXERGY RESULTS")
 logging.info("="*100)
 for comp_name, component in ean.components.items():
-    if component.__class__.__name__ != "CycleCloser":
+    if component.__class__.__name__ != "CycleCloser" and str(comp_name).strip().upper() != "RECON":
         E_F = getattr(component, 'E_F', None)
         E_P = getattr(component, 'E_P', None)
         E_D = getattr(component, 'E_D', None)
@@ -868,6 +934,8 @@ for comp_name, component in ean.components.items():
 resolved_components = []
 for comp_name, component in ean.components.items():
     if component.__class__.__name__ == "CycleCloser":
+        continue
+    if str(comp_name).strip().upper() == "RECON":
         continue
 
     E_F_std = getattr(component, 'E_F', None)
@@ -1150,11 +1218,62 @@ def _build_component_results_table(components: dict) -> str:
     ]) + " \\\\"
     unit_row = " & ".join(["", "", "(W)", "(W)", "(W)", "(W)", "(-)", "(-)"]) + " \\\\" 
 
-    E_F_tot = getattr(ean, "E_F", None)
+    def _find_stream_conn(stream_name: str):
+        conn_direct = ean.connections.get(stream_name)
+        if isinstance(conn_direct, dict):
+            return conn_direct
+        for key, conn in ean.connections.items():
+            if not isinstance(conn, dict):
+                continue
+            name = str(conn.get("name", key))
+            if name == stream_name or str(key) == stream_name:
+                return conn
+        return None
+
+    def _power_stream_abs(stream_name: str):
+        conn = _find_stream_conn(stream_name)
+        if not isinstance(conn, dict):
+            return None
+        val = conn.get("energy_flow")
+        if isinstance(val, (int, float)):
+            return abs(float(val))
+        return None
+
+    def _stream_total_exergy_from_table(stream_name: str):
+        conn = _find_stream_conn(stream_name)
+        if not isinstance(conn, dict):
+            return None
+        m_val = conn.get("m")
+        e_ph = conn.get("e_PH")
+        e_ch = conn.get("e_CH")
+        e_ph_eff = None
+        if isinstance(e_ph, (int, float)):
+            e_ph_eff = float(e_ph)
+        else:
+            e_t = conn.get("e_T")
+            e_m = conn.get("e_M")
+            if isinstance(e_t, (int, float)) and isinstance(e_m, (int, float)):
+                e_ph_eff = float(e_t) + float(e_m)
+            elif isinstance(e_ch, (int, float)):
+                e_ph_eff = 0.0
+
+        if all(isinstance(v, (int, float)) for v in [m_val, e_ph_eff, e_ch]):
+            return float(m_val) * (float(e_ph_eff) + float(e_ch))
+        return None
+
+    W1 = _power_stream_abs("W1")
+    W2 = _power_stream_abs("W2")
+    E_S1 = _stream_total_exergy_from_table("S1")
+    if all(isinstance(v, (int, float)) for v in [W1, W2, E_S1]):
+        E_F_tot = W1 + W2 + E_S1
+    else:
+        E_F_tot = getattr(ean, "E_F", None)
 
     rows = []
     for comp_name, component in components.items():
-        if component.__class__.__name__ in {"CycleCloser", "Mixer", "Splitter"}:
+        if component.__class__.__name__ in {"CycleCloser", "Splitter"}:
+            continue
+        if str(comp_name).strip().upper() == "RECON":
             continue
         # standard values
         E_F = getattr(component, "E_F", None)
@@ -1214,6 +1333,175 @@ def _build_component_results_table(components: dict) -> str:
         *rows,
         "\\hline",
         "\\end{tabular}",
+    ]
+    return "\n".join(lines)
+
+
+def _build_global_check_table(components: dict) -> str:
+    def _find_stream_conn(stream_name: str):
+        conn_direct = ean.connections.get(stream_name)
+        if isinstance(conn_direct, dict):
+            return conn_direct
+        for key, conn in ean.connections.items():
+            if not isinstance(conn, dict):
+                continue
+            name = str(conn.get("name", key))
+            if name == stream_name or str(key) == stream_name:
+                return conn
+        return None
+
+    def _stream_total_exergy_from_table(stream_name: str):
+        conn = _find_stream_conn(stream_name)
+        if not isinstance(conn, dict):
+            return None
+        m_val = conn.get("m")
+        e_ph = conn.get("e_PH")
+        e_ch = conn.get("e_CH")
+        e_ph_eff = None
+        if isinstance(e_ph, (int, float)):
+            e_ph_eff = float(e_ph)
+        else:
+            e_t = conn.get("e_T")
+            e_m = conn.get("e_M")
+            if isinstance(e_t, (int, float)) and isinstance(e_m, (int, float)):
+                e_ph_eff = float(e_t) + float(e_m)
+            elif isinstance(e_ch, (int, float)):
+                e_ph_eff = 0.0
+
+        if all(isinstance(v, (int, float)) for v in [m_val, e_ph_eff, e_ch]):
+            return float(m_val) * (float(e_ph_eff) + float(e_ch))
+        return None
+
+    display_by_name = {}
+    for comp_name, component in components.items():
+        if component.__class__.__name__ == "CycleCloser":
+            continue
+        if str(comp_name).strip().upper() == "RECON":
+            continue
+
+        E_F = getattr(component, "E_F", None)
+        E_P = getattr(component, "E_P", None)
+        E_D = getattr(component, "E_D", None)
+        E_L = getattr(component, "E_L", None)
+
+        E_F_custom = getattr(component, "E_F_custom", None)
+        E_P_custom = getattr(component, "E_P_custom", None)
+        E_D_custom = getattr(component, "E_D_custom", None)
+        E_L_custom = getattr(component, "E_L_custom", None)
+
+        use_custom = all(v is not None for v in (E_F_custom, E_P_custom, E_D_custom))
+        if use_custom:
+            display_E_F = E_F_custom
+            display_E_P = E_P_custom
+            display_E_D = E_D_custom
+            display_E_L = E_L_custom if E_L_custom is not None else 0.0
+        else:
+            display_E_F = E_F
+            display_E_P = E_P
+            display_E_D = E_D
+            display_E_L = E_L if E_L is not None else 0.0
+
+        display_by_name[str(comp_name)] = {
+            "E_F": display_E_F,
+            "E_P": display_E_P,
+            "E_D": display_E_D,
+            "E_L": display_E_L,
+        }
+
+    sum_E_D_table = sum(
+        data["E_D"] for data in display_by_name.values()
+        if isinstance(data.get("E_D"), (int, float))
+    )
+    def _power_stream_abs(stream_name: str):
+        conn = _find_stream_conn(stream_name)
+        if not isinstance(conn, dict):
+            return None
+        val = conn.get("energy_flow")
+        if isinstance(val, (int, float)):
+            return abs(float(val))
+        return None
+
+    W1 = _power_stream_abs("W1")
+    W2 = _power_stream_abs("W2")
+    W3 = _power_stream_abs("W3")
+
+    E_S1 = _stream_total_exergy_from_table("S1")
+
+    product_stream = "S24"
+    E_product = _stream_total_exergy_from_table(product_stream)
+
+    W_T = W3
+    if W_T is None:
+        turb_comp = (
+            components.get("TURB")
+            or components.get("T")
+            or next((c for n, c in components.items() if str(n).strip().upper() in {"TURB", "T"}), None)
+        )
+        if turb_comp is not None:
+            P_val = getattr(turb_comp, "P", None)
+            if isinstance(P_val, (int, float)):
+                W_T = abs(P_val)
+        if W_T is None:
+            turb_data = display_by_name.get("TURB") or display_by_name.get("T") or {}
+            W_T = turb_data.get("E_P")
+
+    loss_streams = ["S7", "S9", "S10", "S21"]
+    loss_terms = [(_name, _stream_total_exergy_from_table(_name)) for _name in loss_streams]
+    sum_E_L_total = sum(v for _, v in loss_terms if isinstance(v, (int, float)))
+
+    E_F_comp = None
+    if isinstance(W1, (int, float)) and isinstance(W2, (int, float)):
+        E_F_comp = W1 + W2
+
+    E_in = None
+    if isinstance(E_F_comp, (int, float)) and isinstance(E_S1, (int, float)):
+        E_in = E_F_comp + E_S1
+
+    sum_out = None
+    if all(isinstance(v, (int, float)) for v in [E_product, W_T, sum_E_D_table, sum_E_L_total]):
+        sum_out = E_product + W_T + sum_E_D_table + sum_E_L_total
+
+    balance_diff = None
+    if isinstance(E_in, (int, float)) and isinstance(sum_out, (int, float)):
+        balance_diff = E_in - sum_out
+
+    balance_diff_pct = None
+    if isinstance(balance_diff, (int, float)) and isinstance(E_in, (int, float)) and E_in != 0:
+        balance_diff_pct = 100.0 * balance_diff / E_in
+
+    def _format_int_de(value):
+        if not isinstance(value, (int, float)):
+            return "-"
+        return f"{int(round(value)):,}".replace(",", ".")
+
+    def _format_pct_de(value):
+        if not isinstance(value, (int, float)):
+            return "-"
+        return f"{value:.2f}".replace(".", ",")
+
+    delta_text = "-"
+    if isinstance(balance_diff, (int, float)) and isinstance(balance_diff_pct, (int, float)):
+        delta_text = f"{_format_int_de(balance_diff)} ({_format_pct_de(balance_diff_pct)} \\%)"
+
+    row_end = r"\\"
+    lines = [
+        r"\textbf{Master-Exergiebilanz des Gesamtsystems}" + row_end,
+        r"\begin{tabular}{llr | llr}",
+        r"\hline",
+        r"\multicolumn{3}{l|}{\textbf{Exergetischer Aufwand ($E_{in}$)}} & \multicolumn{3}{l}{\textbf{Exergetischer Verbleib}} " + row_end,
+        r"\hline",
+        r"Posten & Quelle & Wert (W) & Posten & Typ & Wert (W) " + row_end,
+        r"\hline",
+        f"Strom 1 & $\\dot{{E}}_{{S1}}$ & {_format_int_de(E_S1)} & Produkt N2 & $\\dot{{E}}_{{{product_stream}}}$ & {_format_int_de(E_product)} " + row_end,
+        f"Verdichtung & $\\dot{{W}}_1 + \\dot{{W}}_2$ & {_format_int_de(E_F_comp)} & Turbinenarbeit & $\\dot{{W}}_3$ & {_format_int_de(W_T)} " + row_end,
+        f" &  &  & Exerget. Vernichtung & $\\sum \\dot{{E}}_{{D,k}}$ & {_format_int_de(sum_E_D_table)} " + row_end,
+        f" &  &  & Austrittsverluste & $\\dot{{E}}_{{S7}}+\\dot{{E}}_{{S9}}+\\dot{{E}}_{{S10}}+\\dot{{E}}_{{S21}}$ & {_format_int_de(sum_E_L_total)} " + row_end,
+        r"\hline",
+        f"\\textbf{{Summe Ein}} &  & \\textbf{{{_format_int_de(E_in)}}} & \\textbf{{Summe Aus}} &  & \\textbf{{{_format_int_de(sum_out)}}} " + row_end,
+        r"\hline",
+        f"\\multicolumn{{3}}{{l}}{{}} & \\textbf{{Differenz ($\\Delta$)}} &  & \\textbf{{{delta_text}}} " + row_end,
+        r"\hline",
+        r"\end{tabular}",
     ]
     return "\n".join(lines)
 
@@ -1300,6 +1588,19 @@ components_output_path = os.path.abspath(
 components_table = _build_component_results_table(ean.components)
 with open(components_output_path, "w", encoding="utf-8") as tex_file:
     tex_file.write(components_table)
+
+global_check_output_path = os.path.abspath(
+    os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        "Overleaf_LaTeX",
+        "tabellen",
+        "aspen_luftzerlegung_global_check_single.tex",
+    )
+)
+global_check_table = _build_global_check_table(ean.components)
+with open(global_check_output_path, "w", encoding="utf-8") as tex_file:
+    tex_file.write(global_check_table)
 
 molfractions_output_path = os.path.abspath(
     os.path.join(

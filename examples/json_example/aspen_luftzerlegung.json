@@ -5131,6 +5131,13 @@
             "E_L_custom": null,
             "epsilon_custom": 0.9605866360244665
         },
+        "MIX1": {
+            "E_F_custom": 2963984.045,
+            "E_P_custom": 2920183.3649999993,
+            "E_D_custom": 43800.68000000063,
+            "E_L_custom": 0.0,
+            "epsilon_custom": 0.9852223630981115
+        },
         "KOLHP": {
             "E_F_custom": 5249704.078251176,
             "E_P_custom": 5156586.692783056,
