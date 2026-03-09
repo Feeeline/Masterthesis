@@ -1536,7 +1536,7 @@ def _build_component_results_table(components: dict) -> str:
 
     col_spec = "l" + "l" + "r" * 6
     lines = [
-        r"\textbf{Berechnete Komponenten-Ergebnisse des Doppelkolonnenmodells}\\",
+        r"Berechnete exergetische Kennzahlen der Komponenten des Doppelkolonnenmodells\\",
         f"\\begin{{tabular}}{{{col_spec}}}",
         "\\hline",
         header,
