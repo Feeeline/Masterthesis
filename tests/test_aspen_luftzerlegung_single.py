@@ -1122,7 +1122,7 @@ def _build_streams_latex_table(connections: dict) -> str:
     col_spec = "l" + "r" * (len(columns) - 1)
     lines = [
         f"\\begin{{longtable}}{{{col_spec}}}",
-            r"\caption{Thermodynamische und exergetische Kenngrößen der simulierten Prozessströme} \\",
+            r"\caption{Thermodynamische und exergetische Kenngrößen der simulierten Prozessströme des Single-Kolonnenmodells} \\",
         "\\hline",
         header,
         unit_row,
@@ -1192,7 +1192,7 @@ def _build_molar_fractions_table(connections: dict) -> str:
     col_spec = "l" + "r" * (len(columns) - 1)
     lines = [
         f"\\begin{{longtable}}{{{col_spec}}}",
-            r"\caption{Stoffliche Zusammensetzung der Prozessströme} \\",
+            r"\caption{Stoffliche Zusammensetzung der Prozessströme des Single-Kolonnenmodells} \\",
         "\\hline",
         header,
         unit_row,
@@ -1325,6 +1325,7 @@ def _build_component_results_table(components: dict) -> str:
 
     col_spec = "l" + "l" + "r" * 6
     lines = [
+        r"\textbf{Berechnete Komponenten-Ergebnisse des Single-Kolonnenmodells}\\",
         f"\\begin{{tabular}}{{{col_spec}}}",
         "\\hline",
         header,
