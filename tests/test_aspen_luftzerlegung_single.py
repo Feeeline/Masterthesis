@@ -1505,6 +1505,122 @@ def _build_global_check_table(components: dict) -> str:
     return "\n".join(lines)
 
 
+def _get_block_map_single() -> dict:
+    return {
+        "gekuehlte Luftverdichtung": ["ZK1", "LK2"],
+        "Luftverdichtung": ["LK1", "ZK1", "LK2"],
+        "Gasaufbereitung": ["ZK2", "GW1", "GW2"],
+        "Verdichtungs- und Reinigungsblock": ["LK1", "ZK1", "LK2", "ZK2", "GW1", "GW2"],
+        "Hauptwaermeuebertrager": ["MW"],
+        "Rektifikation": ["KOL", "RC", "D1"],
+        "Rest": ["T", "D2"],
+    }
+
+
+def _compute_block_ed_sums(components: dict, block_map: dict) -> dict:
+    alias_map = {
+        "MW": ["MW", "MH"],
+        "MH": ["MH", "MW"],
+        "RC": ["RC", "RECO"],
+        "RC1": ["RC1", "RC", "RECO"],
+        "T": ["T", "TURB"],
+        "TURB": ["TURB", "T"],
+    }
+
+    def _display_ed(comp_name: str):
+        candidates = alias_map.get(comp_name, [comp_name])
+
+        component = None
+        for cand in candidates:
+            component = components.get(cand)
+            if component is not None:
+                break
+
+        if component is None:
+            return 0.0
+
+        E_D = getattr(component, "E_D", None)
+        E_D_custom = getattr(component, "E_D_custom", None)
+        if isinstance(E_D_custom, (int, float)):
+            return float(E_D_custom)
+        if isinstance(E_D, (int, float)):
+            return float(E_D)
+        return 0.0
+
+    return {
+        block_name: sum(_display_ed(name) for name in comp_list)
+        for block_name, comp_list in block_map.items()
+    }
+
+
+def _build_block_ed_table(components: dict) -> str:
+    block_map = _get_block_map_single()
+    ed_sums = _compute_block_ed_sums(components, block_map)
+
+    rows = []
+    for block_name in block_map.keys():
+        rows.append(" & ".join([block_name, _format_value(ed_sums.get(block_name, 0.0))]) + r" \\")
+
+    lines = [
+        r"\begin{longtable}{lr}",
+        r"\caption{Summierte Exergievernichtung der Funktionsbloecke des Single-Kolonnenmodells} \\",
+        r"\hline",
+        r"Block & Summe $\dot{E}_D$ (W) \\",
+        r"\hline",
+        *rows,
+        r"\hline",
+        r"\end{longtable}",
+    ]
+    return "\n".join(lines)
+
+
+def _read_block_ed_table(tex_path: str) -> dict:
+    result = {}
+    if not os.path.exists(tex_path):
+        return result
+
+    with open(tex_path, "r", encoding="utf-8") as f:
+        for raw_line in f:
+            line = raw_line.strip()
+            if not line or line.startswith("\\"):
+                continue
+            if line.startswith("Block") or "&" not in line:
+                continue
+
+            parts = [p.strip() for p in line.replace("\\\\", "").split("&")]
+            if len(parts) != 2:
+                continue
+
+            block_name, val_raw = parts
+            try:
+                result[block_name] = float(val_raw)
+            except ValueError:
+                result[block_name] = 0.0
+
+    return result
+
+
+def _build_block_ed_comparison_table(single_sums: dict, double_sums: dict) -> str:
+    ordered_blocks = list(_get_block_map_single().keys())
+    rows = []
+    for block_name in ordered_blocks:
+        s_val = single_sums.get(block_name, 0.0)
+        d_val = double_sums.get(block_name, 0.0)
+        rows.append(" & ".join([block_name, _format_value(s_val), _format_value(d_val)]) + r" \\")
+
+    lines = [
+        r"\begin{longtable}{lrr}",
+        r"\caption{Summierte Exergievernichtung der Funktionsbloecke fuer Single- und Doppelkolonnenmodell} \\",
+        r"\hline",
+        r"Block & Summe $\dot{E}_D$ Single (W) & Summe $\dot{E}_D$ Doppel (W) \\",
+        r"\hline",
+        *rows,
+        r"\hline",
+        r"\end{longtable}",
+    ]
+    return "\n".join(lines)
+
+
 def _collect_components(connections: dict, composition_key: str) -> list[str]:
     components = set()
     for conn in connections.values():
@@ -1600,6 +1716,43 @@ global_check_output_path = os.path.abspath(
 global_check_table = _build_global_check_table(ean.components)
 with open(global_check_output_path, "w", encoding="utf-8") as tex_file:
     tex_file.write(global_check_table)
+
+block_ed_output_path = os.path.abspath(
+    os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        "Overleaf_LaTeX",
+        "tabellen",
+        "aspen_luftzerlegung_blocks_ed_single.tex",
+    )
+)
+block_ed_table = _build_block_ed_table(ean.components)
+with open(block_ed_output_path, "w", encoding="utf-8") as tex_file:
+    tex_file.write(block_ed_table)
+
+block_ed_comparison_output_path = os.path.abspath(
+    os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        "Overleaf_LaTeX",
+        "tabellen",
+        "aspen_luftzerlegung_blocks_ed_comparison.tex",
+    )
+)
+double_block_path = os.path.abspath(
+    os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        "Overleaf_LaTeX",
+        "tabellen",
+        "aspen_luftzerlegung_blocks_ed.tex",
+    )
+)
+single_sums = _compute_block_ed_sums(ean.components, _get_block_map_single())
+double_sums = _read_block_ed_table(double_block_path)
+block_ed_comparison_table = _build_block_ed_comparison_table(single_sums, double_sums)
+with open(block_ed_comparison_output_path, "w", encoding="utf-8") as tex_file:
+    tex_file.write(block_ed_comparison_table)
 
 molfractions_output_path = os.path.abspath(
     os.path.join(

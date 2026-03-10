@@ -1,6 +1,7 @@
 import os
 import re
 from pathlib import Path
+from matplotlib.lines import Line2D
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -9,6 +10,8 @@ import pandas as pd
 BASE_DIR = Path(r"C:/Users/Felin/Documents/Masterthesis/Simulation_Code/GIT")
 TABLE_DOUBLE = BASE_DIR / "Overleaf_LaTeX/tabellen/aspen_luftzerlegung_components.tex"
 TABLE_SINGLE = BASE_DIR / "Overleaf_LaTeX/tabellen/aspen_luftzerlegung_components_single.tex"
+MOLFRAC_DOUBLE = BASE_DIR / "Overleaf_LaTeX/tabellen/aspen_luftzerlegung_streams_molfrac.tex"
+MOLFRAC_SINGLE = BASE_DIR / "Overleaf_LaTeX/tabellen/aspen_luftzerlegung_streams_molfrac_single.tex"
 GLOBAL_DOUBLE = BASE_DIR / "Overleaf_LaTeX/tabellen/aspen_luftzerlegung_global_check.tex"
 GLOBAL_SINGLE = BASE_DIR / "Overleaf_LaTeX/tabellen/aspen_luftzerlegung_global_check_single.tex"
 OUT_DIR = BASE_DIR / "Overleaf_LaTeX/bilder"
@@ -63,7 +66,10 @@ def _to_float_latex_number(value: str):
 
 def parse_component_table(tex_path: Path) -> pd.DataFrame:
     rows = []
-    pattern = re.compile(r"^\s*([^&]+)&([^&]+)&([^&]+)&([^&]+)&([^&]+)&([^&]+)&([^&]+)&([^\\]+)\\\\")
+    # Accept both formats:
+    # old: Component, Type, E_F, E_P, E_D, E_L, epsilon, y_D_k
+    # new: Component, Type, E_F, E_P, E_D, epsilon, y_D_k
+    pattern = re.compile(r"^\s*([^&]+)&([^&]+)&([^&]+)&([^&]+)&([^&]+)&([^&]+)&([^&]+)(?:&([^\\]+))?\\\\")
 
     with tex_path.open("r", encoding="utf-8") as f:
         for line in f:
@@ -79,7 +85,8 @@ def parse_component_table(tex_path: Path) -> pd.DataFrame:
 
             component = m.group(1).strip()
             e_d = _to_float(m.group(5))
-            y_dk = _to_float(m.group(8))
+            y_dk_raw = m.group(8) if m.group(8) is not None else m.group(7)
+            y_dk = _to_float(y_dk_raw)
 
             if e_d is None or y_dk is None:
                 continue
@@ -98,6 +105,334 @@ def parse_component_table(tex_path: Path) -> pd.DataFrame:
         raise ValueError(f"Keine verwertbaren Daten in {tex_path}")
 
     return df.sort_values("E_D_W", ascending=False).reset_index(drop=True)
+
+
+def parse_component_ed_map(tex_path: Path) -> dict:
+    rows = {}
+    pattern = re.compile(r"^\s*([^&]+)&([^&]+)&([^&]+)&([^&]+)&([^&]+)&([^&]+)&([^&]+)(?:&([^\\]+))?\\\\")
+
+    with tex_path.open("r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("\\"):
+                continue
+            if line.startswith("Component") or line.startswith("&"):
+                continue
+
+            m = pattern.match(line)
+            if not m:
+                continue
+
+            comp = m.group(1).strip()
+            ed = _to_float(m.group(5))
+            if comp and isinstance(ed, (int, float)):
+                rows[comp] = float(ed)
+
+    if not rows:
+        raise ValueError(f"Keine verwertbaren Komponenten-E_D-Daten in {tex_path}")
+    return rows
+
+
+def parse_molfrac_table(tex_path: Path) -> pd.DataFrame:
+    rows = []
+    pattern = re.compile(r"^\s*([^&]+)&([^&]+)&([^&]+)&([^&]+)&([^&]+)&([^\\]+)\\\\")
+
+    with tex_path.open("r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("\\"):
+                continue
+            if line.startswith("Stream") or line.startswith("&"):
+                continue
+
+            m = pattern.match(line)
+            if not m:
+                continue
+
+            stream = m.group(1).strip()
+            x_n2 = _to_float(m.group(2))
+            x_o2 = _to_float(m.group(3))
+            if x_n2 is None or x_o2 is None:
+                continue
+
+            rows.append({"Stream": stream, "x_N2": x_n2, "x_O2": x_o2})
+
+    df = pd.DataFrame(rows)
+    if df.empty:
+        raise ValueError(f"Keine verwertbaren Molfraktionsdaten in {tex_path}")
+    return df
+
+
+def plot_grouped_product_purity(df_double_mol: pd.DataFrame, df_single_mol: pd.DataFrame, out_path: Path):
+    # Requested product stream mapping.
+    stream_map = {
+        "single": {"n2": "S24", "o2": "S21"},
+        "double": {"n2": "S32", "o2": "S28"},
+    }
+
+    def _pick(df: pd.DataFrame, stream: str, key: str):
+        hit = df.loc[df["Stream"] == stream, key]
+        if hit.empty:
+            raise ValueError(f"Stream {stream} nicht in Molfraktions-Tabelle gefunden.")
+        return float(hit.iloc[0])
+
+    single_n2 = _pick(df_single_mol, stream_map["single"]["n2"], "x_N2")
+    single_o2 = _pick(df_single_mol, stream_map["single"]["o2"], "x_O2")
+    double_n2 = _pick(df_double_mol, stream_map["double"]["n2"], "x_N2")
+    double_o2 = _pick(df_double_mol, stream_map["double"]["o2"], "x_O2")
+
+    plt.style.use("seaborn-v0_8-whitegrid")
+    plt.rcParams.update(
+        {
+            "font.family": "serif",
+            "mathtext.fontset": "stix",
+            "axes.labelsize": 12,
+            "xtick.labelsize": 11,
+            "ytick.labelsize": 10,
+            "legend.fontsize": 10,
+        }
+    )
+
+    fig, ax_left = plt.subplots(figsize=(7.2, 5.4))
+    ax_right = ax_left.twinx()
+
+    categories = ["Stickstoff-Produktstrom", "Sauerstoffreststrom"]
+    x = [0.0, 0.6]
+    width = 0.12  # slight gap avoids visual seam between adjacent bars
+    dx = 0.07
+
+    # Colors requested to match existing style.
+    color_single = "#55A868"
+    color_double = "#4C72B0"
+
+    # Nitrogen product category on left axis.
+    b_single_n2 = ax_left.bar(
+        x[0] - dx,
+        single_n2,
+        width=width,
+        color=color_single,
+        edgecolor="none",
+        linewidth=0,
+        label="Einkolonnen-Modell",
+    )
+    b_double_n2 = ax_left.bar(
+        x[0] + dx,
+        double_n2,
+        width=width,
+        color=color_double,
+        edgecolor="none",
+        linewidth=0,
+        label="Doppelkolonnen-Modell",
+    )
+
+    # Oxygen category on right axis (0..1).
+    b_single_o2 = ax_right.bar(
+        x[1] - dx,
+        single_o2,
+        width=width,
+        color=color_single,
+        edgecolor="none",
+        linewidth=0,
+    )
+    b_double_o2 = ax_right.bar(
+        x[1] + dx,
+        double_o2,
+        width=width,
+        color=color_double,
+        edgecolor="none",
+        linewidth=0,
+    )
+
+    ax_left.set_xticks(x)
+    ax_left.set_xticklabels(categories)
+    ax_left.set_ylabel(r"Molare Zusammensetzung, $x_i$ (kmol/kmol)")
+
+    # Left axis for high-purity N2 visibility.
+    ax_left.set_ylim(0.9999, 1.00)
+    ax_left.set_yticks([0.9999 + 0.00002 * i for i in range(int((1.00 - 0.9999) / 0.00002) + 1)])
+
+    # Right axis for O2 full range.
+    ax_right.set_ylim(0.0, 1.0)
+    ax_right.set_yticks([0.1 * i for i in range(11)])
+    ax_left.set_xlim(-0.28, 0.88)
+
+    # Remove all vertical axis lines and tick marks for cleaner look.
+    ax_left.spines["left"].set_visible(False)
+    ax_left.spines["right"].set_visible(False)
+    ax_right.spines["left"].set_visible(False)
+    ax_right.spines["right"].set_visible(False)
+    ax_left.spines["top"].set_visible(False)
+    ax_right.spines["top"].set_visible(False)
+    ax_left.tick_params(axis="y", length=0)
+    ax_right.tick_params(axis="y", length=0)
+
+    ax_left.grid(axis="y", linestyle="--", alpha=0.35)
+    ax_right.grid(False)
+
+    # Value labels for transparency.
+    for bars, axis in ((b_single_o2, ax_right), (b_double_o2, ax_right), (b_single_n2, ax_left), (b_double_n2, ax_left)):
+        y_max = axis.get_ylim()[1]
+        offset = y_max * 0.01
+        for bar in bars:
+            v = bar.get_height()
+            axis.text(
+                bar.get_x() + bar.get_width() / 2,
+                v + offset,
+                f"{v:.4f}",
+                ha="center",
+                va="bottom",
+                fontsize=9,
+            )
+
+    # Legend below the plot.
+    handles = [b_single_o2[0], b_double_o2[0]]
+    labels = ["Einkolonnen-Modell", "Doppelkolonnen-Modell"]
+    ax_left.legend(handles, labels, loc="upper center", bbox_to_anchor=(0.5, -0.14), ncol=2, frameon=False)
+
+    fig.subplots_adjust(left=0.16, right=0.90, bottom=0.22, top=0.97)
+    fig.savefig(out_path, dpi=300)
+    plt.close(fig)
+
+
+def _component_sum(ed_map: dict, components: list[str]) -> float:
+    return float(sum(float(ed_map.get(c, 0.0)) for c in components))
+
+
+def _compute_block_yd_payload(ed_map: dict, model: str):
+    # Cooled-compression is not shown as a separate point,
+    # but its components remain included inside the V+G block.
+    ignored = set()
+
+    if model == "single":
+        comp_only = ["LK1", "ZK1", "LK2"]
+        gas_only = ["ZK2", "GW1", "GW2"]
+        heat_transfer = ["MH", "RECO"]
+        column_block = ["KOL", "D1"]
+    else:
+        comp_only = ["LK1", "ZK1", "LK2", "PK1"]
+        gas_only = ["ZK2", "GW1", "GW2"]
+        heat_transfer = ["MW", "RC", "RC2"]
+        column_block = ["KOLHP", "KOLLP", "D1", "D2", "D3"]
+
+    named_sets = {
+        "comp_only": set(comp_only),
+        "gas_only": set(gas_only),
+        "combined": set(comp_only) | set(gas_only),
+        "heat": set(heat_transfer),
+        "column": set(column_block),
+    }
+
+    all_components = set(ed_map.keys())
+    used = set()
+    for s in named_sets.values():
+        used |= set(s)
+    used -= ignored
+    rest_components = sorted((all_components - used) - ignored)
+
+    # Normalize by all considered components (excluding explicitly ignored ones),
+    # so combined + heat + column + rest sums to 100%.
+    considered_components = sorted(all_components - ignored)
+    total_ed = _component_sum(ed_map, considered_components)
+    if total_ed <= 0:
+        total_ed = 1.0
+
+    sums = {
+        "combined": _component_sum(ed_map, sorted(named_sets["combined"] - ignored)),
+        "comp_only": _component_sum(ed_map, sorted(named_sets["comp_only"] - ignored)),
+        "gas_only": _component_sum(ed_map, sorted(named_sets["gas_only"] - ignored)),
+        "heat": _component_sum(ed_map, sorted(named_sets["heat"] - ignored)),
+        "column": _component_sum(ed_map, sorted(named_sets["column"] - ignored)),
+        "rest": _component_sum(ed_map, rest_components),
+    }
+
+    y_percent = {k: 100.0 * v / total_ed for k, v in sums.items()}
+    return {"total_ed": total_ed, "sums": sums, "y": y_percent}
+
+
+def plot_block_yd_comparison(ed_single: dict, ed_double: dict, out_path: Path):
+    payload_single = _compute_block_yd_payload(ed_single, "single")
+    payload_double = _compute_block_yd_payload(ed_double, "double")
+
+    cats = ["V+G Block", "Wärmeübertrager", "Kolonnenblock", "Rest"]
+    x = [0, 1, 2, 3]
+
+    y_s = [
+        payload_single["y"]["combined"],
+        payload_single["y"]["heat"],
+        payload_single["y"]["column"],
+        payload_single["y"]["rest"],
+    ]
+    y_d = [
+        payload_double["y"]["combined"],
+        payload_double["y"]["heat"],
+        payload_double["y"]["column"],
+        payload_double["y"]["rest"],
+    ]
+
+    s_sub = [payload_single["y"]["comp_only"], payload_single["y"]["gas_only"]]
+    d_sub = [payload_double["y"]["comp_only"], payload_double["y"]["gas_only"]]
+
+    plt.style.use("seaborn-v0_8-whitegrid")
+    plt.rcParams.update(
+        {
+            "font.family": "serif",
+            "mathtext.fontset": "stix",
+            "axes.labelsize": 12,
+            "xtick.labelsize": 11,
+            "ytick.labelsize": 11,
+            "legend.fontsize": 11,
+        }
+    )
+
+    fig, ax = plt.subplots(figsize=(8.0, 5.8))
+
+    c_single = "#55A868"
+    c_double = "#4C72B0"
+
+    dx = 0.12
+    x_single = [xi - dx for xi in x]
+    x_double = [xi + dx for xi in x]
+
+    ax.scatter(x_single, y_s, marker="s", s=62, color=c_single, edgecolors="black", linewidths=0.6, label="Singlekolonne", zorder=4)
+    ax.scatter(x_double, y_d, marker="^", s=68, color=c_double, edgecolors="black", linewidths=0.6, label="Doppelkolonne", zorder=4)
+
+    # Sub-points only for the combined compression+gas-treatment block.
+    x0s = x_single[0]
+    x0d = x_double[0]
+    # first sub-point = Kompression, second = Reinigung
+    ax.scatter([x0s], [s_sub[0]], marker="o", s=34, color=c_single, edgecolors="black", linewidths=0.5, zorder=5)
+    ax.scatter([x0s], [s_sub[1]], marker="D", s=34, color=c_single, edgecolors="black", linewidths=0.5, zorder=5)
+    ax.scatter([x0d], [d_sub[0]], marker="o", s=34, color=c_double, edgecolors="black", linewidths=0.5, zorder=5)
+    ax.scatter([x0d], [d_sub[1]], marker="D", s=34, color=c_double, edgecolors="black", linewidths=0.5, zorder=5)
+
+    ax.set_xticks(x)
+    ax.set_xticklabels(cats)
+    ax.set_ylabel(r"$y_{D,b}$ [%]")
+    ax.set_ylim(0, max(y_s + y_d + s_sub + d_sub) * 1.2)
+    ax.grid(axis="y", linestyle="--", alpha=0.35)
+
+    for spine in ["top", "right"]:
+        ax.spines[spine].set_visible(False)
+
+    model_handles, model_labels = ax.get_legend_handles_labels()
+    extra_handles = [
+        Line2D([0], [0], marker="o", color="black", markerfacecolor="black", markersize=6, linestyle="None"),
+        Line2D([0], [0], marker="D", color="black", markerfacecolor="black", markersize=6, linestyle="None"),
+    ]
+    extra_labels = ["Unterpunkt Kompression", "Unterpunkt Reinigung"]
+    ax.legend(
+        model_handles + extra_handles,
+        model_labels + extra_labels,
+        loc="upper center",
+        bbox_to_anchor=(0.5, -0.12),
+        ncol=2,
+        frameon=True,
+        fancybox=False,
+        edgecolor="black",
+    )
+    fig.subplots_adjust(left=0.14, right=0.97, bottom=0.22, top=0.96)
+    fig.savefig(out_path, dpi=300)
+    plt.close(fig)
 
 
 def parse_global_master_table(tex_path: Path):
@@ -279,6 +614,10 @@ def main():
 
     df_double = parse_component_table(TABLE_DOUBLE)
     df_single = parse_component_table(TABLE_SINGLE)
+    ed_map_double = parse_component_ed_map(TABLE_DOUBLE)
+    ed_map_single = parse_component_ed_map(TABLE_SINGLE)
+    df_mol_double = parse_molfrac_table(MOLFRAC_DOUBLE)
+    df_mol_single = parse_molfrac_table(MOLFRAC_SINGLE)
     metrics_double_w, metrics_double_mw = parse_global_master_table(GLOBAL_DOUBLE)
     metrics_single_w, metrics_single_mw = parse_global_master_table(GLOBAL_SINGLE)
 
@@ -320,6 +659,18 @@ def main():
         df_double,
         df_single,
         out_path=OUT_DIR / "vergleich_component_pareto_ED.png",
+    )
+
+    plot_grouped_product_purity(
+        df_mol_double,
+        df_mol_single,
+        out_path=OUT_DIR / "vergleich_reinheit_produktstroeme_dualaxis.png",
+    )
+
+    plot_block_yd_comparison(
+        ed_map_single,
+        ed_map_double,
+        out_path=OUT_DIR / "vergleich_yD_funktionsbloecke.png",
     )
 
     print("Plots gespeichert in:")
