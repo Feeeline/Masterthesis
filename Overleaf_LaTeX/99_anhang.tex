@@ -119,17 +119,18 @@ $\dot{E}_{P,KOL}=
 \end{aligned}$\\
 
 RC &
-$\dot{E}_{F,RC}=(\max(\dot{E}^{PH}_{35},\dot{E}^{PH}_{36})-\min(\dot{E}^{PH}_{35},\dot{E}^{PH}_{36}))+(\max(\dot{E}^{M}_{33},\dot{E}^{M}_{34})-\min(\dot{E}^{M}_{33},\dot{E}^{M}_{34}))$ &
-$\dot{E}_{P,RC}=(\max(\dot{E}^{T}_{33},\dot{E}^{T}_{34})-\min(\dot{E}^{T}_{33},\dot{E}^{T}_{34}))$ \\
+$\dot{E}_{F,RC}=(\dot{E}^{PH}_{35}-\dot{E}^{PH}_{36})+(\dot{E}^{M}_{33}-\dot{E}^{M}_{34})$ &
+$\dot{E}_{P,RC}=(\dot{E}^{T}_{33}-\dot{E}^{T}_{34})$ \\
 
 \addlinespace
 D1 &
-$\dot{E}_{F,D1}=\dot{E}^{M}_{12}-\dot{E}^{M}_{13}$ &
-$\dot{E}_{P,D1}=\dot{E}^{T}_{13}-\dot{E}^{T}_{12}$ \\
-
-D2 &
-$\dot{E}_{F,D2}=\dot{E}^{PH}_{18}-\dot{E}^{PH}_{19}$ &
-$\dot{E}_{P,D2}=0$ \\
+$\dot{E}_{F,D1}=
+\begin{aligned}
+&(\dot{E}^{PH}_{15}-\dot{E}^{PH}_{16})
++(\dot{E}^{PH}_{29}-\dot{E}^{PH}_{30}) \\
+&+(\dot{E}^{PH}_{27}-\dot{E}^{PH}_{28})
+\end{aligned}$ &
+$\dot{E}_{P,D1}=0$ \\
 
 \addlinespace
 TURB &
@@ -181,9 +182,9 @@ $\dot{E}_{P,GW2}=\dot{m}_{8}\,(e^{CH}_{8}-e^{CH}_{6})$ \\
 MW &
 $\dot{E}_{F,MW}=
 \begin{aligned}
-&(\max(\dot{E}^{PH}_{15},\dot{E}^{PH}_{16})-\min(\dot{E}^{PH}_{15},\dot{E}^{PH}_{16}))
-+(\max(\dot{E}^{PH}_{29},\dot{E}^{PH}_{30})-\min(\dot{E}^{PH}_{29},\dot{E}^{PH}_{30})) \\
-&+(\max(\dot{E}^{PH}_{27},\dot{E}^{PH}_{28})-\min(\dot{E}^{PH}_{27},\dot{E}^{PH}_{28}))
+&(\dot{E}^{PH}_{15}-\dot{E}^{PH}_{16})
++(\dot{E}^{PH}_{29}-\dot{E}^{PH}_{30}) \\
+&+(\dot{E}^{PH}_{27}-\dot{E}^{PH}_{28})
 +\dot{E}^{T}_{11}
 +\dot{E}^{T}_{19} \\
 &+(\dot{E}^{M}_{11}-\dot{E}^{M}_{12})
@@ -226,12 +227,12 @@ $\dot{E}_{P,KOLLP}=
 
 
 RC1  &
-$\dot{E}_{F,RC1}=(\max(\dot{E}^{PH}_{35},\dot{E}^{PH}_{36})-\min(\dot{E}^{PH}_{35},\dot{E}^{PH}_{36}))+(\max(\dot{E}^{M}_{33},\dot{E}^{M}_{34})-\min(\dot{E}^{M}_{33},\dot{E}^{M}_{34}))$ &
-$\dot{E}_{P,RC1}=(\max(\dot{E}^{T}_{33},\dot{E}^{T}_{34})-\min(\dot{E}^{T}_{33},\dot{E}^{T}_{34}))$ \\
+$\dot{E}_{F,RC1}=(\dot{E}^{PH}_{35}-\dot{E}^{PH}_{36})+(\dot{E}^{M}_{33}-\dot{E}^{M}_{34})$ &
+$\dot{E}_{P,RC1}=(\dot{E}^{T}_{33}-\dot{E}^{T}_{34})$ \\
 
 RC2  &
-$\dot{E}_{F,RC2}=(\max(\dot{E}^{PH}_{39},\dot{E}^{PH}_{40})-\min(\dot{E}^{PH}_{39},\dot{E}^{PH}_{40}))+(\max(\dot{E}^{M}_{37},\dot{E}^{M}_{38})-\min(\dot{E}^{M}_{37},\dot{E}^{M}_{38}))$ &
-$\dot{E}_{P,RC2}=(\max(\dot{E}^{T}_{37},\dot{E}^{T}_{38})-\min(\dot{E}^{T}_{37},\dot{E}^{T}_{38}))$ \\
+$\dot{E}_{F,RC2}=(\dot{E}^{PH}_{39}-\dot{E}^{PH}_{40})+(\dot{E}^{M}_{37}-\dot{E}^{M}_{38})$ &
+$\dot{E}_{P,RC2}=(\dot{E}^{T}_{37}-\dot{E}^{T}_{38})$ \\
 
 
 D1 &
