@@ -12,6 +12,8 @@ TABLE_DOUBLE = BASE_DIR / "Overleaf_LaTeX/tabellen/aspen_luftzerlegung_component
 TABLE_SINGLE = BASE_DIR / "Overleaf_LaTeX/tabellen/aspen_luftzerlegung_components_single.tex"
 MOLFRAC_DOUBLE = BASE_DIR / "Overleaf_LaTeX/tabellen/aspen_luftzerlegung_streams_molfrac.tex"
 MOLFRAC_SINGLE = BASE_DIR / "Overleaf_LaTeX/tabellen/aspen_luftzerlegung_streams_molfrac_single.tex"
+STREAMS_DOUBLE = BASE_DIR / "Overleaf_LaTeX/tabellen/aspen_luftzerlegung_streams.tex"
+STREAMS_SINGLE = BASE_DIR / "Overleaf_LaTeX/tabellen/aspen_luftzerlegung_streams_single.tex"
 GLOBAL_DOUBLE = BASE_DIR / "Overleaf_LaTeX/tabellen/aspen_luftzerlegung_global_check.tex"
 GLOBAL_SINGLE = BASE_DIR / "Overleaf_LaTeX/tabellen/aspen_luftzerlegung_global_check_single.tex"
 OUT_DIR = BASE_DIR / "Overleaf_LaTeX/bilder"
@@ -161,6 +163,31 @@ def parse_molfrac_table(tex_path: Path) -> pd.DataFrame:
     if df.empty:
         raise ValueError(f"Keine verwertbaren Molfraktionsdaten in {tex_path}")
     return df
+
+
+def parse_stream_mass_flows(tex_path: Path) -> dict:
+    rows = {}
+
+    with tex_path.open("r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("\\"):
+                continue
+            if line.startswith("Stream") or line.startswith("&"):
+                continue
+
+            parts = [part.strip() for part in line.replace("\\\\", "").split("&")]
+            if len(parts) < 2:
+                continue
+
+            stream = parts[0]
+            mass_flow = _to_float(parts[1])
+            if stream and isinstance(mass_flow, (int, float)):
+                rows[stream] = float(mass_flow)
+
+    if not rows:
+        raise ValueError(f"Keine verwertbaren Massenstromdaten in {tex_path}")
+    return rows
 
 
 def plot_grouped_product_purity(df_double_mol: pd.DataFrame, df_single_mol: pd.DataFrame, out_path: Path):
@@ -443,6 +470,7 @@ def parse_global_master_table(tex_path: Path):
     E_dest = None
     E_loss = None
     E_in_sum = None
+    product_stream = None
 
     with tex_path.open("r", encoding="utf-8") as f:
         for raw_line in f:
@@ -470,6 +498,9 @@ def parse_global_master_table(tex_path: Path):
 
             if right_label.startswith("Produkt"):
                 E_prod = right_value
+                m = re.search(r"\{(S[A-Z]*\d+)\}", parts[4])
+                if m:
+                    product_stream = m.group(1)
             elif right_label.startswith("Turbinenarbeit"):
                 W_turb = right_value
             elif "Exerget. Vernichtung" in right_label:
@@ -492,7 +523,20 @@ def parse_global_master_table(tex_path: Path):
         "Losses": E_loss,
     }
     metrics_mw = {k: (v / 1e6 if isinstance(v, (int, float)) else None) for k, v in metrics_w.items()}
-    return metrics_w, metrics_mw
+    return metrics_w, metrics_mw, product_stream
+
+
+def compute_specific_metrics(metrics_w: dict, product_mass_flow: float) -> dict:
+    if not isinstance(product_mass_flow, (int, float)) or product_mass_flow <= 0:
+        raise ValueError("Produktmassenstrom muss positiv sein.")
+
+    specific_metrics = {}
+    for key, value in metrics_w.items():
+        if isinstance(value, (int, float)):
+            specific_metrics[key] = value / product_mass_flow / 1e3
+        else:
+            specific_metrics[key] = None
+    return specific_metrics
 
 
 def make_plot(df: pd.DataFrame, x_col: str, xlabel: str, out_path: Path, xlim=None):
@@ -586,6 +630,33 @@ def plot_grouped_system_metrics(metrics_double_mw, metrics_single_mw, out_path: 
     plt.close(fig)
 
 
+def plot_grouped_specific_system_metrics(metrics_double_spec, metrics_single_spec, out_path: Path):
+    categories = ["Total Input", "Product", "Destruction", "Losses"]
+    vals_double = [metrics_double_spec.get(c) for c in categories]
+    vals_single = [metrics_single_spec.get(c) for c in categories]
+
+    plt.style.use("seaborn-v0_8")
+    fig, ax = plt.subplots(figsize=(10, 6))
+    x = range(len(categories))
+    width = 0.38
+
+    bars_double = ax.bar([i - width / 2 for i in x], vals_double, width=width, label="Doppelkolonne", color="#4C72B0")
+    bars_single = ax.bar([i + width / 2 for i in x], vals_single, width=width, label="Singlekolonne", color="#55A868")
+
+    ax.set_xticks(list(x))
+    ax.set_xticklabels(categories)
+    ax.set_ylabel(r"Spezifischer Exergiestrom [kJ/kg]")
+    ax.legend()
+    ax.grid(axis="y", alpha=0.3)
+
+    _annotate_vertical_bars(ax, bars_double, vals_double, unit="kJ/kg")
+    _annotate_vertical_bars(ax, bars_single, vals_single, unit="kJ/kg")
+
+    fig.tight_layout()
+    fig.savefig(out_path, dpi=300)
+    plt.close(fig)
+
+
 def plot_component_pareto_comparison(df_double: pd.DataFrame, df_single: pd.DataFrame, out_path: Path):
     plt.style.use("seaborn-v0_8")
     fig, axes = plt.subplots(2, 1, figsize=(11, 12), sharex=False)
@@ -618,8 +689,18 @@ def main():
     ed_map_single = parse_component_ed_map(TABLE_SINGLE)
     df_mol_double = parse_molfrac_table(MOLFRAC_DOUBLE)
     df_mol_single = parse_molfrac_table(MOLFRAC_SINGLE)
-    metrics_double_w, metrics_double_mw = parse_global_master_table(GLOBAL_DOUBLE)
-    metrics_single_w, metrics_single_mw = parse_global_master_table(GLOBAL_SINGLE)
+    stream_mdot_double = parse_stream_mass_flows(STREAMS_DOUBLE)
+    stream_mdot_single = parse_stream_mass_flows(STREAMS_SINGLE)
+    metrics_double_w, metrics_double_mw, product_stream_double = parse_global_master_table(GLOBAL_DOUBLE)
+    metrics_single_w, metrics_single_mw, product_stream_single = parse_global_master_table(GLOBAL_SINGLE)
+
+    if product_stream_double not in stream_mdot_double:
+        raise ValueError(f"Produktstrom {product_stream_double} nicht in {STREAMS_DOUBLE} gefunden.")
+    if product_stream_single not in stream_mdot_single:
+        raise ValueError(f"Produktstrom {product_stream_single} nicht in {STREAMS_SINGLE} gefunden.")
+
+    metrics_double_spec = compute_specific_metrics(metrics_double_w, stream_mdot_double[product_stream_double])
+    metrics_single_spec = compute_specific_metrics(metrics_single_w, stream_mdot_single[product_stream_single])
 
     make_plot(
         df_double,
@@ -653,6 +734,12 @@ def main():
         metrics_double_mw,
         metrics_single_mw,
         out_path=OUT_DIR / "vergleich_global_kennzahlen_grouped.png",
+    )
+
+    plot_grouped_specific_system_metrics(
+        metrics_double_spec,
+        metrics_single_spec,
+        out_path=OUT_DIR / "vergleich_global_kennzahlen_grouped_spezifisch.png",
     )
 
     plot_component_pareto_comparison(
