@@ -17,6 +17,38 @@ STREAMS_SINGLE = BASE_DIR / "Overleaf_LaTeX/tabellen/aspen_luftzerlegung_streams
 GLOBAL_DOUBLE = BASE_DIR / "Overleaf_LaTeX/tabellen/aspen_luftzerlegung_global_check.tex"
 GLOBAL_SINGLE = BASE_DIR / "Overleaf_LaTeX/tabellen/aspen_luftzerlegung_global_check_single.tex"
 OUT_DIR = BASE_DIR / "Overleaf_LaTeX/bilder"
+COLOR_SINGLE = "#55A868"
+COLOR_DOUBLE = "#4C72B0"
+PLOT_THEME = {
+    "font.family": "serif",
+    "mathtext.fontset": "stix",
+    "axes.labelsize": 12,
+    "xtick.labelsize": 11,
+    "ytick.labelsize": 11,
+    "legend.fontsize": 11,
+}
+
+
+def _apply_plot_theme(style: str = "seaborn-v0_8-whitegrid"):
+    plt.style.use(style)
+    plt.rcParams.update(PLOT_THEME)
+
+
+def _style_axis(ax, grid_axis: str = "y"):
+    ax.grid(axis=grid_axis, linestyle="--", alpha=0.35)
+    for spine in ["top", "right"]:
+        ax.spines[spine].set_visible(False)
+
+
+def _style_bottom_legend(ax, ncol: int = 2):
+    ax.legend(
+        loc="upper center",
+        bbox_to_anchor=(0.5, -0.12),
+        ncol=ncol,
+        frameon=True,
+        fancybox=False,
+        edgecolor="black",
+    )
 
 
 def _to_float(value: str):
@@ -208,17 +240,7 @@ def plot_grouped_product_purity(df_double_mol: pd.DataFrame, df_single_mol: pd.D
     double_n2 = _pick(df_double_mol, stream_map["double"]["n2"], "x_N2")
     double_o2 = _pick(df_double_mol, stream_map["double"]["o2"], "x_O2")
 
-    plt.style.use("seaborn-v0_8-whitegrid")
-    plt.rcParams.update(
-        {
-            "font.family": "serif",
-            "mathtext.fontset": "stix",
-            "axes.labelsize": 12,
-            "xtick.labelsize": 11,
-            "ytick.labelsize": 10,
-            "legend.fontsize": 10,
-        }
-    )
+    _apply_plot_theme()
 
     fig, ax_left = plt.subplots(figsize=(7.2, 5.4))
     ax_right = ax_left.twinx()
@@ -229,8 +251,8 @@ def plot_grouped_product_purity(df_double_mol: pd.DataFrame, df_single_mol: pd.D
     dx = 0.07
 
     # Colors requested to match existing style.
-    color_single = "#55A868"
-    color_double = "#4C72B0"
+    color_single = COLOR_SINGLE
+    color_double = COLOR_DOUBLE
 
     # Nitrogen product category on left axis.
     b_single_n2 = ax_left.bar(
@@ -314,7 +336,16 @@ def plot_grouped_product_purity(df_double_mol: pd.DataFrame, df_single_mol: pd.D
     # Legend below the plot.
     handles = [b_single_o2[0], b_double_o2[0]]
     labels = ["Einkolonnen-Modell", "Doppelkolonnen-Modell"]
-    ax_left.legend(handles, labels, loc="upper center", bbox_to_anchor=(0.5, -0.14), ncol=2, frameon=False)
+    ax_left.legend(
+        handles,
+        labels,
+        loc="upper center",
+        bbox_to_anchor=(0.5, -0.14),
+        ncol=2,
+        frameon=True,
+        fancybox=False,
+        edgecolor="black",
+    )
 
     fig.subplots_adjust(left=0.16, right=0.90, bottom=0.22, top=0.97)
     fig.savefig(out_path, dpi=300)
@@ -399,22 +430,12 @@ def plot_block_yd_comparison(ed_single: dict, ed_double: dict, out_path: Path):
     s_sub = [payload_single["y"]["comp_only"], payload_single["y"]["gas_only"]]
     d_sub = [payload_double["y"]["comp_only"], payload_double["y"]["gas_only"]]
 
-    plt.style.use("seaborn-v0_8-whitegrid")
-    plt.rcParams.update(
-        {
-            "font.family": "serif",
-            "mathtext.fontset": "stix",
-            "axes.labelsize": 12,
-            "xtick.labelsize": 11,
-            "ytick.labelsize": 11,
-            "legend.fontsize": 11,
-        }
-    )
+    _apply_plot_theme()
 
     fig, ax = plt.subplots(figsize=(8.0, 5.8))
 
-    c_single = "#55A868"
-    c_double = "#4C72B0"
+    c_single = COLOR_SINGLE
+    c_double = COLOR_DOUBLE
 
     dx = 0.12
     x_single = [xi - dx for xi in x]
@@ -436,10 +457,7 @@ def plot_block_yd_comparison(ed_single: dict, ed_double: dict, out_path: Path):
     ax.set_xticklabels(cats)
     ax.set_ylabel(r"$y_{D,b}$ [%]")
     ax.set_ylim(0, max(y_s + y_d + s_sub + d_sub) * 1.2)
-    ax.grid(axis="y", linestyle="--", alpha=0.35)
-
-    for spine in ["top", "right"]:
-        ax.spines[spine].set_visible(False)
+    _style_axis(ax, grid_axis="y")
 
     model_handles, model_labels = ax.get_legend_handles_labels()
     extra_handles = [
@@ -540,17 +558,18 @@ def compute_specific_metrics(metrics_w: dict, product_mass_flow: float) -> dict:
 
 
 def make_plot(df: pd.DataFrame, x_col: str, xlabel: str, out_path: Path, xlim=None):
-    plt.style.use("seaborn-v0_8")
+    _apply_plot_theme()
     fig, ax = plt.subplots(figsize=(10, 7))
 
-    ax.barh(df["Component"], df[x_col], color="#4C72B0")
+    color = COLOR_SINGLE if "single" in out_path.stem.lower() else COLOR_DOUBLE
+    ax.barh(df["Component"], df[x_col], color=color)
     ax.invert_yaxis()
 
     ax.set_xlabel(xlabel)
     ax.set_ylabel("Component")
     if xlim is not None:
         ax.set_xlim(*xlim)
-    ax.grid(axis="x", alpha=0.3)
+    _style_axis(ax, grid_axis="x")
 
     fig.tight_layout()
     fig.savefig(out_path, dpi=300)
@@ -608,24 +627,24 @@ def plot_grouped_system_metrics(metrics_double_mw, metrics_single_mw, out_path: 
     vals_double = [metrics_double_mw.get(c) for c in categories]
     vals_single = [metrics_single_mw.get(c) for c in categories]
 
-    plt.style.use("seaborn-v0_8")
+    _apply_plot_theme()
     fig, ax = plt.subplots(figsize=(10, 6))
     x = range(len(categories))
     width = 0.38
 
-    bars_double = ax.bar([i - width / 2 for i in x], vals_double, width=width, label="Doppelkolonne", color="#4C72B0")
-    bars_single = ax.bar([i + width / 2 for i in x], vals_single, width=width, label="Singlekolonne", color="#55A868")
+    bars_double = ax.bar([i - width / 2 for i in x], vals_double, width=width, label="Doppelkolonne", color=COLOR_DOUBLE)
+    bars_single = ax.bar([i + width / 2 for i in x], vals_single, width=width, label="Singlekolonne", color=COLOR_SINGLE)
 
     ax.set_xticks(list(x))
     ax.set_xticklabels(categories)
     ax.set_ylabel("Exergiestrom [MW]")
-    ax.legend()
-    ax.grid(axis="y", alpha=0.3)
+    _style_axis(ax, grid_axis="y")
+    _style_bottom_legend(ax)
 
     _annotate_vertical_bars(ax, bars_double, vals_double, unit="MW")
     _annotate_vertical_bars(ax, bars_single, vals_single, unit="MW")
 
-    fig.tight_layout()
+    fig.subplots_adjust(left=0.10, right=0.98, bottom=0.20, top=0.96)
     fig.savefig(out_path, dpi=300)
     plt.close(fig)
 
@@ -635,47 +654,47 @@ def plot_grouped_specific_system_metrics(metrics_double_spec, metrics_single_spe
     vals_double = [metrics_double_spec.get(c) for c in categories]
     vals_single = [metrics_single_spec.get(c) for c in categories]
 
-    plt.style.use("seaborn-v0_8")
+    _apply_plot_theme()
     fig, ax = plt.subplots(figsize=(10, 6))
     x = range(len(categories))
     width = 0.38
 
-    bars_double = ax.bar([i - width / 2 for i in x], vals_double, width=width, label="Doppelkolonne", color="#4C72B0")
-    bars_single = ax.bar([i + width / 2 for i in x], vals_single, width=width, label="Singlekolonne", color="#55A868")
+    bars_double = ax.bar([i - width / 2 for i in x], vals_double, width=width, label="Doppelkolonne", color=COLOR_DOUBLE)
+    bars_single = ax.bar([i + width / 2 for i in x], vals_single, width=width, label="Singlekolonne", color=COLOR_SINGLE)
 
     ax.set_xticks(list(x))
     ax.set_xticklabels(categories)
     ax.set_ylabel(r"Spezifischer Exergiestrom [kJ/kg]")
-    ax.legend()
-    ax.grid(axis="y", alpha=0.3)
+    _style_axis(ax, grid_axis="y")
+    _style_bottom_legend(ax)
 
     _annotate_vertical_bars(ax, bars_double, vals_double, unit="kJ/kg")
     _annotate_vertical_bars(ax, bars_single, vals_single, unit="kJ/kg")
 
-    fig.tight_layout()
+    fig.subplots_adjust(left=0.10, right=0.98, bottom=0.20, top=0.96)
     fig.savefig(out_path, dpi=300)
     plt.close(fig)
 
 
 def plot_component_pareto_comparison(df_double: pd.DataFrame, df_single: pd.DataFrame, out_path: Path):
-    plt.style.use("seaborn-v0_8")
+    _apply_plot_theme()
     fig, axes = plt.subplots(2, 1, figsize=(11, 12), sharex=False)
 
-    bars_d = axes[0].barh(df_double["Component"], df_double["E_D_MW"], color="#4C72B0")
+    bars_d = axes[0].barh(df_double["Component"], df_double["E_D_MW"], color=COLOR_DOUBLE)
     axes[0].invert_yaxis()
     axes[0].set_xlabel(r"$\dot{E}_D$ [MW]")
     axes[0].set_ylabel("Doppelkolonne")
-    axes[0].grid(axis="x", alpha=0.3)
+    _style_axis(axes[0], grid_axis="x")
     _annotate_horizontal_bars(axes[0], bars_d, unit="MW")
 
-    bars_s = axes[1].barh(df_single["Component"], df_single["E_D_MW"], color="#55A868")
+    bars_s = axes[1].barh(df_single["Component"], df_single["E_D_MW"], color=COLOR_SINGLE)
     axes[1].invert_yaxis()
     axes[1].set_xlabel(r"$\dot{E}_D$ [MW]")
     axes[1].set_ylabel("Singlekolonne")
-    axes[1].grid(axis="x", alpha=0.3)
+    _style_axis(axes[1], grid_axis="x")
     _annotate_horizontal_bars(axes[1], bars_s, unit="MW")
 
-    fig.tight_layout()
+    fig.subplots_adjust(left=0.16, right=0.97, bottom=0.08, top=0.98, hspace=0.25)
     fig.savefig(out_path, dpi=300)
     plt.close(fig)
 
