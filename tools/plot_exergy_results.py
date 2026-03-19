@@ -1,5 +1,6 @@
 import os
 import re
+import json
 from pathlib import Path
 from matplotlib.lines import Line2D
 from matplotlib.ticker import FuncFormatter
@@ -11,6 +12,12 @@ import pandas as pd
 BASE_DIR = Path(r"C:/Users/Felin/Documents/Masterthesis/Simulation_Code/GIT")
 TABLE_DOUBLE = BASE_DIR / "Overleaf_LaTeX/tabellen/aspen_luftzerlegung_components.tex"
 TABLE_SINGLE = BASE_DIR / "Overleaf_LaTeX/tabellen/aspen_luftzerlegung_components_single.tex"
+TABLE_DOUBLE_KLEIN = BASE_DIR / "Overleaf_LaTeX/tabellen/aspen_luftzerlegung_components_klein.tex"
+TABLE_SINGLE_KLEIN = BASE_DIR / "Overleaf_LaTeX/tabellen/aspen_luftzerlegung_components_single_klein.tex"
+JSON_DOUBLE = BASE_DIR / "examples/json_example/aspen_luftzerlegung.json"
+JSON_DOUBLE_KLEIN = BASE_DIR / "examples/json_example/aspen_luftzerlegung_klein.json"
+JSON_SINGLE = BASE_DIR / "examples/json_example/aspen_luftzerlegung_single.json"
+JSON_SINGLE_KLEIN = BASE_DIR / "examples/json_example/aspen_luftzerlegung_single_klein.json"
 MOLFRAC_DOUBLE = BASE_DIR / "Overleaf_LaTeX/tabellen/aspen_luftzerlegung_streams_molfrac.tex"
 MOLFRAC_SINGLE = BASE_DIR / "Overleaf_LaTeX/tabellen/aspen_luftzerlegung_streams_molfrac_single.tex"
 STREAMS_DOUBLE = BASE_DIR / "Overleaf_LaTeX/tabellen/aspen_luftzerlegung_streams.tex"
@@ -18,6 +25,8 @@ STREAMS_SINGLE = BASE_DIR / "Overleaf_LaTeX/tabellen/aspen_luftzerlegung_streams
 GLOBAL_DOUBLE = BASE_DIR / "Overleaf_LaTeX/tabellen/aspen_luftzerlegung_global_check.tex"
 GLOBAL_SINGLE = BASE_DIR / "Overleaf_LaTeX/tabellen/aspen_luftzerlegung_global_check_single.tex"
 OUT_DIR = BASE_DIR / "Overleaf_LaTeX/bilder"
+TAB_DIR = BASE_DIR / "Overleaf_LaTeX/tabellen"
+WERTE_TEX = BASE_DIR / "Overleaf_LaTeX/werte.tex"
 COLOR_SINGLE = "#55A868"
 COLOR_DOUBLE = "#4C72B0"
 PLOT_THEME = {
@@ -101,6 +110,10 @@ def _to_float_latex_number(value: str):
     value = value.replace("\\", "").replace("{", "").replace("}", "").strip()
     if not value or value == "-":
         return None
+
+    # Threshold notation from tables, e.g. <1e-6: use 0.0 for plotting.
+    if value.startswith("<"):
+        return 0.0
 
     # German thousand separator format (e.g. 7.631.750 or -7.608)
     if re.match(r"^-?\d{1,3}(\.\d{3})+(,\d+)?$", value):
@@ -227,10 +240,11 @@ def parse_molfrac_table(tex_path: Path) -> pd.DataFrame:
             stream = m.group(1).strip()
             x_n2 = _to_float(m.group(2))
             x_o2 = _to_float(m.group(3))
+            x_ar = _to_float(m.group(5))
             if x_n2 is None or x_o2 is None:
                 continue
 
-            rows.append({"Stream": stream, "x_N2": x_n2, "x_O2": x_o2})
+            rows.append({"Stream": stream, "x_N2": x_n2, "x_O2": x_o2, "x_AR": x_ar if x_ar is not None else 0.0})
 
     df = pd.DataFrame(rows)
     if df.empty:
@@ -261,6 +275,69 @@ def parse_stream_mass_flows(tex_path: Path) -> dict:
     if not rows:
         raise ValueError(f"Keine verwertbaren Massenstromdaten in {tex_path}")
     return rows
+
+
+def parse_stream_data_from_json(json_path: Path, stream_names: list[str]) -> dict:
+    """Read m [kg/s], T [K], p [Pa], x_N2, x_O2, x_AR from JSON connections for given streams."""
+    data = {}
+    with json_path.open("r", encoding="utf-8") as f:
+        j = json.load(f)
+    connections = j.get("connections", {})
+    for name in stream_names:
+        conn = connections.get(name, {})
+        mc = conn.get("molar_composition", {})
+        data[name] = {
+            "m_dot": conn.get("m"),
+            "T": conn.get("T"),
+            "p_Pa": conn.get("p"),
+            "n_mol_s": conn.get("n"),
+            "x_N2": mc.get("N2", 0.0),
+            "x_O2": mc.get("O2", 0.0),
+            "x_AR": mc.get("AR", 0.0),
+        }
+    return data
+
+
+def parse_stream_thermo_data(tex_path: Path) -> dict:
+    """Return dict: stream -> {'m_dot': float, 'T': float, 'p_Pa': float}"""
+    data = {}
+    with tex_path.open("r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("\\") or line.startswith("Stream") or line.startswith("&"):
+                continue
+            parts = [p.strip() for p in line.replace("\\\\", "").split("&")]
+            if len(parts) < 5:
+                continue
+            stream = parts[0]
+            m_dot = _to_float(parts[1])
+            # parts[2] contains molar flow (mol/s) in the stream tables
+            n_mol_s = _to_float(parts[2])
+            T = _to_float(parts[3])
+            p_Pa = _to_float(parts[4])
+            if stream and m_dot is not None and T is not None and p_Pa is not None:
+                data[stream] = {"m_dot": m_dot, "n_mol_s": n_mol_s, "T": T, "p_Pa": p_Pa}
+    return data
+
+
+def compute_yd_percent_from_ed_map(ed_map: dict, allowed_components: set[str] | None = None) -> dict:
+    """Compute percent shares of E_D per component from an ed_map (component->E_D).
+
+    Returns mapping component -> percent of total E_D (0..100).
+    """
+    e_map = {}
+    for name, val in ed_map.items():
+        if allowed_components is not None and name not in allowed_components:
+            continue
+        try:
+            e_map[name] = abs(float(val))
+        except Exception:
+            continue
+
+    total = sum(e_map.values())
+    if total <= 0:
+        return {k: 0.0 for k in e_map.keys()}
+    return {k: (v / total) * 100.0 for k, v in e_map.items()}
 
 
 def plot_grouped_product_purity(df_double_mol: pd.DataFrame, df_single_mol: pd.DataFrame, out_path: Path):
@@ -663,6 +740,267 @@ def _annotate_horizontal_bars(ax, bars, unit="MW"):
         )
 
 
+def _format_percent_de(value, digits: int = 3):
+    if value is None:
+        return "-"
+    x = float(value)
+    # Avoid negative zero from floating-point roundoff, e.g. -0,000.
+    if abs(x) < 0.5 * (10 ** (-digits)):
+        x = 0.0
+    return f"{x:.{digits}f}".replace(".", ",")
+
+
+def parse_component_yd_percent_from_json(json_path: Path, allowed_components: set[str] | None = None) -> dict[str, float]:
+    payload = json.loads(json_path.read_text(encoding="utf-8"))
+    components = payload.get("components", {})
+
+    e_d_map = {}
+    for group in components.values():
+        if not isinstance(group, dict):
+            continue
+        for comp_name, comp_payload in group.items():
+            if not isinstance(comp_payload, dict):
+                continue
+            ex = comp_payload.get("exergy_results", {})
+            if not isinstance(ex, dict):
+                continue
+            e_d = ex.get("E_D")
+            if isinstance(e_d, (int, float)):
+                name = str(comp_name)
+                if allowed_components is not None and name not in allowed_components:
+                    continue
+                # Match reporting logic: compare destruction magnitudes.
+                e_d_map[name] = abs(float(e_d))
+
+    total_e_d = sum(v for v in e_d_map.values() if isinstance(v, (int, float)))
+    if total_e_d <= 0:
+        return {name: 0.0 for name in e_d_map.keys()}
+
+    return {name: (val / total_e_d) * 100.0 for name, val in e_d_map.items()}
+
+
+def _build_yd_large_vs_small_latex_table(
+    yd_double_large: dict[str, float],
+    yd_double_small: dict[str, float],
+    yd_single_large: dict[str, float],
+    yd_single_small: dict[str, float],
+) -> str:
+    def _rows_for_model(large_map: dict[str, float], small_map: dict[str, float], model_label: str):
+        components = sorted(set(large_map.keys()) | set(small_map.keys()))
+
+        rows = []
+        for comp in components:
+            y_large = large_map.get(comp)
+            y_small = small_map.get(comp)
+            diff = None
+            if isinstance(y_large, (int, float)) and isinstance(y_small, (int, float)):
+                diff = y_small - y_large
+
+            rows.append(
+                " & ".join(
+                    [
+                        model_label,
+                        comp,
+                        _format_percent_de(y_large),
+                        _format_percent_de(y_small),
+                        _format_percent_de(diff),
+                    ]
+                )
+                + r" \\\\" 
+            )
+        return rows
+
+    rows = []
+    rows.extend(_rows_for_model(yd_double_large, yd_double_small, "Doppel"))
+    rows.append(r"\hline")
+    rows.extend(_rows_for_model(yd_single_large, yd_single_small, "Single"))
+
+    lines = [
+        r"\begin{longtable}{llrrr}",
+        r"\caption{Vergleich der Exergievernichtungsanteile $y_D$ zwischen grosser und kleiner Variante} \\\\ ",
+        r"\hline",
+        r"Modell & Komponente & $y_D$ (Gross) [\%] & $y_D$ (Klein) [\%] & Differenz [Prozentpunkte] \\\\ ",
+        r"\hline",
+        *rows,
+        r"\hline",
+        r"\end{longtable}",
+    ]
+    return "\n".join(lines)
+
+
+def compute_n2_recovery(streams_single: dict, streams_double: dict) -> dict:
+    """Compute N2 recovery metrics for both models.
+
+    Returns dict with keys:
+      single_eta_pct   – η_N2 Single [%]:  N2 in product / N2 in feed × 100
+      double_eta_pct   – η_N2 Double [%]
+      single_ratio     – mol product / mol feed air (Single)
+      double_ratio     – mol product / mol feed air (Double)
+    """
+    def _recovery(feed: dict, product: dict):
+        n_feed    = feed["n_mol_s"]
+        n_product = product["n_mol_s"]
+        x_n2_feed    = feed["x_N2"]
+        x_n2_product = product["x_N2"]
+        n2_in_feed    = n_feed    * x_n2_feed
+        n2_in_product = n_product * x_n2_product
+        eta_pct = n2_in_product / n2_in_feed * 100.0
+        ratio   = n_product / n_feed
+        return eta_pct, ratio
+
+    eta_s, ratio_s = _recovery(streams_single["S1"], streams_single["S24"])
+    eta_d, ratio_d = _recovery(streams_double["S1"], streams_double["S32"])
+
+    return {
+        "single_eta_pct": eta_s,
+        "double_eta_pct": eta_d,
+        "single_ratio":   ratio_s,
+        "double_ratio":   ratio_d,
+    }
+
+
+def _build_n2_recovery_latex_table(recovery: dict) -> str:
+    """Build a small LaTeX table with N2 recovery results."""
+    def fc(x, d=4):
+        return _format_decimal_comma(x, d)
+
+    rows = [
+        r"Modell & $\eta_{N_2}$ [\%] & $\dot{n}_{\text{Produkt}} / \dot{n}_{\text{Luft}}$ [-] \\\\",
+        r"\hline",
+        f"Singlekolonne & {fc(recovery['single_eta_pct'], 2)} & {fc(recovery['single_ratio'], 6)} \\\\",
+        f"Doppelkolonne & {fc(recovery['double_eta_pct'], 2)} & {fc(recovery['double_ratio'], 6)} \\\\",
+    ]
+    lines = [
+        r"\begin{tabular}{lrr}",
+        r"\hline",
+        *rows,
+        r"\hline",
+        r"\end{tabular}",
+    ]
+    return "\n".join(lines)
+
+
+def _build_werte_tex(recovery: dict, streams_single: dict, streams_double: dict) -> str:
+    """Build central LaTeX value file with simulation results as \newcommand macros."""
+
+    def _fmt_value(value: float, digits: int = 10) -> str:
+        if value is None:
+            return "0"
+        text = f"{float(value):.{digits}f}".rstrip("0").rstrip(".")
+        return text if text else "0"
+
+    single_product = streams_single.get("S24", {})
+    double_product = streams_double.get("S32", {})
+
+    single_o2_ppm = float(single_product.get("x_O2", 0.0)) * 1e6
+    single_ar_ppm = float(single_product.get("x_AR", 0.0)) * 1e6
+    double_o2_ppm = float(double_product.get("x_O2", 0.0)) * 1e6
+    double_ar_ppm = float(double_product.get("x_AR", 0.0)) * 1e6
+
+    lines = [
+        r"% werte.tex",
+        r"% Zentrale Sammlung wichtiger Ergebniswerte aus der Simulation.",
+        r"% Diese Datei wird automatisch von tools/plot_exergy_results.py erzeugt.",
+        r"% Konventionen:",
+        r"% - Alle Werte als \newcommand mit Prefix val",
+        r"% - Nur Zahlenwerte im Makro, Einheit als Kommentar",
+        "",
+        r"% ------------------------------------------------------------",
+        r"% Rueckgewinnung",
+        r"% ------------------------------------------------------------",
+        f"\\newcommand{{\\valSingleRueckgewinnungN2}}{{{_fmt_value(recovery.get('single_eta_pct'), 8)}}} % [%]",
+        f"\\newcommand{{\\valDoppelRueckgewinnungN2}}{{{_fmt_value(recovery.get('double_eta_pct'), 8)}}} % [%]",
+        f"\\newcommand{{\\valSingleN2ProduktZuLuft}}{{{_fmt_value(recovery.get('single_ratio'), 10)}}} % [-]",
+        f"\\newcommand{{\\valDoppelN2ProduktZuLuft}}{{{_fmt_value(recovery.get('double_ratio'), 10)}}} % [-]",
+        "",
+        r"% ------------------------------------------------------------",
+        r"% Druecke",
+        r"% ------------------------------------------------------------",
+        r"% (Platzhalter fuer zukuenftige Werte)",
+        "",
+        r"% ------------------------------------------------------------",
+        r"% Massenstroeme",
+        r"% ------------------------------------------------------------",
+        r"% (Platzhalter fuer zukuenftige Werte)",
+        "",
+        r"% ------------------------------------------------------------",
+        r"% Temperaturen",
+        r"% ------------------------------------------------------------",
+        r"% (Platzhalter fuer zukuenftige Werte)",
+        "",
+        r"% ------------------------------------------------------------",
+        r"% Zusammensetzung N2-Produktstrom (ppm)",
+        r"% Basis: Single S24, Doppel S32",
+        r"% ------------------------------------------------------------",
+        f"\\newcommand{{\\valSingleN2ProduktO2Ppm}}{{{_fmt_value(single_o2_ppm, 10)}}} % [ppm]",
+        f"\\newcommand{{\\valSingleN2ProduktArPpm}}{{{_fmt_value(single_ar_ppm, 10)}}} % [ppm]",
+        f"\\newcommand{{\\valDoppelN2ProduktO2Ppm}}{{{_fmt_value(double_o2_ppm, 10)}}} % [ppm]",
+        f"\\newcommand{{\\valDoppelN2ProduktArPpm}}{{{_fmt_value(double_ar_ppm, 10)}}} % [ppm]",
+    ]
+
+    return "\n".join(lines) + "\n"
+
+
+def _build_stream_comparison_latex_table(
+    streams_single: dict,
+    streams_double: dict,
+) -> str:
+    """Build LaTeX table comparing key process streams for Single and Double column models."""
+
+    def fmt_x(x_n2: float, x_o2: float, x_ar: float) -> str:
+        return (
+            f"{_format_decimal_comma(x_n2, 6)} / "
+            f"{_format_decimal_comma(x_o2, 6)} / "
+            f"{_format_decimal_comma(x_ar, 6)}"
+        )
+
+    def fmt_p(p_Pa: float) -> str:
+        return _format_decimal_comma(p_Pa / 1e5, 2)
+
+    def fmt_T(T: float) -> str:
+        return _format_decimal_comma(T, 2)
+
+    def fmt_m(m: float) -> str:
+        return _format_decimal_comma(m, 2)
+
+    # (single_stream_key, double_stream_key, row_label)
+    stream_defs = [
+        ("S1",  "S1",  "Luft (S1)"),
+        ("S24", "S32", r"N$_2$-Produkt (S24 / S32)"),
+        ("S21", "S28", "Reststrom (S21 / S28)"),
+    ]
+
+    rows = []
+    for s_key, d_key, label in stream_defs:
+        s = streams_single.get(s_key, {})
+        d = streams_double.get(d_key, {})
+        m_s = fmt_m(s.get("m_dot"))
+        m_d = fmt_m(d.get("m_dot"))
+        p_val = fmt_p(s.get("p_Pa", 0.0))
+        T_s = fmt_T(s.get("T", 0.0))
+        T_d = fmt_T(d.get("T", 0.0))
+        rows.append(
+            f"{label} & {m_s} & {m_d} & {fmt_x(s.get('x_N2', 0.0), s.get('x_O2', 0.0), s.get('x_AR', 0.0))} "
+            f"& {fmt_x(d.get('x_N2', 0.0), d.get('x_O2', 0.0), d.get('x_AR', 0.0))} & {p_val} & {T_s} & {T_d} \\\\" 
+        )
+
+    lines = [
+        r"\begin{longtable}{lrrrrrrrr}",
+        r"\caption{Gegenüberstellung der Ergebnisse der Prozesssimulation für das Singlekolonnenmodell und das Doppelkolonnenmodell anhand ausgewählter Stoffstromgrößen, Zusammensetzungen und thermodynamischer Zustandsparameter.} \\",
+        r"\hline",
+        (
+            r"Stoffstrom & $\dot{m}_{\text{Single}}$ [kg/s] & $\dot{m}_{\text{Doppel}}$ [kg/s]"
+            r" & $x_{\text{N}_2/\text{O}_2/\text{Ar},\,\text{Single}}$ [-] & $x_{\text{N}_2/\text{O}_2/\text{Ar},\,\text{Doppel}}$ [-]"
+            r" & $p$ [bar] & $T_{\text{Single}}$ [K] & $T_{\text{Doppel}}$ [K] \\"
+        ),
+        r"\hline",
+        *rows,
+        r"\hline",
+        r"\end{longtable}",
+    ]
+    return "\n".join(lines)
+
+
 def plot_grouped_system_metrics(metrics_double_mw, metrics_single_mw, out_path: Path):
     categories = ["Total Input", "Product", "Destruction", "Losses"]
     vals_double = [metrics_double_mw.get(c) for c in categories]
@@ -740,11 +1078,39 @@ def plot_component_pareto_comparison(df_double: pd.DataFrame, df_single: pd.Data
     plt.close(fig)
 
 
+def plot_absolute_ed_large_vs_small(df_large: pd.DataFrame, df_small: pd.DataFrame, model_label: str, out_path: Path):
+    _apply_plot_theme()
+    fig, axes = plt.subplots(2, 1, figsize=(11, 12), sharex=False)
+
+    color = COLOR_DOUBLE if "doppel" in model_label.lower() else COLOR_SINGLE
+
+    bars_large = axes[0].barh(df_large["Component"], df_large["E_D_MW"], color=color)
+    axes[0].invert_yaxis()
+    axes[0].set_xlabel(r"$\dot{E}_D$ [MW]")
+    axes[0].set_ylabel(f"{model_label} groß")
+    _style_axis(axes[0], grid_axis="x")
+    _annotate_horizontal_bars(axes[0], bars_large, unit="MW")
+
+    bars_small = axes[1].barh(df_small["Component"], df_small["E_D_MW"], color=color)
+    axes[1].invert_yaxis()
+    axes[1].set_xlabel(r"$\dot{E}_D$ [MW]")
+    axes[1].set_ylabel(f"{model_label} klein")
+    _style_axis(axes[1], grid_axis="x")
+    _annotate_horizontal_bars(axes[1], bars_small, unit="MW")
+
+    fig.subplots_adjust(left=0.16, right=0.97, bottom=0.08, top=0.98, hspace=0.25)
+    fig.savefig(out_path, dpi=300)
+    plt.close(fig)
+
+
 def main():
     os.makedirs(OUT_DIR, exist_ok=True)
+    os.makedirs(TAB_DIR, exist_ok=True)
 
     df_double = parse_component_table(TABLE_DOUBLE)
     df_single = parse_component_table(TABLE_SINGLE)
+    df_double_klein = parse_component_table(TABLE_DOUBLE_KLEIN)
+    df_single_klein = parse_component_table(TABLE_SINGLE_KLEIN)
     ed_map_double = parse_component_ed_map(TABLE_DOUBLE)
     ed_map_single = parse_component_ed_map(TABLE_SINGLE)
     df_mol_double = parse_molfrac_table(MOLFRAC_DOUBLE)
@@ -808,6 +1174,20 @@ def main():
         out_path=OUT_DIR / "vergleich_component_pareto_ED.png",
     )
 
+    plot_absolute_ed_large_vs_small(
+        df_double,
+        df_double_klein,
+        model_label="Doppelkolonne",
+        out_path=OUT_DIR / "doppelkolonne_E_D_barh_gross_klein.png",
+    )
+
+    plot_absolute_ed_large_vs_small(
+        df_single,
+        df_single_klein,
+        model_label="Singlekolonne",
+        out_path=OUT_DIR / "singlekolonne_E_D_barh_gross_klein.png",
+    )
+
     plot_grouped_product_purity(
         df_mol_double,
         df_mol_single,
@@ -819,6 +1199,85 @@ def main():
         ed_map_double,
         out_path=OUT_DIR / "vergleich_yD_funktionsbloecke.png",
     )
+
+    # Compute y_D shares from the component LaTeX E_D maps (avoid JSON drift)
+    ed_map_double_large = ed_map_double
+    ed_map_double_small = parse_component_ed_map(TABLE_DOUBLE_KLEIN)
+    ed_map_single_large = ed_map_single
+    ed_map_single_small = parse_component_ed_map(TABLE_SINGLE_KLEIN)
+
+    yd_double_large = compute_yd_percent_from_ed_map(
+        ed_map_double_large, allowed_components=set(df_double["Component"].astype(str).tolist())
+    )
+    yd_double_small = compute_yd_percent_from_ed_map(
+        ed_map_double_small, allowed_components=set(df_double_klein["Component"].astype(str).tolist())
+    )
+    yd_single_large = compute_yd_percent_from_ed_map(
+        ed_map_single_large, allowed_components=set(df_single["Component"].astype(str).tolist())
+    )
+    yd_single_small = compute_yd_percent_from_ed_map(
+        ed_map_single_small, allowed_components=set(df_single_klein["Component"].astype(str).tolist())
+    )
+
+    yd_comp_table = _build_yd_large_vs_small_latex_table(
+        yd_double_large,
+        yd_double_small,
+        yd_single_large,
+        yd_single_small,
+    )
+    yd_comp_out = TAB_DIR / "aspen_luftzerlegung_yd_gross_klein_components.tex"
+    with yd_comp_out.open("w", encoding="utf-8") as f:
+        f.write(yd_comp_table)
+
+    # Build stream thermo + molfraction payloads from LaTeX tables (not JSON)
+    thermo_tex_single = parse_stream_thermo_data(STREAMS_SINGLE)
+    thermo_tex_double = parse_stream_thermo_data(STREAMS_DOUBLE)
+
+    # mol fraction tables provide x_N2, x_O2, x_AR
+    mol_single = parse_molfrac_table(MOLFRAC_SINGLE).set_index("Stream").to_dict(orient="index")
+    mol_double = parse_molfrac_table(MOLFRAC_DOUBLE).set_index("Stream").to_dict(orient="index")
+
+    def _combine_streams(thermo_map, mol_map, keys: list[str]):
+        out = {}
+        for k in keys:
+            t = thermo_map.get(k, {})
+            m = mol_map.get(k, {})
+            out[k] = {
+                "m_dot": t.get("m_dot"),
+                "n_mol_s": t.get("n_mol_s"),
+                "T": t.get("T"),
+                "p_Pa": t.get("p_Pa"),
+                "x_N2": m.get("x_N2", 0.0),
+                "x_O2": m.get("x_O2", 0.0),
+                "x_AR": m.get("x_AR", 0.0),
+            }
+        return out
+
+    thermo_single = _combine_streams(thermo_tex_single, mol_single, ["S1", "S21", "S24"])
+    thermo_double = _combine_streams(thermo_tex_double, mol_double, ["S1", "S28", "S32"])
+
+    recovery = compute_n2_recovery(thermo_single, thermo_double)
+    print("\n=== N2-Rueckgewinnung ===")
+    print(f"  Single  eta_N2 = {recovery['single_eta_pct']:.4f} %   ratio = {recovery['single_ratio']:.6f} mol/mol")
+    print(f"  Doppel  eta_N2 = {recovery['double_eta_pct']:.4f} %   ratio = {recovery['double_ratio']:.6f} mol/mol")
+    recovery_table = _build_n2_recovery_latex_table(recovery)
+    recovery_out = TAB_DIR / "aspen_luftzerlegung_n2_recovery.tex"
+    with recovery_out.open("w", encoding="utf-8") as f:
+        f.write(recovery_table)
+    print("N2-Rueckgewinnung gespeichert:", recovery_out)
+
+    stream_comp_table = _build_stream_comparison_latex_table(
+        thermo_single,
+        thermo_double,
+    )
+    stream_comp_out = TAB_DIR / "aspen_luftzerlegung_streams_vergleich.tex"
+    with stream_comp_out.open("w", encoding="utf-8") as f:
+        f.write(stream_comp_table)
+
+    werte_tex = _build_werte_tex(recovery, thermo_single, thermo_double)
+    with WERTE_TEX.open("w", encoding="utf-8") as f:
+        f.write(werte_tex)
+    print("Werte-Datei gespeichert:", WERTE_TEX)
 
     print("Plots gespeichert in:")
     print(OUT_DIR)
