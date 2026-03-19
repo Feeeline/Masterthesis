@@ -1053,7 +1053,24 @@ def _format_value(value):
     if value is None:
         return "-"
     if isinstance(value, (int, float)):
-        return f"{value:.6g}"
+        # Thesis table formatting: no scientific notation and at most two decimals.
+        x = round(float(value), 2)
+        if abs(x) < 1e-9:
+            return "0"
+        text = f"{x:.2f}".rstrip("0").rstrip(".")
+        return text.replace(".", ",") if text else "0"
+    return _latex_escape(str(value))
+
+
+def _format_molfrac_value(value):
+    if value is None:
+        return "-"
+    if isinstance(value, (int, float)):
+        x = float(value)
+        if abs(x) < 1e-12:
+            return "0"
+        # Keep higher precision for composition tables.
+        return f"{x:.6g}".replace(".", ",")
     return _latex_escape(str(value))
 
 
@@ -1202,7 +1219,7 @@ def _build_molar_fractions_table(connections: dict) -> str:
         values = []
         for key, _, _ in columns:
             val = conn.get(key)
-            values.append(_format_value(val))
+            values.append(_format_molfrac_value(val))
         rows.append(" & ".join(values) + r" \\")
 
     col_spec = "l" + "r" * (len(columns) - 1)
@@ -1487,7 +1504,7 @@ def _build_global_check_table(components: dict) -> str:
     def _format_int_de(value):
         if not isinstance(value, (int, float)):
             return "-"
-        return f"{int(round(value)):,}".replace(",", ".")
+        return f"{int(round(value)):,}"
 
     def _format_pct_de(value):
         if not isinstance(value, (int, float)):
@@ -1609,7 +1626,12 @@ def _read_block_ed_table(tex_path: str) -> dict:
 
             block_name, val_raw = parts
             try:
-                result[block_name] = float(val_raw)
+                val_norm = val_raw.strip()
+                if "," in val_norm and "." in val_norm:
+                    val_norm = val_norm.replace(".", "").replace(",", ".")
+                elif "," in val_norm:
+                    val_norm = val_norm.replace(",", ".")
+                result[block_name] = float(val_norm)
             except ValueError:
                 result[block_name] = 0.0
 

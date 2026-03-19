@@ -2,6 +2,7 @@ import os
 import re
 from pathlib import Path
 from matplotlib.lines import Line2D
+from matplotlib.ticker import FuncFormatter
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -36,6 +37,15 @@ def _apply_plot_theme(style: str = "seaborn-v0_8-whitegrid"):
 
 def _style_axis(ax, grid_axis: str = "y"):
     ax.grid(axis=grid_axis, linestyle="--", alpha=0.35)
+    # Apply decimal-comma formatting only to the likely numeric axis.
+    # This keeps categorical axes (e.g., component names) unchanged.
+    if grid_axis == "x":
+        ax.xaxis.set_major_formatter(FuncFormatter(_tick_formatter_decimal_comma))
+    elif grid_axis == "y":
+        ax.yaxis.set_major_formatter(FuncFormatter(_tick_formatter_decimal_comma))
+    else:
+        ax.xaxis.set_major_formatter(FuncFormatter(_tick_formatter_decimal_comma))
+        ax.yaxis.set_major_formatter(FuncFormatter(_tick_formatter_decimal_comma))
     for spine in ["top", "right"]:
         ax.spines[spine].set_visible(False)
 
@@ -52,14 +62,34 @@ def _style_bottom_legend(ax, ncol: int = 2):
 
 
 def _to_float(value: str):
-    value = value.strip()
-    if value in {"-", ""}:
-        return None
-    value = value.replace("\\", "").strip()
-    try:
-        return float(value)
-    except ValueError:
-        return None
+    return _to_float_latex_number(value)
+
+
+def _format_decimal_comma(value, decimals: int = 3, trim: bool = False):
+    if value is None or not isinstance(value, (int, float)):
+        return "-"
+    x = float(value)
+    text = f"{x:.{decimals}f}"
+    if trim:
+        text = text.rstrip("0").rstrip(".")
+        if text in {"", "-0"}:
+            text = "0"
+    return text.replace(".", ",")
+
+
+def _tick_formatter_decimal_comma(x, _pos):
+    if not isinstance(x, (int, float)):
+        return ""
+    ax = abs(float(x))
+    if ax >= 100:
+        text = f"{x:.0f}"
+    elif ax >= 1:
+        text = f"{x:.2f}".rstrip("0").rstrip(".")
+    else:
+        text = f"{x:.4f}".rstrip("0").rstrip(".")
+    if text in {"", "-0"}:
+        text = "0"
+    return text.replace(".", ",")
 
 
 def _to_float_latex_number(value: str):
@@ -80,6 +110,14 @@ def _to_float_latex_number(value: str):
         except ValueError:
             return None
 
+    # English thousand separator format (e.g. 7,631,750 or 7,631,750.25)
+    if re.match(r"^-?\d{1,3}(,\d{3})+(\.\d+)?$", value):
+        value = value.replace(",", "")
+        try:
+            return float(value)
+        except ValueError:
+            return None
+
     # scientific notation or regular float
     sci_candidate = value.replace(" ", "")
     try:
@@ -87,11 +125,14 @@ def _to_float_latex_number(value: str):
     except ValueError:
         pass
 
-    # mixed comma decimal fallback
-    if "," in value:
-        value = value.replace(".", "").replace(",", ".")
+    # decimal comma and comma-separated integer fallback
+    if "," in value and "." not in value:
         try:
-            return float(value)
+            return float(value.replace(",", "."))
+        except ValueError:
+            pass
+        try:
+            return float(value.replace(",", ""))
         except ValueError:
             return None
 
@@ -327,7 +368,7 @@ def plot_grouped_product_purity(df_double_mol: pd.DataFrame, df_single_mol: pd.D
             axis.text(
                 bar.get_x() + bar.get_width() / 2,
                 v + offset,
-                f"{v:.4f}",
+                _format_decimal_comma(v, decimals=4, trim=False),
                 ha="center",
                 va="bottom",
                 fontsize=9,
@@ -599,7 +640,7 @@ def _annotate_vertical_bars(ax, bars, values, unit="MW"):
         ax.text(
             bar.get_x() + bar.get_width() / 2,
             bar.get_height() + offset,
-            f"{val:.3f} {unit}",
+            f"{_format_decimal_comma(val, decimals=3, trim=False)} {unit}",
             ha="center",
             va="bottom",
             fontsize=9,
@@ -615,7 +656,7 @@ def _annotate_horizontal_bars(ax, bars, unit="MW"):
         ax.text(
             width + offset,
             bar.get_y() + bar.get_height() / 2,
-            f"{width:.3f} {unit}",
+            f"{_format_decimal_comma(width, decimals=3, trim=False)} {unit}",
             va="center",
             ha="left",
             fontsize=8,
