@@ -1,20 +1,19 @@
 \chapter{Prozessbeschreibung}
 \label{ch:prozess}
 
-Nachfolgend werden die der Simulation zugrunde gelegten Zielbedingungen sowie ein Überblick über die untersuchten Prozessvarianten und Fälle vorgestellt. Die beiden Prozesskonzepte werden hinsichtlich ihres Aufbaus und ihrer Funktionsweise beschrieben. Fall~A beschreibt einen Einkolonnen-Stickstoffgenerator, während Fall~B einen Doppelkolonnen-Stickstoffgenerator repräsentiert. Die nachfolgenden Abschnitte verdeutlichen die apparativen Unterschiede der Varianten sowie die daraus resultierenden Prozessabfolgen.
+Nachfolgend werden die der Simulation zugrunde gelegten Zielbedingungen sowie ein Überblick über die untersuchten Prozessvarianten und Fälle vorgestellt. Die beiden Prozesskonzepte werden hinsichtlich ihres Aufbaus und ihrer Funktionsweise beschrieben. Der erste Fall beschreibt den stickstoffgenerierenden Einkolonnenprozess, während der zeite Fall einen Doppelkolonnenprozess repräsentiert. Die nachfolgenden Abschnitte verdeutlichen die apparativen Unterschiede der Varianten sowie die daraus resultierenden Prozessabfolgen.
 
-\section{Zielbedingungen und Überblick über die untersuchten Prozessvarianten}
+\section{Zielbedingungen und Prozessvarianten}
 \label{sec:prozess_überblick}
 
-Das Stickstoffprodukt soll in gasförmigem Zustand für die nachgeschaltete Ammoniaksynthese bereitgestellt werden. Es wird davon ausgegangen, dass Wasser und Kohlendioxid im Prozess vollständig abgeschieden werden. Als zentrale Zielbedingung wird eine Stickstoffreinheit für Stickstoff 5.0 mit einer maximalen Verunreinigung von \SI{10}{ppm} festgelegt, außerdem soll ein kritischer maximaler Sauerstoffgehalt von \SI{5}{ppm} nicht überschritten werden. Diese Reinheitsanforderungen gelten für alle im Folgenden betrachteten Prozessvarianten gleichermaßen.\\
+Das Stickstoffprodukt soll in gasförmigem Zustand für die nachgeschaltete Ammoniaksynthese bereitgestellt werden. In beiden Prozessvarianten und in der in der Literatur vorgeschlagenen Prozesskonfiguration ist eine flüssige Stickstoffentnahme ebenfalls möglich; hierauf wird in den hier betrachteten Prozessen jedoch verzichtet. Es wird davon ausgegangen, dass Wasser und Kohlendioxid im Prozess vollständig abgeschieden werden. Als zentrale Zielbedingung wird eine Stickstoffreinheit für Stickstoff 5.0 mit einer maximalen Verunreinigung von \SI{10}{ppm} festgelegt. Außerdem soll ein kritischer maximaler Sauerstoffgehalt von \SI{5}{ppm} nicht überschritten werden. Diese Reinheitsanforderungen gelten für alle im Folgenden betrachteten Prozessvarianten gleichermaßen.\\
 \\
 Bezüglich der Produktmenge werden zwei Varianten des Prozesses betrachtet: eine großtechnische Referenzvariante sowie eine entsprechend skalierte Kleinvariante. Ausgangspunkt bildet die in Penkuhn und Tsatsaronis beschriebene Ammoniaksynthese \cite{penkuhn_comparison_2017}, bei der ein Produktmassenstrom von \(\dot{m}_{\mathrm{NH_3}} = 19{,}7~\mathrm{kg/s}\) Ammoniak erzielt wird. Ausgehend von dieser Referenz wurde der zugehörige Stickstoffstrom berechnet. \\
-Zur Abbildung einer kleineren Prozessvariante wurde das System anschließend um den Faktor \(1/3{,}42\) skaliert, sodass der Wasserstoff-Feed einem Massenstrom von \(1~\mathrm{kg/s}\) entspricht. Die daraus resultierenden Mengenanforderungen für den Stickstoffstrom sind in Tabelle~\ref{tab:n2_produktstreams} dargestellt.
+Zur Abbildung einer kleineren Prozessvariante wurde das System anschließend um den Faktor \(1/3{,}42\) skaliert, sodass der Wasserstoff-Feed einem Massenstrom von \(1~\mathrm{kg/s}\) entspricht. Die daraus resultierenden Mengenanforderungen für den Stickstoffstrom sind in Tabelle \ref{tab:n2_produktstreams} dargestellt.
 
 \begin{table}[h]
 \centering
-\caption{Berechnete Stoffströme für Stickstoff in der großen und skalierten Variante 
-(bei Normbedingungen \(T_\mathrm{N}=273{,}15~\mathrm{K},\ p_\mathrm{N}=1{,}013~\mathrm{bar}\)).}
+\caption{Berechnete Stoffströme für das geforderte Stickstoffprodukt in der großen und skalierten Variante (bei Normbedingungen \(T_\mathrm{N}=273{,}15~\mathrm{K},\ p_\mathrm{N}=1{,}013~\mathrm{bar}\)).}
 \label{tab:n2_produktstreams}
 \begin{tabular}{lccc}
 \toprule
@@ -28,8 +27,7 @@ Kleinere Variante (\(1/3{,}42\)) & 166.08 & 4.65 & 13\,401 \\
 \bottomrule
 \end{tabular}
 \end{table}
-
-Für Druck und Temperatur des Stickstoffproduktes werden im Rahmen der Prozessbeschreibung keine festen Zielwerte vorgegeben. Da das Produktgas vor der Nutzung in der Ammoniaksynthese mit Wasserstoff vermischt und anschließend erneut verdichtet sowie aufgeheizt wird, wäre eine gezielte Bereitstellung auf erhöhtem Druck- oder Temperaturniveau energetisch nicht sinnvoll. Die Auswahl geeigneter Prozessdrücke erfolgt daher auf Basis des spezifischen Energiebedarfs und wird in einem späteren Kapitel näher erläutert.
+Für Druck und Temperatur des Stickstoffprodukts werden im Rahmen der Prozessbeschreibung keine festen Zielwerte vorgegeben. Da das Produktgas vor der Nutzung in der Ammoniaksynthese mit Wasserstoff vermischt und anschließend erneut verdichtet sowie aufgeheizt wird, wäre eine gezielte Bereitstellung auf erhöhtem Druck- oder Temperaturniveau energetisch nicht sinnvoll. Die Auswahl geeigneter Prozessdrücke erfolgt daher auf Basis des spezifischen Energiebedarfs und wird in einem späteren Kapitel näher erläutert.
 
 \section{Fall A - Einkolonnen Stickstoffgenerator}
 \label{sec:prozess_FallA}
