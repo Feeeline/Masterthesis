@@ -1328,8 +1328,22 @@ def _format_molfrac_value(value):
         x = float(value)
         if abs(x) < 1e-12:
             return "0"
-        # Keep higher precision for composition tables.
-        return f"{x:.6g}".replace(".", ",")
+        # Composition formatting by magnitude for readable thesis tables.
+        ax = abs(x)
+        if ax >= 1e-2:
+            text = f"{x:.4f}"
+        elif ax >= 1e-4:
+            text = f"{x:.6f}"
+        else:
+            return "<1e-6"
+
+        # Remove trailing zeros for non-scientific notation.
+        if "e" not in text and "E" not in text:
+            text = text.rstrip("0").rstrip(".")
+            if text in {"", "-0"}:
+                text = "0"
+
+        return text.replace(".", ",")
     return _latex_escape(str(value))
 
 
