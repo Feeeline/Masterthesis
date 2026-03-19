@@ -1337,6 +1337,17 @@ def _build_streams_latex_table(connections: dict) -> str:
         conn for conn in connections.values() if conn.get("kind") == "material"
     ]
 
+    def _stream_value(conn: dict, key: str):
+        # Aspen exports sometimes leave e_PH empty while e_T and e_M are available.
+        # In this case, reconstruct e_PH = e_T + e_M for the LaTeX table output.
+        val = conn.get(key)
+        if key == "e_PH" and val is None:
+            e_t = conn.get("e_T")
+            e_m = conn.get("e_M")
+            if isinstance(e_t, (int, float)) and isinstance(e_m, (int, float)):
+                return float(e_t) + float(e_m)
+        return val
+
     def _sort_key(conn):
         name = str(conn.get("name", ""))
         prefix = ""
@@ -1362,6 +1373,11 @@ def _build_streams_latex_table(connections: dict) -> str:
             unit = conn.get(unit_key)
             if unit:
                 break
+        if key == "e_PH" and not unit:
+            for conn in material_streams:
+                unit = conn.get("e_T_unit")
+                if unit:
+                    break
         unit_lookup[key] = unit or ""
 
     header = " & ".join(label for _, label, _ in columns) + " \\\\"
@@ -1374,7 +1390,7 @@ def _build_streams_latex_table(connections: dict) -> str:
     for conn in material_streams:
         values = []
         for key, _, _ in columns:
-            val = conn.get(key)
+            val = _stream_value(conn, key)
             values.append(_format_value(val))
         rows.append(" & ".join(values) + r" \\")
 
