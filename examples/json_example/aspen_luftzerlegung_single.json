@@ -77,8 +77,8 @@
                     "y_star": 0.0
                 }
             },
-            "RC": {
-                "name": "RC",
+            "RECO": {
+                "name": "RECO",
                 "type": "MHeatX",
                 "eta_s": null,
                 "eta_mech": null,

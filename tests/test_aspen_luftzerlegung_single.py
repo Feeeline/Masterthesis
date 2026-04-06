@@ -1479,8 +1479,8 @@ def _build_component_results_table(components: dict) -> str:
         r"$\dot{E}_D$",
         r"$\varepsilon$",
         r"$y_{D,k}$",
-    ]) + " \\\""
-    unit_row = " & ".join(["", "", "(W)", "(W)", "(W)", "(-)", "(-)"]) + " \\\""
+    ]) + " \\\\"
+    unit_row = " & ".join(["", "", "(W)", "(W)", "(W)", "(-)", "(-)"]) + " \\\\"
     # Support two input formats:
     # - runtime component objects (component instances with attributes)
     # - exported component dicts (as produced by ean._serialize())
