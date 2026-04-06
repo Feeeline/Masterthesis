@@ -1,0 +1,25 @@
+Found component key: D1
+Class: Valve
+E_F: 0.0
+E_P: 0.0
+E_D: 0.0
+E_L: None
+epsilon: None
+P: None
+
+__dict__ keys and values:
+E_D: 0.0
+E_F: 0.0
+E_P: 0.0
+P: None
+P_unit: 'W'
+Q: None
+Q_unit: 'W'
+epsilon: None
+eta_mech: None
+eta_s: None
+inl: {0: {'name': 'S13', 'kind': 'material', 'source_component': 'KOLHP', 'source_connector': 2, 'target_component': 'D1', 'target_connector': 0, 'T': 100.702097, 'T_unit': 'K', 'p': 613920.0, 'p_unit': 'Pa', 'h': -379647.351, 'h_unit': 'J / kg', 's': -3152.97823, 's_unit': 'J / kgK', 'm': 24.04508, 'm_unit': 'kg / s', 'energy_flow': 9128650.91, 'energy_flow_unit': 'Watt', 'e_PH': 587984.2154819198, 'n': 811.1907659999999, 'n_unit': 'mol / s', 'lfrac': 1.0, 'lfrac_unit': '', 'vfrac_out': 0.0, 'vfrac_out_unit': '', 'vlstd': 0, 'vlstd_unit': '', 'hmx': -11253.396, 'hmx_unit': 'J / kg', 'smx': -93.4596607, 'smx_unit': 'J / kgK', 'usrech': 261.501806, 'usrech_unit': 'kW', 'usreme': 3493.87229, 'usreme_unit': 'kW', 'usreph': 14138.1275, 'usreph_unit': 'kW', 'usreth': 10644.2553, 'usreth_unit': 'kW', 'mass_composition': {}, 'molar_composition': {'N2': 0.623186032, 'O2': 0.360899921, 'AR': 0.0159140471}, 'lf': 1.0, 'lf_unit': '-', 'lf_raw': 1.0, 'lf_raw_unit': '1', 'vf': 0.0, 'vf_unit': '-', 'vf_raw': 0.0, 'vf_raw_unit': '1', 'vstd': 0, 'vstd_unit': '-', 'vstd_raw': 0, 'vstd_raw_unit': '1', 'mfn2': 0.623186032, 'mfn2_unit': '-', 'mfn2_raw': 0.623186032, 'mfn2_raw_unit': '1', 'mfo2': 0.360899921, 'mfo2_unit': '-', 'mfo2_raw': 0.360899921, 'mfo2_raw_unit': '1', 'mfar': 0.0159140471, 'mfar_unit': '-', 'mfar_raw': 0.0159140471, 'mfar_raw_unit': '1', 'mfco': 0.0, 'mfco_unit': '-', 'mfco_raw': 0.0, 'mfco_raw_unit': '1', 'mfho': 0.0, 'mfho_unit': '-', 'mfho_raw': 0.0, 'mfho_raw_unit': '1', 'hmx_raw': -11253396.0, 'hmx_raw_unit': 'J/kmol', 'smx_raw': -93459.6607, 'smx_raw_unit': 'J/kmol-K', 'ech_raw': 261.501806, 'ech_raw_unit': 'kW', 'ech': 261501.80599999998, 'ech_unit': 'J / kg', 'em_raw': 3493.87229, 'em_raw_unit': 'kW', 'em': 3493872.2899999996, 'em_unit': 'J / kg', 'eph_raw': 14138.1275, 'eph_raw_unit': 'kW', 'eph': 14138127.5, 'eph_unit': 'J / kg', 'eth_raw': 10644.2553, 'eth_raw_unit': 'kW', 'eth': 10644255.3, 'eth_unit': 'J / kg', 'E_CH': 261501.80599999995, 'E_CH_unit': 'W', 'e_CH': 10875.48080522086, 'e_CH_unit': 'J / kg', 'E_PH': 0.0, 'E': 261501.80599999995, 'E_T': 0.0, 'E_M': 0.0, 'E_unit': 'W', 'e_T': 442679.13851815014, 'e_M': 145305.08070673916}}
+is_dissipative: False
+name: 'D1'
+outl: {0: {'name': 'S14', 'kind': 'material', 'source_component': 'D1', 'source_connector': 0, 'target_component': 'KOLLP', 'target_connector': 0, 'T': 92.1604104, 'T_unit': 'K', 'p': 313040.0, 'p_unit': 'Pa', 'h': -379647.351, 'h_unit': 'J / kg', 's': -3141.27509, 's_unit': 'J / kgK', 'm': 24.04508, 'm_unit': 'kg / s', 'energy_flow': 9128650.91, 'energy_flow_unit': 'Watt', 'e_PH': 584611.9538799621, 'n': 811.1907659999999, 'n_unit': 'mol / s', 'lfrac': 0.904965164, 'lfrac_unit': '', 'vfrac_out': 0.0950348362, 'vfrac_out_unit': '', 'vlstd': 0, 'vlstd_unit': '', 'hmx': -11253.396, 'hmx_unit': 'J / kg', 'smx': -93.1127595, 'smx_unit': 'J / kgK', 'usrech': 261.501806, 'usrech_unit': 'kW', 'usreme': 2189.15723, 'usreme_unit': 'kW', 'usreph': 14057.0412, 'usreph_unit': 'kW', 'usreth': 11867.884, 'usreth_unit': 'kW', 'mass_composition': {}, 'molar_composition': {'N2': 0.623186032, 'O2': 0.360899921, 'AR': 0.0159140471}, 'lf': 0.904965164, 'lf_unit': '-', 'lf_raw': 0.904965164, 'lf_raw_unit': '1', 'vf': 0.0950348362, 'vf_unit': '-', 'vf_raw': 0.0950348362, 'vf_raw_unit': '1', 'vstd': 0, 'vstd_unit': '-', 'vstd_raw': 0, 'vstd_raw_unit': '1', 'mfn2': 0.623186032, 'mfn2_unit': '-', 'mfn2_raw': 0.623186032, 'mfn2_raw_unit': '1', 'mfo2': 0.360899921, 'mfo2_unit': '-', 'mfo2_raw': 0.360899921, 'mfo2_raw_unit': '1', 'mfar': 0.0159140471, 'mfar_unit': '-', 'mfar_raw': 0.0159140471, 'mfar_raw_unit': '1', 'mfco': 0.0, 'mfco_unit': '-', 'mfco_raw': 0.0, 'mfco_raw_unit': '1', 'mfho': 0.0, 'mfho_unit': '-', 'mfho_raw': 0.0, 'mfho_raw_unit': '1', 'hmx_raw': -11253396.0, 'hmx_raw_unit': 'J/kmol', 'smx_raw': -93112.7595, 'smx_raw_unit': 'J/kmol-K', 'ech_raw': 261.501806, 'ech_raw_unit': 'kW', 'ech': 261501.80599999998, 'ech_unit': 'J / kg', 'em_raw': 2189.15723, 'em_raw_unit': 'kW', 'em': 2189157.23, 'em_unit': 'J / kg', 'eph_raw': 14057.0412, 'eph_raw_unit': 'kW', 'eph': 14057041.2, 'eph_unit': 'J / kg', 'eth_raw': 11867.884, 'eth_raw_unit': 'kW', 'eth': 11867884.0, 'eth_unit': 'J / kg', 'E_CH': 261501.80599999995, 'E_CH_unit': 'W', 'e_CH': 10875.48080522086, 'e_CH_unit': 'J / kg', 'E_PH': 0.0, 'E': 261501.80599999995, 'E_T': 0.0, 'E_M': 0.0, 'E_unit': 'W', 'e_T': 493568.08128731535, 'e_M': 91043.8738403033}}
+type: 'Valve'

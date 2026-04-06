@@ -1,0 +1,8 @@
+Found component key: D1
+Class: Valve
+E_F: 0.0
+E_P: 0.0
+E_D: 0.0
+E_L: None
+epsilon: None
+P: None

@@ -154,6 +154,14 @@ def _to_float_latex_number(value: str):
 
 def parse_component_table(tex_path: Path) -> pd.DataFrame:
     rows = []
+    # Normalize old component names to their current canonical names so plots
+    # remain correct even if .tex files still contain legacy names.
+    name_map = {
+        "MH": "MW",
+        "RECO": "RC",
+        "RECON": "RC",
+        "TURB": "T",
+    }
     # Accept both formats:
     # old: Component, Type, E_F, E_P, E_D, E_L, epsilon, y_D_k
     # new: Component, Type, E_F, E_P, E_D, epsilon, y_D_k
@@ -172,6 +180,9 @@ def parse_component_table(tex_path: Path) -> pd.DataFrame:
                 continue
 
             component = m.group(1).strip()
+            # normalize legacy names
+            if component in name_map:
+                component = name_map[component]
             e_d = _to_float(m.group(5))
             y_dk_raw = m.group(8) if m.group(8) is not None else m.group(7)
             y_dk = _to_float(y_dk_raw)
@@ -191,6 +202,12 @@ def parse_component_table(tex_path: Path) -> pd.DataFrame:
     df = pd.DataFrame(rows)
     if df.empty:
         raise ValueError(f"Keine verwertbaren Daten in {tex_path}")
+    # Recompute y_D_k from parsed E_D values so shares sum to 1 per model
+    total = df["E_D_W"].abs().sum()
+    if total > 0:
+        df["y_D_k"] = df["E_D_W"].abs() / total
+    else:
+        df["y_D_k"] = 0.0
 
     return df.sort_values("E_D_W", ascending=False).reset_index(drop=True)
 
@@ -198,6 +215,13 @@ def parse_component_table(tex_path: Path) -> pd.DataFrame:
 def parse_component_ed_map(tex_path: Path) -> dict:
     rows = {}
     pattern = re.compile(r"^\s*([^&]+)&([^&]+)&([^&]+)&([^&]+)&([^&]+)&([^&]+)&([^&]+)(?:&([^\\]+))?\\\\")
+
+    name_map = {
+        "MH": "MW",
+        "RECO": "RC",
+        "RECON": "RC",
+        "TURB": "T",
+    }
 
     with tex_path.open("r", encoding="utf-8") as f:
         for line in f:
@@ -212,6 +236,8 @@ def parse_component_ed_map(tex_path: Path) -> dict:
                 continue
 
             comp = m.group(1).strip()
+            if comp in name_map:
+                comp = name_map[comp]
             ed = _to_float(m.group(5))
             if comp and isinstance(ed, (int, float)):
                 rows[comp] = float(ed)
@@ -278,24 +304,9 @@ def parse_stream_mass_flows(tex_path: Path) -> dict:
 
 
 def parse_stream_data_from_json(json_path: Path, stream_names: list[str]) -> dict:
-    """Read m [kg/s], T [K], p [Pa], x_N2, x_O2, x_AR from JSON connections for given streams."""
-    data = {}
-    with json_path.open("r", encoding="utf-8") as f:
-        j = json.load(f)
-    connections = j.get("connections", {})
-    for name in stream_names:
-        conn = connections.get(name, {})
-        mc = conn.get("molar_composition", {})
-        data[name] = {
-            "m_dot": conn.get("m"),
-            "T": conn.get("T"),
-            "p_Pa": conn.get("p"),
-            "n_mol_s": conn.get("n"),
-            "x_N2": mc.get("N2", 0.0),
-            "x_O2": mc.get("O2", 0.0),
-            "x_AR": mc.get("AR", 0.0),
-        }
-    return data
+    raise RuntimeError(
+        "JSON input is disabled for result calculations. Use the LaTeX tables under Overleaf_LaTeX/tabellen/ as authoritative sources."
+    )
 
 
 def parse_stream_thermo_data(tex_path: Path) -> dict:
@@ -482,13 +493,15 @@ def _compute_block_yd_payload(ed_map: dict, model: str):
     if model == "single":
         comp_only = ["LK1", "ZK1", "LK2"]
         gas_only = ["ZK2", "GW1", "GW2"]
-        heat_transfer = ["MW", "RC"]
-        column_block = ["KOL", "D1"]
+        # move RC from heat transfer into the column block per user request
+        heat_transfer = ["MW"]
+        column_block = ["KOL", "D1", "RC"]
     else:
         comp_only = ["LK1", "ZK1", "LK2", "PK1"]
         gas_only = ["ZK2", "GW1", "GW2"]
-        heat_transfer = ["MW", "RC", "RC2"]
-        column_block = ["KOLHP", "KOLLP", "D1", "D2", "D3"]
+        # move RC and RC2 from heat transfer into the column block per user request
+        heat_transfer = ["MW"]
+        column_block = ["KOLHP", "KOLLP", "D1", "D2", "D3", "RC", "RC2"]
 
     named_sets = {
         "comp_only": set(comp_only),
@@ -653,10 +666,10 @@ def parse_global_master_table(tex_path: Path):
         product_total = E_prod + W_turb
 
     metrics_w = {
-        "Total Input": total_input,
-        "Product": product_total,
-        "Destruction": E_dest,
-        "Losses": E_loss,
+        r"$\dot{E}_{F,tot}$": total_input,
+        r"$\dot{E}_{P,tot}$": product_total,
+        r"$\dot{E}_{D,tot}$": E_dest,
+        r"$\dot{E}_{L,tot}$": E_loss,
     }
     metrics_mw = {k: (v / 1e6 if isinstance(v, (int, float)) else None) for k, v in metrics_w.items()}
     return metrics_w, metrics_mw, product_stream
@@ -680,7 +693,19 @@ def make_plot(df: pd.DataFrame, x_col: str, xlabel: str, out_path: Path, xlim=No
     fig, ax = plt.subplots(figsize=(10, 7))
 
     color = COLOR_SINGLE if "single" in out_path.stem.lower() else COLOR_DOUBLE
-    ax.barh(df["Component"], df[x_col], color=color)
+    # For visibility: do not modify numeric values, but apply a tiny visual
+    # floor for extremely small non-zero shares so they are still visible in
+    # the plot (e.g. 0.00something). This floor is only applied to the
+    # displayed bar widths, labels keep the original unmodified values.
+    display_vals = df[x_col].astype(float).copy()
+    if x_col == "y_D_k" or x_col.lower().startswith("y_"):
+        # floor relative to dynamic range but absolute minimum to avoid invisibility
+        maxv = float(display_vals.abs().max() if not display_vals.empty else 0.0)
+        floor = max(1e-6, maxv * 1e-5)
+        # apply floor only to non-zero but sub-threshold values
+        small_mask = (display_vals != 0.0) & (display_vals.abs() < floor)
+        display_vals[small_mask] = display_vals[small_mask].apply(lambda v: floor if v > 0 else -floor)
+    ax.barh(df["Component"], display_vals, color=color)
     ax.invert_yaxis()
 
     ax.set_xlabel(xlabel)
@@ -700,11 +725,15 @@ def _yd_axis_limit(df: pd.DataFrame, col: str = "y_D_k"):
         return (0, 1)
 
     share_le_half = (values <= 0.5).mean()
+    # If most components are very small, use a tighter axis to enhance visibility.
     if share_le_half >= 0.8:
-        return (0, 0.5)
+        return (0, 0.3)
 
-    upper = float(values.quantile(0.95))
-    upper = max(0.5, min(1.0, upper * 1.1))
+    # Compute a high-percentile upper bound and cap it at 0.3 to show more bars.
+    upper = float(values.quantile(0.95)) * 1.1
+    # Allow very small upper if data warrants, but cap maximum to 0.3
+    upper = max(upper, 0.01)
+    upper = min(upper, 0.3)
     return (0, upper)
 
 
@@ -740,43 +769,26 @@ def _annotate_horizontal_bars(ax, bars, unit="MW"):
         )
 
 
-def _format_percent_de(value, digits: int = 3):
+def _format_percent_de(value, digits: int = 4):
+    """Format percent value for DE/LaTeX output.
+
+    Do NOT coerce very small values to exactly zero here — keep precision so
+    that tiny non-zero shares remain visible in textual outputs. Visual
+    plotting may still apply a minimal floor for visibility only.
+    """
     if value is None:
         return "-"
     x = float(value)
-    # Avoid negative zero from floating-point roundoff, e.g. -0,000.
-    if abs(x) < 0.5 * (10 ** (-digits)):
-        x = 0.0
+    # Normalize tiny numerical noise to exact 0 only when it's numerically zero.
+    if x == 0.0:
+        return f"{0:.{digits}f}".replace(".", ",")
     return f"{x:.{digits}f}".replace(".", ",")
 
 
 def parse_component_yd_percent_from_json(json_path: Path, allowed_components: set[str] | None = None) -> dict[str, float]:
-    payload = json.loads(json_path.read_text(encoding="utf-8"))
-    components = payload.get("components", {})
-
-    e_d_map = {}
-    for group in components.values():
-        if not isinstance(group, dict):
-            continue
-        for comp_name, comp_payload in group.items():
-            if not isinstance(comp_payload, dict):
-                continue
-            ex = comp_payload.get("exergy_results", {})
-            if not isinstance(ex, dict):
-                continue
-            e_d = ex.get("E_D")
-            if isinstance(e_d, (int, float)):
-                name = str(comp_name)
-                if allowed_components is not None and name not in allowed_components:
-                    continue
-                # Match reporting logic: compare destruction magnitudes.
-                e_d_map[name] = abs(float(e_d))
-
-    total_e_d = sum(v for v in e_d_map.values() if isinstance(v, (int, float)))
-    if total_e_d <= 0:
-        return {name: 0.0 for name in e_d_map.keys()}
-
-    return {name: (val / total_e_d) * 100.0 for name, val in e_d_map.items()}
+    raise RuntimeError(
+        "JSON input is disabled for result calculations. Use the LaTeX tables under Overleaf_LaTeX/tabellen/ as authoritative sources."
+    )
 
 
 def _build_yd_large_vs_small_latex_table(
@@ -1002,7 +1014,7 @@ def _build_stream_comparison_latex_table(
 
 
 def plot_grouped_system_metrics(metrics_double_mw, metrics_single_mw, out_path: Path):
-    categories = ["Total Input", "Product", "Destruction", "Losses"]
+    categories = [r"$\dot{E}_{F,tot}$", r"$\dot{E}_{P,tot}$", r"$\dot{E}_{D,tot}$", r"$\dot{E}_{L,tot}$"]
     vals_double = [metrics_double_mw.get(c) for c in categories]
     vals_single = [metrics_single_mw.get(c) for c in categories]
 
@@ -1029,20 +1041,23 @@ def plot_grouped_system_metrics(metrics_double_mw, metrics_single_mw, out_path: 
 
 
 def plot_grouped_specific_system_metrics(metrics_double_spec, metrics_single_spec, out_path: Path):
-    categories = ["Total Input", "Product", "Destruction", "Losses"]
-    vals_double = [metrics_double_spec.get(c) for c in categories]
-    vals_single = [metrics_single_spec.get(c) for c in categories]
+    # Lookup keys correspond to the computed specific metrics (capital E labels).
+    lookup_keys = [r"$\dot{E}_{F,tot}$", r"$\dot{E}_{P,tot}$", r"$\dot{E}_{D,tot}$", r"$\dot{E}_{L,tot}$"]
+    # Display labels should show lowercase e as requested.
+    display_labels = [r"$\dot{e}_{f,tot}$", r"$\dot{e}_{p,tot}$", r"$\dot{e}_{d,tot}$", r"$\dot{e}_{l,tot}$"]
+    vals_double = [metrics_double_spec.get(k) for k in lookup_keys]
+    vals_single = [metrics_single_spec.get(k) for k in lookup_keys]
 
     _apply_plot_theme()
     fig, ax = plt.subplots(figsize=(10, 6))
-    x = range(len(categories))
+    x = range(len(lookup_keys))
     width = 0.38
 
     bars_double = ax.bar([i - width / 2 for i in x], vals_double, width=width, label="Doppelkolonne", color=COLOR_DOUBLE)
     bars_single = ax.bar([i + width / 2 for i in x], vals_single, width=width, label="Singlekolonne", color=COLOR_SINGLE)
 
     ax.set_xticks(list(x))
-    ax.set_xticklabels(categories)
+    ax.set_xticklabels(display_labels)
     ax.set_ylabel(r"Spezifischer Exergiestrom [kJ/kg]")
     _style_axis(ax, grid_axis="y")
     _style_bottom_legend(ax)
@@ -1109,6 +1124,20 @@ def main():
 
     df_double = parse_component_table(TABLE_DOUBLE)
     df_single = parse_component_table(TABLE_SINGLE)
+    # Recompute y_D_k from the component E_D totals in the LaTeX tables
+    # User request: y_D_k = E_D_component / sum(|E_D_component|) per model
+    def _recompute_yd(df: pd.DataFrame) -> pd.DataFrame:
+        if "E_D_W" not in df.columns:
+            return df
+        total = df["E_D_W"].abs().sum()
+        if total <= 0:
+            df["y_D_k"] = 0.0
+        else:
+            df["y_D_k"] = df["E_D_W"].abs() / total
+        return df
+
+    df_double = _recompute_yd(df_double)
+    df_single = _recompute_yd(df_single)
     ed_map_double = parse_component_ed_map(TABLE_DOUBLE)
     ed_map_single = parse_component_ed_map(TABLE_SINGLE)
     df_mol_double = parse_molfrac_table(MOLFRAC_DOUBLE)

@@ -72,16 +72,16 @@ x \in \{CH, T, M\}.
 \toprule
 Komponente & $\dot{E}_{F,k}$ & $\dot{E}_{P,k}$ \\
 \midrule
-LK2 &
-$\dot{W}_{LK2}$ &
-$\dot{E}^{PH}_{4}-\dot{E}^{PH}_{3}$ \\
-
-ZK1 (dissipativ) &
-$\dot{E}^{PH}_{2}-\dot{E}^{PH}_{3}$ &-- \\
-
-ZK2 (dissipativ) &
-$\dot{E}^{PH}_{4}-\dot{E}^{PH}_{5}$ &-- \\
-
+MW &
+\dot{E}_{F,MW}=
+\begin{aligned}
+(&\dot{E}^{PH}_{14}-\dot{E}^{PH}_{15})
++(\dot{E}^{PH}_{20}-\dot{E}^{PH}_{21}) \\
+&+(\dot{E}^{PH}_{25}-\dot{E}^{PH}_{24})
++(\dot{E}^{M}_{8}-\dot{E}^{M}_{11})
++\dot{E}^{T}_{8}
+\end{aligned}$ &
+\dot{E}_{P,MW}=\dot{E}^{T}_{11}$ \\
 GW1 &
 $\dot{E}_{F,GW1}=\dot{E}^{PH}_{5}-\dot{E}^{PH}_{6}-\dot{E}^{PH}_{7}$ &
 $\dot{E}_{P,GW1}=\dot{m}_{6}\,(e^{CH}_{6}-e^{CH}_{5})$ \\
@@ -101,9 +101,9 @@ $\dot{E}_{F,MH}=
 \end{aligned}$ &
 $\dot{E}_{P,MH}=\dot{E}^{T}_{11}$ \\
 
-RECO &
-$\dot{E}_{F,RECO}=\dot{E}^{PH}_{SZ27}-\dot{E}^{PH}_{SZ28}+\dot{E}^{M}_{SZ25}-\dot{E}^{M}_{SZ26}$ &
-$\dot{E}_{P,RECO}=\dot{E}^{T}_{SZ26}-\dot{E}^{T}_{SZ25}$ \\
+RC &
+\dot{E}_{F,RC}=\dot{E}^{PH}_{SZ27}-\dot{E}^{PH}_{SZ28}+\dot{E}^{M}_{SZ25}-\dot{E}^{M}_{SZ26}$ &
+\dot{E}_{P,RC}=\dot{E}^{T}_{SZ26}-\dot{E}^{T}_{SZ25}$ \\
 
 KOL &
 $\dot{E}_{F,KOL}=
@@ -133,9 +133,9 @@ $\dot{E}_{F,D1}=
 $\dot{E}_{P,D1}=0$ \\
 
 \addlinespace
-TURB &
-$\dot{E}_{F,TURB}=\dot{E}^{M}_{16}-\dot{E}^{M}_{17}$ &
-$\dot{E}_{P,TURB}=\dot{W}_{T}+\dot{E}^{T}_{17}-\dot{E}^{T}_{16}$ \\
+T &
+\dot{E}_{F,T}=\dot{E}^{M}_{16}-\dot{E}^{M}_{17}$ &
+\dot{E}_{P,T}=\dot{W}_{T}+\dot{E}^{T}_{17}-\dot{E}^{T}_{16}$ \\
 \bottomrule
 \end{tabular}
 \end{table}
