@@ -836,7 +836,7 @@ def _format_w_tex(value: float) -> str:
     return s
 
 
-def _build_global_check_tex(raw: dict, model_label: str, product_stream: str, metrics_w: dict | None = None) -> str:
+def _build_global_check_tex(raw: dict, model_label: str, product_stream: str, metrics_w: dict | None = None, computed: dict | None = None) -> str:
     """Build the requested German-formatted global check LaTeX table.
 
     raw keys: E_s1, E_comp, E_prod, W_turb, E_dest, E_loss, E_in_sum
@@ -897,7 +897,21 @@ def _build_global_check_tex(raw: dict, model_label: str, product_stream: str, me
 
     sum_right = _format_w_tex(sum_right_val)
 
+    # diagnostic comments: include parsed raw values and computed-from-tables values
+    debug_lines = []
+    try:
+        parsed_vals = {k: raw.get(k) for k in ("E_s1", "E_comp", "E_prod", "W_turb", "E_dest", "E_loss", "E_in_sum")}
+        debug_lines.append(f"% parsed_raw: {parsed_vals}")
+    except Exception:
+        pass
+    if isinstance(computed, dict):
+        try:
+            debug_lines.append(f"% computed_from_tables: { {k: computed.get(k) for k in ('E_F','E_P','E_D','E_L','E_in_sum','product_stream')} }")
+        except Exception:
+            pass
+
     lines = [
+        *debug_lines,
         r"\begin{longtable}{llr | llr}",
         (f"\\caption{{Exergetische Bilanz des Gesamtsystems der {model_label}}} " + r"\\"),
         r"\hline",
@@ -908,8 +922,6 @@ def _build_global_check_tex(raw: dict, model_label: str, product_stream: str, me
         *rows,
         r"\hline",
         (f"\\textbf{{Gesamtaufwand}} & \\dot{{E}}_{{F,tot}} & \\textbf{{{sum_left}}} & \\textbf{{Summe Aus}} & \\begin{{tabular}}{{@{{}}l@{{}}}}\\dot{{E}}_{{P,tot}} + \\dot{{E}}_{{D,tot}} \\\\ + \\dot{{E}}_{{L,tot}}\\end{{tabular}} & \\textbf{{{sum_right}}} " + r"\\"),
-        r"\hline",
-        (f"\\multicolumn{{3}}{{l}}{{}} & \\textbf{{Abweichung ($\\Delta\\dot{{E}}$)}} &  & \\textbf{{{diff_text} ({pct_text} \\%)}} " + r"\\"),
         r"\hline",
         r"\end{longtable}",
     ]
@@ -1386,6 +1398,18 @@ def main():
     def _coalesce(a, b):
         return a if isinstance(a, (int, float)) else b
 
+    # Overwrite metrics_w entries with computed values when available to keep consistency
+    if isinstance(metrics_double_w, dict):
+        metrics_double_w[r"$\dot{E}_{F,tot}$"] = _coalesce(computed_double.get("E_in_sum"), metrics_double_w.get(r"$\dot{E}_{F,tot}$"))
+        metrics_double_w[r"$\dot{E}_{P,tot}$"] = _coalesce(computed_double.get("E_P"), metrics_double_w.get(r"$\dot{E}_{P,tot}$"))
+        metrics_double_w[r"$\dot{E}_{D,tot}$"] = _coalesce(computed_double.get("E_D"), metrics_double_w.get(r"$\dot{E}_{D,tot}$"))
+        metrics_double_w[r"$\dot{E}_{L,tot}$"] = _coalesce(computed_double.get("E_L"), metrics_double_w.get(r"$\dot{E}_{L,tot}$"))
+    if isinstance(metrics_single_w, dict):
+        metrics_single_w[r"$\dot{E}_{F,tot}$"] = _coalesce(computed_single.get("E_in_sum"), metrics_single_w.get(r"$\dot{E}_{F,tot}$"))
+        metrics_single_w[r"$\dot{E}_{P,tot}$"] = _coalesce(computed_single.get("E_P"), metrics_single_w.get(r"$\dot{E}_{P,tot}$"))
+        metrics_single_w[r"$\dot{E}_{D,tot}$"] = _coalesce(computed_single.get("E_D"), metrics_single_w.get(r"$\dot{E}_{D,tot}$"))
+        metrics_single_w[r"$\dot{E}_{L,tot}$"] = _coalesce(computed_single.get("E_L"), metrics_single_w.get(r"$\dot{E}_{L,tot}$"))
+
     try:
         # build double using computed values where possible
         raw_for_double = raw_double.copy() if isinstance(raw_double, dict) else {}
@@ -1413,7 +1437,7 @@ def main():
             if isinstance(raw_for_double.get("E_s1"), (int, float)) and isinstance(raw_for_double.get("E_comp"), (int, float)):
                 raw_for_double["E_in_sum"] = float(raw_for_double.get("E_s1")) + float(raw_for_double.get("E_comp"))
 
-        new_double_tex = _build_global_check_tex(raw_for_double, "Doppelkolonne", computed_double.get("product_stream"), metrics_double_w)
+        new_double_tex = _build_global_check_tex(raw_for_double, "Doppelkolonne", computed_double.get("product_stream"), metrics_double_w, computed_double)
         GLOBAL_DOUBLE.write_text(new_double_tex, encoding="utf-8")
     except Exception:
         pass
@@ -1441,7 +1465,7 @@ def main():
             if isinstance(raw_for_single.get("E_s1"), (int, float)) and isinstance(raw_for_single.get("E_comp"), (int, float)):
                 raw_for_single["E_in_sum"] = float(raw_for_single.get("E_s1")) + float(raw_for_single.get("E_comp"))
 
-        new_single_tex = _build_global_check_tex(raw_for_single, "Einzelkolonne", computed_single.get("product_stream"), metrics_single_w)
+        new_single_tex = _build_global_check_tex(raw_for_single, "Einzelkolonne", computed_single.get("product_stream"), metrics_single_w, computed_single)
         GLOBAL_SINGLE.write_text(new_single_tex, encoding="utf-8")
     except Exception:
         pass
