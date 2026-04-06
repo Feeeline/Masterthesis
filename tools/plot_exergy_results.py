@@ -326,9 +326,134 @@ def parse_stream_thermo_data(tex_path: Path) -> dict:
             n_mol_s = _to_float(parts[2])
             T = _to_float(parts[3])
             p_Pa = _to_float(parts[4])
+            # attempt to read specific exergy columns if present: e_PH,e_CH,e_T,e_M
+            e_ph = None
+            e_ch = None
+            e_t = None
+            e_m = None
+            # indices: 0=stream,1=m_dot,2=n_mol_s,3=T,4=p,5=h,6=s,7=l_frac,8=v_frac,9=e_PH,10=e_CH,11=e_T,12=e_M
+            try:
+                if len(parts) > 9:
+                    e_ph = _to_float(parts[9])
+                if len(parts) > 10:
+                    e_ch = _to_float(parts[10])
+                if len(parts) > 11:
+                    e_t = _to_float(parts[11])
+                if len(parts) > 12:
+                    e_m = _to_float(parts[12])
+            except Exception:
+                e_ph = e_ch = e_t = e_m = None
+
+            E_W = None
+            if isinstance(m_dot, (int, float)):
+                speci = [v for v in (e_ph, e_ch, e_t, e_m) if isinstance(v, (int, float))]
+                if speci:
+                    E_W = float(m_dot) * sum(speci)
+
             if stream and m_dot is not None and T is not None and p_Pa is not None:
-                data[stream] = {"m_dot": m_dot, "n_mol_s": n_mol_s, "T": T, "p_Pa": p_Pa}
+                data[stream] = {"m_dot": m_dot, "n_mol_s": n_mol_s, "T": T, "p_Pa": p_Pa, "e_ph": e_ph, "e_ch": e_ch, "e_t": e_t, "e_m": e_m, "E_W": E_W}
     return data
+
+
+def compute_global_metrics_from_tables(df_components: pd.DataFrame, streams_thermo: dict, product_stream: str | None, model_label: str) -> dict:
+    """Compute global metrics (W) from component and stream LaTeX tables.
+
+    Returns dict with keys: E_F, E_P, E_D, E_L, E_in_sum, product_stream_name
+    """
+    # E_D total from components
+    E_D_tot = None
+    try:
+        if isinstance(df_components, pd.DataFrame) and "E_D_W" in df_components.columns:
+            E_D_tot = float(df_components["E_D_W"].abs().sum())
+    except Exception:
+        E_D_tot = None
+
+    # Product stream exergy from streams table
+    E_prod = None
+    prod_name = product_stream or ("S24" if "Einzel" in model_label or "Single" in model_label else "S32")
+    p = streams_thermo.get(prod_name)
+    if isinstance(p, dict):
+        E_prod = p.get("E_W")
+
+    # Loss streams (Austrittsverluste) sum over S7,S9,S10,S21 if available
+    loss_streams = ["S7", "S9", "S10", "S21"]
+    E_loss = 0.0
+    found_loss = False
+    for s in loss_streams:
+        v = streams_thermo.get(s, {}).get("E_W") if streams_thermo.get(s) else None
+        if isinstance(v, (int, float)):
+            E_loss += float(v)
+            found_loss = True
+    if not found_loss:
+        E_loss = None
+
+    # E_P_tot: take E_prod (product stream exergy)
+    # sum right side (product + E_D + E_L)
+    sum_right = None
+    try:
+        parts = []
+        if isinstance(E_prod, (int, float)):
+            parts.append(float(E_prod))
+        if isinstance(E_D_tot, (int, float)):
+            parts.append(float(E_D_tot))
+        if isinstance(E_loss, (int, float)):
+            parts.append(float(E_loss))
+        if parts:
+            sum_right = sum(parts)
+    except Exception:
+        sum_right = None
+
+    # E_in_sum: use sum_right when available
+    E_in_sum = sum_right
+
+    return {
+        "E_F": E_in_sum,
+        "E_P": E_prod,
+        "E_D": E_D_tot,
+        "E_L": E_loss,
+        "E_in_sum": E_in_sum,
+        "product_stream": prod_name,
+    }
+
+
+def parse_compressor_power_from_json(json_path: Path) -> float | None:
+    """Read JSON results and sum compressor electrical power `P` (W).
+
+    Returns total compressor power (W) or None if not available.
+    """
+    if not json_path.exists():
+        return None
+    try:
+        with json_path.open("r", encoding="utf-8") as f:
+            data = json.load(f)
+    except Exception:
+        return None
+
+    total = 0.0
+    found = False
+    # JSON layout: components -> category -> {name: {..P..}}
+    comps = data.get("components") if isinstance(data, dict) else None
+    if not isinstance(comps, dict):
+        return None
+
+    for cat, cat_dict in comps.items():
+        if not isinstance(cat_dict, dict):
+            continue
+        for key, entry in cat_dict.items():
+            try:
+                typ = entry.get("type") if isinstance(entry, dict) else None
+                p = entry.get("P") if isinstance(entry, dict) else None
+                # Accept type == 'Compressor' or names that include 'LK'/'PK'
+                if (isinstance(typ, str) and typ.lower().startswith("comp")) or (isinstance(key, str) and (key.upper().startswith("LK") or key.upper().startswith("PK") or "COMP" in key.upper())):
+                    if isinstance(p, (int, float)):
+                        total += float(p)
+                        found = True
+            except Exception:
+                continue
+
+    if not found:
+        return None
+    return total
 
 
 def compute_yd_percent_from_ed_map(ed_map: dict, allowed_components: set[str] | None = None) -> dict:
@@ -638,23 +763,25 @@ def parse_global_master_table(tex_path: Path):
             right_label = parts[3]
             right_value = _to_float_latex_number(parts[5])
 
-            if left_label.startswith("Strom 1"):
+            # tolerate multiple possible wording variants (German/modified)
+            if "Strom 1" in left_label or "Feed" in left_label or "Feed-Strom" in left_label:
                 E_s1 = left_value
-            elif left_label.startswith("Verdichtung"):
+            elif "Verdichtung" in left_label or "Verdichter" in left_label or "Verdichterleistung" in left_label:
                 E_comp = left_value
-            elif "Summe Ein" in left_label:
+            elif "Summe Ein" in left_label or "Summe Aufwand" in left_label or "Gesamtaufwand" in left_label:
                 E_in_sum = left_value
 
-            if right_label.startswith("Produkt"):
+            # right-hand labels: accept multiple variants
+            if "Produkt" in right_label:
                 E_prod = right_value
                 m = re.search(r"\{(S[A-Z]*\d+)\}", parts[4])
                 if m:
                     product_stream = m.group(1)
-            elif right_label.startswith("Turbinenarbeit"):
+            elif "Turbine" in right_label or "Turbinen" in right_label or "Turbinenleistung" in right_label:
                 W_turb = right_value
-            elif "Exerget. Vernichtung" in right_label:
+            elif "Vernichtung" in right_label or "Exergievernichtung" in right_label or "Exergievernichtung" in right_label:
                 E_dest = right_value
-            elif "Austrittsverluste" in right_label:
+            elif "Austritt" in right_label or "Austrittsverluste" in right_label or "Exergieverlust" in right_label:
                 E_loss = right_value
 
     total_input = E_in_sum
@@ -672,7 +799,16 @@ def parse_global_master_table(tex_path: Path):
         r"$\dot{E}_{L,tot}$": E_loss,
     }
     metrics_mw = {k: (v / 1e6 if isinstance(v, (int, float)) else None) for k, v in metrics_w.items()}
-    return metrics_w, metrics_mw, product_stream
+    raw = {
+        "E_s1": E_s1,
+        "E_comp": E_comp,
+        "E_prod": E_prod,
+        "W_turb": W_turb,
+        "E_dest": E_dest,
+        "E_loss": E_loss,
+        "E_in_sum": E_in_sum,
+    }
+    return metrics_w, metrics_mw, product_stream, raw
 
 
 def compute_specific_metrics(metrics_w: dict, product_mass_flow: float) -> dict:
@@ -686,6 +822,98 @@ def compute_specific_metrics(metrics_w: dict, product_mass_flow: float) -> dict:
         else:
             specific_metrics[key] = None
     return specific_metrics
+
+
+def _format_w_tex(value: float) -> str:
+    """Format Watt values for LaTeX table: thousand-separators with dots, no decimals."""
+    if value is None:
+        return "-"
+    try:
+        iv = int(round(float(value)))
+    except Exception:
+        return "-"
+    s = f"{iv:,}".replace(",", ".")
+    return s
+
+
+def _build_global_check_tex(raw: dict, model_label: str, product_stream: str, metrics_w: dict | None = None) -> str:
+    """Build the requested German-formatted global check LaTeX table.
+
+    raw keys: E_s1, E_comp, E_prod, W_turb, E_dest, E_loss, E_in_sum
+    """
+    left1_label = "Feed-Strom 1"
+    left1_sym = r"$\dot{E}_{S1}$"
+    left2_label = "Verdichterleistung"
+    left2_sym = r"$\dot{W}_1 + \dot{W}_2$"
+
+    right1_label = f"Produktstrom N$_2$"
+    right1_sym = r"$\dot{E}_{%s}$" % product_stream if product_stream else r"$\dot{E}_{S24}$"
+    right2_label = "Turbinenleistung"
+    right2_sym = r"$\dot{W}_3$"
+
+    rows = []
+    # compute product total (Produkt + Turbine) if available via metrics_w, else derive from raw
+    # Accept product stream exergy alone if turbine value missing
+    product_total = None
+    if metrics_w and isinstance(metrics_w.get(r"$\dot{E}_{P,tot}$"), (int, float)):
+        product_total = metrics_w.get(r"$\dot{E}_{P,tot}$")
+    else:
+        if isinstance(raw.get('E_prod'), (int, float)):
+            product_total = (raw.get('E_prod') or 0) + (raw.get('W_turb') or 0)
+
+    # Rows
+    row = f"{left1_label} & {left1_sym} & {_format_w_tex(raw.get('E_s1'))} & {right1_label} & {right1_sym} & {_format_w_tex(raw.get('E_prod'))}"
+    rows.append(row + r" \\")
+    row = f"{left2_label} & {left2_sym} & {_format_w_tex(raw.get('E_comp'))} & {right2_label} & {right2_sym} & {_format_w_tex(raw.get('W_turb'))}"
+    rows.append(row + r" \\")
+    # use explicit symbols requested by user
+    row = f" &  &  & Exergievernichtung & $\\dot{{E}}_{{D,tot}}$ & {_format_w_tex(raw.get('E_dest'))}"
+    rows.append(row + r" \\")
+    row = f" &  &  & Exergieverlust & $\\dot{{E}}_{{L,tot}}$ & {_format_w_tex(raw.get('E_loss'))}"
+    rows.append(row + r" \\")
+
+    sum_left = _format_w_tex(raw.get('E_in_sum'))
+    # sum_right should be E_P,tot + E_D,tot + E_L,tot
+    sum_right_val = None
+    if isinstance(product_total, (int, float)) and isinstance(raw.get('E_dest'), (int, float)) and isinstance(raw.get('E_loss'), (int, float)):
+        sum_right_val = (product_total or 0) + (raw.get('E_dest') or 0) + (raw.get('E_loss') or 0)
+    # allow fallback: if turbine missing but E_prod present, use E_prod for product_total (already handled above)
+    diff_val = None
+    try:
+        if isinstance(raw.get('E_in_sum'), (int, float)) and isinstance(sum_right_val, (int, float)):
+            diff_val = (raw.get('E_in_sum') or 0) - sum_right_val
+    except Exception:
+        diff_val = None
+
+    diff_text = "-"
+    pct_text = "-"
+    if diff_val is not None:
+        diff_text = _format_w_tex(diff_val)
+        try:
+            pct = abs(diff_val) / (raw.get('E_in_sum') or 1) * 100.0
+            pct_text = f"{pct:.2f}".replace(".", ",")
+        except Exception:
+            pct_text = "-"
+
+    sum_right = _format_w_tex(sum_right_val)
+
+    lines = [
+        r"\begin{longtable}{llr | llr}",
+        (f"\\caption{{Exergetische Bilanz des Gesamtsystems der {model_label}}} " + r"\\"),
+        r"\hline",
+        r"\multicolumn{3}{l|}{\textbf{Aufwandseite}} & \multicolumn{3}{l}{\textbf{Nutzen, Vernichtung \& Verlust}} \\",
+        r"\hline",
+        r"Posten & Symbol & Wert (W) & Posten & Symbol & Wert (W) \\",
+        r"\hline",
+        *rows,
+        r"\hline",
+        (f"\\textbf{{Gesamtaufwand}} & \\dot{{E}}_{{F,tot}} & \\textbf{{{sum_left}}} & \\textbf{{Summe Aus}} & \\begin{{tabular}}{{@{{}}l@{{}}}}\\dot{{E}}_{{P,tot}} + \\dot{{E}}_{{D,tot}} \\\\ + \\dot{{E}}_{{L,tot}}\\end{{tabular}} & \\textbf{{{sum_right}}} " + r"\\"),
+        r"\hline",
+        (f"\\multicolumn{{3}}{{l}}{{}} & \\textbf{{Abweichung ($\\Delta\\dot{{E}}$)}} &  & \\textbf{{{diff_text} ({pct_text} \\%)}} " + r"\\"),
+        r"\hline",
+        r"\end{longtable}",
+    ]
+    return "\n".join(lines)
 
 
 def make_plot(df: pd.DataFrame, x_col: str, xlabel: str, out_path: Path, xlim=None):
@@ -1015,8 +1243,8 @@ def _build_stream_comparison_latex_table(
 
 def plot_grouped_system_metrics(metrics_double_mw, metrics_single_mw, out_path: Path):
     categories = [r"$\dot{E}_{F,tot}$", r"$\dot{E}_{P,tot}$", r"$\dot{E}_{D,tot}$", r"$\dot{E}_{L,tot}$"]
-    vals_double = [metrics_double_mw.get(c) for c in categories]
-    vals_single = [metrics_single_mw.get(c) for c in categories]
+    vals_double = [metrics_double_mw.get(c) if metrics_double_mw.get(c) is not None else 0.0 for c in categories]
+    vals_single = [metrics_single_mw.get(c) if metrics_single_mw.get(c) is not None else 0.0 for c in categories]
 
     _apply_plot_theme()
     fig, ax = plt.subplots(figsize=(10, 6))
@@ -1045,8 +1273,8 @@ def plot_grouped_specific_system_metrics(metrics_double_spec, metrics_single_spe
     lookup_keys = [r"$\dot{E}_{F,tot}$", r"$\dot{E}_{P,tot}$", r"$\dot{E}_{D,tot}$", r"$\dot{E}_{L,tot}$"]
     # Display labels should show lowercase e as requested.
     display_labels = [r"$\dot{e}_{f,tot}$", r"$\dot{e}_{p,tot}$", r"$\dot{e}_{d,tot}$", r"$\dot{e}_{l,tot}$"]
-    vals_double = [metrics_double_spec.get(k) for k in lookup_keys]
-    vals_single = [metrics_single_spec.get(k) for k in lookup_keys]
+    vals_double = [metrics_double_spec.get(k) if metrics_double_spec.get(k) is not None else 0.0 for k in lookup_keys]
+    vals_single = [metrics_single_spec.get(k) if metrics_single_spec.get(k) is not None else 0.0 for k in lookup_keys]
 
     _apply_plot_theme()
     fig, ax = plt.subplots(figsize=(10, 6))
@@ -1144,8 +1372,79 @@ def main():
     df_mol_single = parse_molfrac_table(MOLFRAC_SINGLE)
     stream_mdot_double = parse_stream_mass_flows(STREAMS_DOUBLE)
     stream_mdot_single = parse_stream_mass_flows(STREAMS_SINGLE)
-    metrics_double_w, metrics_double_mw, product_stream_double = parse_global_master_table(GLOBAL_DOUBLE)
-    metrics_single_w, metrics_single_mw, product_stream_single = parse_global_master_table(GLOBAL_SINGLE)
+    metrics_double_w, metrics_double_mw, product_stream_double, raw_double = parse_global_master_table(GLOBAL_DOUBLE)
+    metrics_single_w, metrics_single_mw, product_stream_single, raw_single = parse_global_master_table(GLOBAL_SINGLE)
+
+    # Also compute global metrics from component and stream tables (authoritative LaTeX sources)
+    streams_double_thermo = parse_stream_thermo_data(STREAMS_DOUBLE)
+    streams_single_thermo = parse_stream_thermo_data(STREAMS_SINGLE)
+
+    computed_double = compute_global_metrics_from_tables(df_double, streams_double_thermo, product_stream_double, "Doppelkolonne")
+    computed_single = compute_global_metrics_from_tables(df_single, streams_single_thermo, product_stream_single, "Einzelkolonne")
+
+    # Prefer computed values from tables when available, else fall back to parsed global file
+    def _coalesce(a, b):
+        return a if isinstance(a, (int, float)) else b
+
+    try:
+        # build double using computed values where possible
+        raw_for_double = raw_double.copy() if isinstance(raw_double, dict) else {}
+        raw_for_double["E_in_sum"] = _coalesce(computed_double.get("E_in_sum"), raw_double.get("E_in_sum") if isinstance(raw_double, dict) else None)
+        raw_for_double["E_prod"] = _coalesce(computed_double.get("E_P"), raw_double.get("E_prod") if isinstance(raw_double, dict) else None)
+        raw_for_double["E_dest"] = _coalesce(computed_double.get("E_D"), raw_double.get("E_dest") if isinstance(raw_double, dict) else None)
+        raw_for_double["E_loss"] = _coalesce(computed_double.get("E_L"), raw_double.get("E_loss") if isinstance(raw_double, dict) else None)
+        # ensure Verdichterleistung is present: prefer raw/global, then derived from components/streams, then JSON fallback
+        if not isinstance(raw_for_double.get("E_comp"), (int, float)):
+            # try to derive from parsed values: compressors in components may not include power, so try JSON
+            comp_power = parse_compressor_power_from_json(JSON_DOUBLE)
+            if isinstance(comp_power, (int, float)):
+                raw_for_double["E_comp"] = comp_power
+
+        # fill Feed-Strom 1 from stream thermo table if available
+        try:
+            s1_val = streams_double_thermo.get("S1", {}).get("E_W") if streams_double_thermo.get("S1") else None
+            if isinstance(s1_val, (int, float)) and not isinstance(raw_for_double.get("E_s1"), (int, float)):
+                raw_for_double["E_s1"] = float(s1_val)
+        except Exception:
+            pass
+
+        # if Gesamtaufwand missing, try to compute as E_s1 + E_comp
+        if not isinstance(raw_for_double.get("E_in_sum"), (int, float)):
+            if isinstance(raw_for_double.get("E_s1"), (int, float)) and isinstance(raw_for_double.get("E_comp"), (int, float)):
+                raw_for_double["E_in_sum"] = float(raw_for_double.get("E_s1")) + float(raw_for_double.get("E_comp"))
+
+        new_double_tex = _build_global_check_tex(raw_for_double, "Doppelkolonne", computed_double.get("product_stream"), metrics_double_w)
+        GLOBAL_DOUBLE.write_text(new_double_tex, encoding="utf-8")
+    except Exception:
+        pass
+    try:
+        raw_for_single = raw_single.copy() if isinstance(raw_single, dict) else {}
+        raw_for_single["E_in_sum"] = _coalesce(computed_single.get("E_in_sum"), raw_single.get("E_in_sum") if isinstance(raw_single, dict) else None)
+        raw_for_single["E_prod"] = _coalesce(computed_single.get("E_P"), raw_single.get("E_prod") if isinstance(raw_single, dict) else None)
+        raw_for_single["E_dest"] = _coalesce(computed_single.get("E_D"), raw_single.get("E_dest") if isinstance(raw_single, dict) else None)
+        raw_for_single["E_loss"] = _coalesce(computed_single.get("E_L"), raw_single.get("E_loss") if isinstance(raw_single, dict) else None)
+        if not isinstance(raw_for_single.get("E_comp"), (int, float)):
+            comp_power = parse_compressor_power_from_json(JSON_SINGLE)
+            if isinstance(comp_power, (int, float)):
+                raw_for_single["E_comp"] = comp_power
+
+        # fill Feed-Strom 1 from stream thermo table if available
+        try:
+            s1_val = streams_single_thermo.get("S1", {}).get("E_W") if streams_single_thermo.get("S1") else None
+            if isinstance(s1_val, (int, float)) and not isinstance(raw_for_single.get("E_s1"), (int, float)):
+                raw_for_single["E_s1"] = float(s1_val)
+        except Exception:
+            pass
+
+        # if Gesamtaufwand missing, try to compute as E_s1 + E_comp
+        if not isinstance(raw_for_single.get("E_in_sum"), (int, float)):
+            if isinstance(raw_for_single.get("E_s1"), (int, float)) and isinstance(raw_for_single.get("E_comp"), (int, float)):
+                raw_for_single["E_in_sum"] = float(raw_for_single.get("E_s1")) + float(raw_for_single.get("E_comp"))
+
+        new_single_tex = _build_global_check_tex(raw_for_single, "Einzelkolonne", computed_single.get("product_stream"), metrics_single_w)
+        GLOBAL_SINGLE.write_text(new_single_tex, encoding="utf-8")
+    except Exception:
+        pass
 
     if product_stream_double not in stream_mdot_double:
         raise ValueError(f"Produktstrom {product_stream_double} nicht in {STREAMS_DOUBLE} gefunden.")
