@@ -482,7 +482,7 @@ def _compute_block_yd_payload(ed_map: dict, model: str):
     if model == "single":
         comp_only = ["LK1", "ZK1", "LK2"]
         gas_only = ["ZK2", "GW1", "GW2"]
-        heat_transfer = ["MH", "RECO"]
+        heat_transfer = ["MW", "RC"]
         column_block = ["KOL", "D1"]
     else:
         comp_only = ["LK1", "ZK1", "LK2", "PK1"]
@@ -1109,8 +1109,6 @@ def main():
 
     df_double = parse_component_table(TABLE_DOUBLE)
     df_single = parse_component_table(TABLE_SINGLE)
-    df_double_klein = parse_component_table(TABLE_DOUBLE_KLEIN)
-    df_single_klein = parse_component_table(TABLE_SINGLE_KLEIN)
     ed_map_double = parse_component_ed_map(TABLE_DOUBLE)
     ed_map_single = parse_component_ed_map(TABLE_SINGLE)
     df_mol_double = parse_molfrac_table(MOLFRAC_DOUBLE)
@@ -1174,19 +1172,7 @@ def main():
         out_path=OUT_DIR / "vergleich_component_pareto_ED.png",
     )
 
-    plot_absolute_ed_large_vs_small(
-        df_double,
-        df_double_klein,
-        model_label="Doppelkolonne",
-        out_path=OUT_DIR / "doppelkolonne_E_D_barh_gross_klein.png",
-    )
-
-    plot_absolute_ed_large_vs_small(
-        df_single,
-        df_single_klein,
-        model_label="Singlekolonne",
-        out_path=OUT_DIR / "singlekolonne_E_D_barh_gross_klein.png",
-    )
+    # Gross/Klein comparison plots removed per user request.
 
     plot_grouped_product_purity(
         df_mol_double,
@@ -1200,34 +1186,7 @@ def main():
         out_path=OUT_DIR / "vergleich_yD_funktionsbloecke.png",
     )
 
-    # Compute y_D shares from the component LaTeX E_D maps (avoid JSON drift)
-    ed_map_double_large = ed_map_double
-    ed_map_double_small = parse_component_ed_map(TABLE_DOUBLE_KLEIN)
-    ed_map_single_large = ed_map_single
-    ed_map_single_small = parse_component_ed_map(TABLE_SINGLE_KLEIN)
-
-    yd_double_large = compute_yd_percent_from_ed_map(
-        ed_map_double_large, allowed_components=set(df_double["Component"].astype(str).tolist())
-    )
-    yd_double_small = compute_yd_percent_from_ed_map(
-        ed_map_double_small, allowed_components=set(df_double_klein["Component"].astype(str).tolist())
-    )
-    yd_single_large = compute_yd_percent_from_ed_map(
-        ed_map_single_large, allowed_components=set(df_single["Component"].astype(str).tolist())
-    )
-    yd_single_small = compute_yd_percent_from_ed_map(
-        ed_map_single_small, allowed_components=set(df_single_klein["Component"].astype(str).tolist())
-    )
-
-    yd_comp_table = _build_yd_large_vs_small_latex_table(
-        yd_double_large,
-        yd_double_small,
-        yd_single_large,
-        yd_single_small,
-    )
-    yd_comp_out = TAB_DIR / "aspen_luftzerlegung_yd_gross_klein_components.tex"
-    with yd_comp_out.open("w", encoding="utf-8") as f:
-        f.write(yd_comp_table)
+    # Gross/Klein y_D comparison removed per user request.
 
     # Build stream thermo + molfraction payloads from LaTeX tables (not JSON)
     thermo_tex_single = parse_stream_thermo_data(STREAMS_SINGLE)

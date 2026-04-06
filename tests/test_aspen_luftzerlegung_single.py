@@ -6,20 +6,12 @@ import math
 
 from exerpy import ExergyAnalysis
 
-# Get the log file path (single-column run)
+# Get the log file path
 log_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'parser_run_single.log'))
-
-"""
-Logging setup note:
-- We avoid opening parser_run_single.log via FileHandler because shell redirection
-    (e.g. `python tests/test_aspen_luftzerlegung_single.py > parser_run_single.log 2>&1`) already
-    owns the file handle and causes PermissionError on Windows.
-- Instead, emit logs to stdout only; the shell captures them into parser_run_single.log.
-"""
 
 # Reset existing handlers and configure stdout-only logging
 for handler in logging.root.handlers[:]:
-        logging.root.removeHandler(handler)
+    logging.root.removeHandler(handler)
 
 console_handler = logging.StreamHandler(sys.stdout)
 console_handler.setLevel(logging.INFO)
@@ -27,41 +19,9 @@ console_handler.setFormatter(logging.Formatter('%(message)s'))
 logging.root.addHandler(console_handler)
 logging.root.setLevel(logging.INFO)
 
-#model_path = r'C:\Users\Felin\Documents\Masterthesis\Code\Exerpy\exerpy\examples\asu_aspen\Singekolonne\Single_Column_Simulation_Final.bkp'
-model_path = r"C:\Users\Felin\Documents\Masterthesis\Simulation_Code\GIT\examples\asu_aspen\Singekolonne\Single_Column_Simulation_Final.bkp"
-
+model_path = r"C:\Users\Felin\Documents\Masterthesis\Simulation_Code\GIT\examples\asu_aspen\Singekolonne_klein\Single_Column_Simulation_Final.bkp"
 
 ean = ExergyAnalysis.from_aspen(model_path, chemExLib='Ahrendts', split_physical_exergy=True)
-
-# ===== MHeatX CONFIGURATION (spezProdukt mode - OPTIONAL) =====
-# If you want to configure specific stream pairs for MHeatX components,
-# define them here. Otherwise, leave empty {} for balance-mode only.
-#
-# Structure:
-# {
-#     "component_name": {
-#         "part": "E_PH" | "E_T" | "E_M",  # exergy component to use
-#         "hot_pairs": [("S_in", "S_out"), ...],      # streams giving up exergy (fuel-like)
-#         "cold_pairs": [("S_in", "S_out"), ...],     # streams taking exergy (product-like)
-#         "product_pairs": [("S_in", "S_out"), ...],  # which cold pairs are "product"
-#         "fuel_pairs": [("S_in", "S_out"), ...],     # optional: override fuel base (default=hot_pairs)
-#     }
-# }
-#
-# Example (uncomment and customize as needed):
-MHEATX_CFG = {
-    # "MW": {
-    #     "part": "E_PH",
-    #     "hot_pairs": [("S11", "S12"), ("S19", "S20")],       # cooled streams
-    #     "cold_pairs": [("S15", "S16"), ("S27", "S28"), ("S29", "S30")],  # heated streams
-    #     "product_pairs": [("S15", "S16")],  # which of the cold streams are product
-    # },
-}
-
-# Apply configuration to ExergyAnalysis
-if MHEATX_CFG:
-    ean.set_mheatx_config(MHEATX_CFG)
-
 # Discover power connections in the parsed model and use them for the test.
 # Some Aspen files name power flows differently, so we pick available 'power' connections dynamically.
 power_conns = ean.list_connections_by_kind('power')
@@ -123,6 +83,47 @@ logging.info(f"  ean.E_D={ean.E_D}, recomputed={E_D_chk}, diff={None if E_D_chk 
 export_now = ean._serialize()
 connections_now = export_now.get("connections", {})
 
+def _power_stream_abs(stream_name: str):
+    # Return absolute power/energy flow for a named power connection if present.
+    conn = connections_now.get(stream_name) or ean.connections.get(stream_name)
+    if not isinstance(conn, dict):
+        return None
+    val = conn.get("energy_flow") or conn.get("E") or conn.get("energy_flow_unit")
+    if isinstance(val, (int, float)):
+        return abs(float(val))
+    return None
+
+def _stream_total_exergy_from_table(stream_name: str):
+    # Find connection by name/key in the exported connections and compute total exergy m*(e_PH+e_CH)
+    conn = connections_now.get(stream_name)
+    if not isinstance(conn, dict):
+        for key, c in connections_now.items():
+            if not isinstance(c, dict):
+                continue
+            name = str(c.get("name", key))
+            if name == stream_name or str(key) == stream_name:
+                conn = c
+                break
+    if not isinstance(conn, dict):
+        return None
+    m_val = conn.get("m")
+    e_ph = conn.get("e_PH")
+    e_ch = conn.get("e_CH")
+    e_ph_eff = None
+    if isinstance(e_ph, (int, float)):
+        e_ph_eff = float(e_ph)
+    else:
+        e_t = conn.get("e_T")
+        e_m = conn.get("e_M")
+        if isinstance(e_t, (int, float)) and isinstance(e_m, (int, float)):
+            e_ph_eff = float(e_t) + float(e_m)
+        elif isinstance(e_ch, (int, float)):
+            e_ph_eff = 0.0
+
+    if all(isinstance(v, (int, float)) for v in [m_val, e_ph_eff, e_ch]):
+        return float(m_val) * (float(e_ph_eff) + float(e_ch))
+    return None
+
 def _find_conn_by_suffix(suffix: str):
     for key, conn in connections_now.items():
         name = str(conn.get("name", key))
@@ -147,11 +148,52 @@ def _get_eph_effective(conn):
         return e_t + e_m
     return None
 
+
+def _term_m_eph(conn):
+    """Return total physical exergy term m * e_PH (with e_PH fallback), or None."""
+    if not isinstance(conn, dict):
+        return None
+    m = conn.get("m")
+    if not isinstance(m, (int, float)):
+        return None
+    eph = _get_eph_effective(conn)
+    if isinstance(eph, (int, float)):
+        return float(m) * float(eph)
+    return None
+
+
+def _safe_diff_mult(m, val_plus, val_minus):
+    """Compute m*(val_plus - val_minus) using 0 for missing val_plus/val_minus if m exists.
+    Returns None if mass m is missing."""
+    if not isinstance(m, (int, float)):
+        return None
+    a = float(val_plus) if isinstance(val_plus, (int, float)) else 0.0
+    b = float(val_minus) if isinstance(val_minus, (int, float)) else 0.0
+    return float(m) * (a - b)
+
 # Try to locate streams 33..36 by suffix (best-effort)
 s33 = _find_conn_by_suffix("33")
 s34 = _find_conn_by_suffix("34")
 s35 = _find_conn_by_suffix("35")
 s36 = _find_conn_by_suffix("36")
+
+# If the model doesn't use numeric S-numbers 33..36 (single-column exports often
+# use SZ25/SZ26/SZ27/SZ28), try mapping those to the 33..36 placeholders so the
+# user's RC formula can still be evaluated from available streams.
+if not any((s33, s34, s35, s36)):
+    alt_s25 = _find_conn_by_suffix("SZ25")
+    alt_s26 = _find_conn_by_suffix("SZ26")
+    alt_s27 = _find_conn_by_suffix("SZ27")
+    alt_s28 = _find_conn_by_suffix("SZ28")
+    # map: s33 <- SZ25, s34 <- SZ26, s35 <- SZ27, s36 <- SZ28 (best-effort)
+    if alt_s25 is not None and s33 is None:
+        s33 = alt_s25
+    if alt_s26 is not None and s34 is None:
+        s34 = alt_s26
+    if alt_s27 is not None and s35 is None:
+        s35 = alt_s27
+    if alt_s28 is not None and s36 is None:
+        s36 = alt_s28
 
 ep_calc = None
 ef_calc = None
@@ -286,17 +328,35 @@ else:
     logging.info("  epsilon (tot) match: N/A (missing values)")
 
 # --- Condensation thermal exergy: Ep as difference of E_T totals for streams 33 and 34
-et33_tot = _total_from_permass(s33, "e_T")
-et34_tot = _total_from_permass(s34, "e_T")
+# Use best-effort fallbacks: treat missing per-term totals as 0 when at least one term exists
+et33_tot_raw = _total_from_permass(s33, "e_T")
+et34_tot_raw = _total_from_permass(s34, "e_T")
 ep_condens_tot = None
-if et33_tot is not None and et34_tot is not None:
-    # determine which stream has larger thermal exergy and take the difference
-    larger = et33_tot if et33_tot >= et34_tot else et34_tot
-    smaller = et34_tot if et33_tot >= et34_tot else et33_tot
-    ep_condens_tot = larger - smaller
+if et33_tot_raw is not None or et34_tot_raw is not None:
+    et33_tot = float(et33_tot_raw or 0.0)
+    et34_tot = float(et34_tot_raw or 0.0)
+    # difference (non-negative): larger - smaller
+    ep_condens_tot = abs(et33_tot - et34_tot)
 
 logging.info("\nCondensation thermal exergy (E_T) comparison:")
-logging.info(f"  E_T33 = {et33_tot}, E_T34 = {et34_tot}, Ep_condensation = {ep_condens_tot}")
+# prepare display-friendly values (handle missing/raw vs computed)
+display_et33 = None
+display_et34 = None
+if 'et33_tot' in locals():
+    display_et33 = et33_tot
+elif et33_tot_raw is not None:
+    try:
+        display_et33 = float(et33_tot_raw)
+    except Exception:
+        display_et33 = et33_tot_raw
+if 'et34_tot' in locals():
+    display_et34 = et34_tot
+elif et34_tot_raw is not None:
+    try:
+        display_et34 = float(et34_tot_raw)
+    except Exception:
+        display_et34 = et34_tot_raw
+logging.info(f"  E_T33 = {display_et33}, E_T34 = {display_et34}, Ep_condensation = {ep_condens_tot}")
 if E_P_comp is not None and ep_condens_tot is not None:
     logging.info("  Ep_cond match: " + ("YES" if _cmp(E_P_comp, ep_condens_tot) else f"NO (diff={E_P_comp - ep_condens_tot:.6g})"))
 else:
@@ -305,23 +365,29 @@ else:
 # --- Ef per user's spec:
 #  - physical exergy difference of reboiler streams 35 and 36 (non-negative)
 #  - plus mechanical exergy difference of 33 and 34 (non-negative, represents pressure loss)
-eph35_tot = _total_from_permass(s35, "e_PH")
-eph36_tot = _total_from_permass(s36, "e_PH")
-em33_tot = _total_from_permass(s33, "e_M")
-em34_tot = _total_from_permass(s34, "e_M")
+# Best-effort: compute available diffs treating missing terms as 0 if at least one term exists
+eph35_tot_raw = _total_from_permass(s35, "e_PH")
+eph36_tot_raw = _total_from_permass(s36, "e_PH")
+em33_tot_raw = _total_from_permass(s33, "e_M")
+em34_tot_raw = _total_from_permass(s34, "e_M")
 
 phys_diff = None
 mech_diff = None
 ef_custom = None
 
-if eph35_tot is not None and eph36_tot is not None:
-    phys_diff = abs(eph35_tot - eph36_tot)
+if eph35_tot_raw is not None or eph36_tot_raw is not None:
+    a = float(eph35_tot_raw or 0.0)
+    b = float(eph36_tot_raw or 0.0)
+    phys_diff = abs(a - b)
 
-if em33_tot is not None and em34_tot is not None:
-    mech_diff = abs(em33_tot - em34_tot)
+if em33_tot_raw is not None or em34_tot_raw is not None:
+    a = float(em33_tot_raw or 0.0)
+    b = float(em34_tot_raw or 0.0)
+    mech_diff = abs(a - b)
 
-if phys_diff is not None and mech_diff is not None:
-    ef_custom = phys_diff + mech_diff
+# If at least one diff is available, use sum (missing part treated as 0)
+if phys_diff is not None or mech_diff is not None:
+    ef_custom = (phys_diff or 0.0) + (mech_diff or 0.0)
 
 logging.info("\nEf (user formula) breakdown:")
 logging.info(f"  phys | E_PH35 = {eph35_tot}, E_PH36 = {eph36_tot}, phys_diff = {phys_diff}")
@@ -458,6 +524,31 @@ if all(v is not None for v in required_ef_terms):
 if ef_mh is not None and ep_mh is not None:
     ed_mh = ef_mh - ep_mh
 
+# Best-effort: if some terms are present, compute partial sums instead of leaving None
+if ep_mh is None:
+    # try compute ep_mh from available et11_tot
+    if et11_tot is not None:
+        ep_mh = et11_tot
+
+if ef_mh is None:
+    # try to sum available terms (treat missing terms as 0) but only if at least one term exists
+    required_terms = [eph14_tot, eph15_tot, eph20_tot, eph21_tot, eph25_tot, eph24_tot, em8_tot, em11_tot, et8_tot]
+    if any(isinstance(v, (int, float)) for v in required_terms):
+        # use 0 for missing
+        eph14_tot = eph14_tot or 0.0
+        eph15_tot = eph15_tot or 0.0
+        eph20_tot = eph20_tot or 0.0
+        eph21_tot = eph21_tot or 0.0
+        eph25_tot = eph25_tot or 0.0
+        eph24_tot = eph24_tot or 0.0
+        em8_tot = em8_tot or 0.0
+        em11_tot = em11_tot or 0.0
+        et8_tot = et8_tot or 0.0
+        ef_mh = (eph14_tot - eph15_tot) + (eph20_tot - eph21_tot) + (eph25_tot - eph24_tot) + (em8_tot - em11_tot) + et8_tot
+
+if ed_mh is None and ef_mh is not None and ep_mh is not None:
+    ed_mh = ef_mh - ep_mh
+
 logging.info("\nMH custom calculation (user total balance):")
 logging.info(f"  ET11={et11_tot} -> Ep_mh={ep_mh}")
 logging.info(
@@ -529,22 +620,35 @@ ep_gw1 = None
 ef_gw1 = None
 ed_gw1 = None
 el_gw1 = None
-
 # Ep = product (chemical exergy increase in gas stream)
-if m6 is not None and ech6 is not None and ech5 is not None:
-    ep_gw1 = m6 * (ech6 - ech5)
+# Best-effort: compute using available chemical exergies; treat missing terms as 0 when mass present
+if isinstance(m6, (int, float)) and (isinstance(ech6, (int, float)) or isinstance(ech5, (int, float))):
+    ep_gw1 = _safe_diff_mult(m6, ech6, ech5)
 
-# Ef = fuel (physical exergy formulation)
-if all(v is not None for v in [m5, m6, m7, eph5, eph6, eph7]):
-    ef_gw1 = m5*eph5 - m6*eph6 - m7*eph7
+# Ef = fuel (physical exergy formulation) -- compute per-term if available
+t1 = _term_m_eph(s5)
+t2 = _term_m_eph(s6)
+t3 = _term_m_eph(s7)
+if any(isinstance(v, (int, float)) for v in (t1, t2, t3)):
+    ef_gw1 = (t1 or 0.0) - (t2 or 0.0) - (t3 or 0.0)
 
 # El = exergy loss in stream 7 (total exergy)
-if all(v is not None for v in [m7, eph7, ech7]):
-    el_gw1 = m7 * (eph7 + ech7)
+t_el = None
+if isinstance(m7, (int, float)):
+    eph7_eff = _get_eph_effective(s7)
+    if isinstance(eph7_eff, (int, float)) or isinstance(ech7, (int, float)):
+        e_ph_term = eph7_eff if isinstance(eph7_eff, (int, float)) else 0.0
+        e_ch_term = float(ech7) if isinstance(ech7, (int, float)) else 0.0
+        t_el = float(m7) * (e_ph_term + e_ch_term)
+if t_el is not None:
+    el_gw1 = t_el
 
-# Ed = destruction (separate from losses)
-if ef_gw1 is not None and ep_gw1 is not None and el_gw1 is not None:
-    ed_gw1 = ef_gw1 - ep_gw1 - el_gw1
+# Ed = destruction (separate from losses) - compute if any inputs available
+if any(isinstance(v, (int, float)) for v in (ef_gw1, ep_gw1, el_gw1)):
+    ef_calc_val = ef_gw1 or 0.0
+    ep_calc_val = ep_gw1 or 0.0
+    el_calc_val = el_gw1 or 0.0
+    ed_gw1 = ef_calc_val - ep_calc_val - el_calc_val
 
 logging.info("\nGW1 custom calculation (complete exergy balance):")
 logging.info(f"  Streams: m5={m5}, m6={m6}, m7={m7} kg/s")
@@ -606,19 +710,33 @@ ed_gw2 = None
 el_gw2 = None
 
 # Ep = product (chemical exergy gain in main product stream S8)
-if m8 is not None and ech8 is not None and ech6 is not None:
-    ep_gw2 = m8 * (ech8 - ech6)
+# Ep = product (chemical exergy gain in main product stream S8)
+if isinstance(m8, (int, float)) and (isinstance(ech8, (int, float)) or isinstance(ech6, (int, float))):
+    ep_gw2 = _safe_diff_mult(m8, ech8, ech6)
 
-# Ef = fuel (physical exergy formulation)
-if all(v is not None for v in [m6, m8, m9, m10, eph6, eph8, eph9, eph10, ech6, ech8, ech9, ech10]):
-    E9_total = m9 * (eph9 + ech9)
-    E10_total = m10 * (eph10 + ech10)
-    ef_gw2 = m6 * eph6 - m8 * eph8 - m9 * eph9 - m10 * eph10
-    el_gw2 = E9_total + E10_total
+# Ef = fuel (physical exergy formulation) -- compute per-term if available
+t6 = _term_m_eph(s6)
+t8 = _term_m_eph(s8)
+t9 = _term_m_eph(s9)
+t10 = _term_m_eph(s10)
+if any(isinstance(v, (int, float)) for v in (t6, t8, t9, t10)):
+    ef_gw2 = (t6 or 0.0) - (t8 or 0.0) - (t9 or 0.0) - (t10 or 0.0)
+    # losses as totals where possible
+    E9_total = t9 if isinstance(t9, (int, float)) else (m9 * ( (eph9 or 0.0) + (ech9 or 0.0)) if isinstance(m9, (int, float)) else None)
+    E10_total = t10 if isinstance(t10, (int, float)) else (m10 * ( (eph10 or 0.0) + (ech10 or 0.0)) if isinstance(m10, (int, float)) else None)
+    losses = 0.0
+    if isinstance(E9_total, (int, float)):
+        losses += E9_total
+    if isinstance(E10_total, (int, float)):
+        losses += E10_total
+    el_gw2 = losses if losses != 0.0 else None
 
 # Ed = destruction (separate from losses)
-if ef_gw2 is not None and ep_gw2 is not None and el_gw2 is not None:
-    ed_gw2 = ef_gw2 - ep_gw2 - el_gw2
+if any(isinstance(v, (int, float)) for v in (ef_gw2, ep_gw2, el_gw2)):
+    ef_val = ef_gw2 or 0.0
+    ep_val = ep_gw2 or 0.0
+    el_val = el_gw2 or 0.0
+    ed_gw2 = ef_val - ep_val - el_val
 
 logging.info("\nGW2 custom calculation (complete exergy balance):")
 logging.info(f"  Streams: m6={m6}, m8={m8}, m9={m9}, m10={m10} kg/s")
@@ -681,12 +799,15 @@ if mix_comp is not None:
         if isinstance(conn, dict) and conn.get("kind", "material") != "power"
     ]
 
-    if inlet_terms and all(isinstance(v, (int, float)) for v in inlet_terms):
-        mix_E_F_custom = sum(inlet_terms)
-    if outlet_terms and all(isinstance(v, (int, float)) for v in outlet_terms):
-        mix_E_P_custom = sum(outlet_terms)
-    if isinstance(mix_E_F_custom, (int, float)) and isinstance(mix_E_P_custom, (int, float)):
-        mix_E_D_custom = mix_E_F_custom - mix_E_P_custom
+    # Best-effort: sum available numeric inlet/outlet terms even if some are missing
+    numeric_inlets = [v for v in inlet_terms if isinstance(v, (int, float))]
+    numeric_outlets = [v for v in outlet_terms if isinstance(v, (int, float))]
+    if numeric_inlets:
+        mix_E_F_custom = sum(numeric_inlets)
+    if numeric_outlets:
+        mix_E_P_custom = sum(numeric_outlets)
+    if isinstance(mix_E_F_custom, (int, float)) or isinstance(mix_E_P_custom, (int, float)):
+        mix_E_D_custom = (mix_E_F_custom or 0.0) - (mix_E_P_custom or 0.0)
 
 logging.info("\nMIX custom calculation (total exergy based):")
 logging.info(f"  E_F_custom = sum(E_tot,in) = {mix_E_F_custom} W")
@@ -710,11 +831,19 @@ if mix_comp is not None:
 _log_component_custom_compare('MIX', mix_comp)
 
 
-# --- RECO custom calculations using streams SZ25, SZ26, SZ27, SZ28
+# --- RC (formerly RECO) custom calculations using streams SZ25, SZ26, SZ27, SZ28
 # Ep = ETSZ26 - ETSZ25
 # Ef = EPHSZ27 - EPHSZ28 + EMSZ25 - EMSZ26
 
-reco_comp = ean.components.get("RECO") or next((c for n, c in ean.components.items() if str(n).upper().startswith("RECO")), None)
+# Prefer the renamed key "RC" (falls back to legacy "RECO")
+reco_comp = (
+    ean.components.get("RC")
+    or ean.components.get("RECO")
+    or next(
+        (c for n, c in ean.components.items() if str(n).upper().startswith("RC") or str(n).upper().startswith("RECO")),
+        None,
+    )
+)
 
 sz25 = _find_exact_stream("SZ25")
 sz26 = _find_exact_stream("SZ26")
@@ -732,16 +861,17 @@ ep_reco = None
 ef_reco = None
 ed_reco = None
 
-if etsz26 is not None and etsz25 is not None:
-    ep_reco = etsz26 - etsz25
+# Best-effort: compute ep_reco and ef_reco using available terms (use 0 for missing per-term values)
+if isinstance(etsz26, (int, float)) or isinstance(etsz25, (int, float)):
+    ep_reco = (etsz26 or 0.0) - (etsz25 or 0.0)
 
-if all(v is not None for v in [ephsz27, ephsz28, emsz25, emsz26]):
-    ef_reco = ephsz27 - ephsz28 + emsz25 - emsz26
+if any(isinstance(v, (int, float)) for v in [ephsz27, ephsz28, emsz25, emsz26]):
+    ef_reco = (ephsz27 or 0.0) - (ephsz28 or 0.0) + (emsz25 or 0.0) - (emsz26 or 0.0)
 
-if ef_reco is not None and ep_reco is not None:
-    ed_reco = ef_reco - ep_reco
+if any(isinstance(v, (int, float)) for v in [ef_reco, ep_reco]):
+    ed_reco = (ef_reco or 0.0) - (ep_reco or 0.0)
 
-logging.info("\nRECO custom calculation (user formula):")
+logging.info("\nRC custom calculation (user formula):")
 logging.info(f"  Ep_reco = ETSZ26 - ETSZ25 = {etsz26} - {etsz25} = {ep_reco} W")
 logging.info(
     f"  Ef_reco = EPHSZ27 - EPHSZ28 + EMSZ25 - EMSZ26 = "
@@ -758,7 +888,7 @@ if reco_comp is not None:
     except Exception:
         pass
 
-_log_component_custom_compare('RECO', reco_comp)
+_log_component_custom_compare('RC', reco_comp)
 
 
 # --- KOL custom calculations (single column) using user formulas
@@ -803,26 +933,55 @@ ef_mech_kol = None
 ef_kol = None
 ed_kol = None
 
-if all(v is not None for v in [m12_kol, m23_kol, ech11_kol, ech12_kol, ech23_kol]):
-    ep_ch_kol = float(m12_kol) * (float(ech12_kol) - float(ech11_kol)) + float(m23_kol) * (float(ech23_kol) - float(ech11_kol))
+# Best-effort chemical exergy part
+parts_ch = []
+term = _safe_diff_mult(m12_kol, ech12_kol, ech11_kol) if isinstance(m12_kol, (int, float)) and (ech12_kol is not None or ech11_kol is not None) else None
+if term is not None:
+    parts_ch.append(term)
+term = _safe_diff_mult(m23_kol, ech23_kol, ech11_kol) if isinstance(m23_kol, (int, float)) and (ech23_kol is not None or ech11_kol is not None) else None
+if term is not None:
+    parts_ch.append(term)
+if parts_ch:
+    ep_ch_kol = sum(parts_ch)
 
-if all(v is not None for v in [m12_kol, m23_kol, et11_kol, et12_kol, et23_kol]):
-    ep_t_kol = float(m12_kol) * (float(et12_kol) - float(et11_kol)) + float(m23_kol) * (float(et23_kol) - float(et11_kol))
+# Best-effort thermal exergy part
+parts_t = []
+term = _safe_diff_mult(m12_kol, et12_kol, et11_kol) if isinstance(m12_kol, (int, float)) and (et12_kol is not None or et11_kol is not None) else None
+if term is not None:
+    parts_t.append(term)
+term = _safe_diff_mult(m23_kol, et23_kol, et11_kol) if isinstance(m23_kol, (int, float)) and (et23_kol is not None or et11_kol is not None) else None
+if term is not None:
+    parts_t.append(term)
+if parts_t:
+    ep_t_kol = sum(parts_t)
 
-if ep_ch_kol is not None and ep_t_kol is not None:
-    ep_kol = ep_ch_kol + ep_t_kol
+if ep_ch_kol is not None or ep_t_kol is not None:
+    ep_kol = (ep_ch_kol or 0.0) + (ep_t_kol or 0.0)
 
-if esz26_liq is not None and esz26_gas is not None:
-    ef_kond_kol = esz26_liq - esz26_gas
+# Condenser fuel term (liq - gas)
+if isinstance(esz26_liq, (int, float)) or isinstance(esz26_gas, (int, float)):
+    ef_kond_kol = (esz26_liq or 0.0) - (esz26_gas or 0.0)
 
-if all(v is not None for v in [m12_kol, m23_kol, em11_kol, em12_kol, em23_kol]):
-    ef_mech_kol = float(m12_kol) * (float(em11_kol) - float(em12_kol)) + float(m23_kol) * (float(em11_kol) - float(em23_kol))
+# Mechanical fuel part
+parts_mech = []
+term = None
+if isinstance(m12_kol, (int, float)) and (em11_kol is not None or em12_kol is not None):
+    term = float(m12_kol) * ((em11_kol or 0.0) - (em12_kol or 0.0))
+if term is not None:
+    parts_mech.append(term)
+term = None
+if isinstance(m23_kol, (int, float)) and (em11_kol is not None or em23_kol is not None):
+    term = float(m23_kol) * ((em11_kol or 0.0) - (em23_kol or 0.0))
+if term is not None:
+    parts_mech.append(term)
+if parts_mech:
+    ef_mech_kol = sum(parts_mech)
 
-if ef_kond_kol is not None and ef_mech_kol is not None:
-    ef_kol = ef_kond_kol + ef_mech_kol
+if ef_kond_kol is not None or ef_mech_kol is not None:
+    ef_kol = (ef_kond_kol or 0.0) + (ef_mech_kol or 0.0)
 
-if ef_kol is not None and ep_kol is not None:
-    ed_kol = ef_kol - ep_kol
+if ef_kol is not None or ep_kol is not None:
+    ed_kol = (ef_kol or 0.0) - (ep_kol or 0.0)
 
 e11_tot_kol = None
 e12_tot_kol = None
@@ -947,7 +1106,8 @@ for comp_name, component in ean.components.items():
     E_D_custom = getattr(component, 'E_D_custom', None)
     E_L_custom = getattr(component, 'E_L_custom', None)
 
-    use_custom = all(v is not None for v in (E_F_custom, E_P_custom, E_D_custom))
+    # Only use custom triplet when all values are numeric and finite (no NaN/inf)
+    use_custom = all(isinstance(v, (int, float)) and math.isfinite(v) for v in (E_F_custom, E_P_custom, E_D_custom))
     if use_custom:
         source = "custom"
         E_F_sel, E_P_sel, E_D_sel = E_F_custom, E_P_custom, E_D_custom
@@ -1027,6 +1187,26 @@ for comp_name, comp in ean.components.items():
 
 if custom_exergy:
     json_payload["custom_exergy"] = custom_exergy
+# If RC component did not exist in the model but RC custom calcs were performed,
+# include them explicitly so the user's formula is visible in the JSON export.
+try:
+    rc_missing = ('rc_comp' in locals() and (rc_comp is None))
+except Exception:
+    rc_missing = False
+if rc_missing:
+    try:
+        rc_vals_present = any(v is not None for v in (globals().get('ep_condens_tot', None), globals().get('ef_custom', None), globals().get('ed_custom', None)))
+        if rc_vals_present:
+            custom_ex = json_payload.setdefault("custom_exergy", {})
+            custom_ex["RC"] = {
+                "E_F_custom": globals().get('ef_custom', None),
+                "E_P_custom": globals().get('ep_condens_tot', None),
+                "E_D_custom": globals().get('ed_custom', None),
+                "E_L_custom": None,
+                "epsilon_custom": (globals().get('ep_condens_tot', None) / globals().get('ef_custom', None)) if (globals().get('ef_custom', None) and globals().get('ef_custom', None) != 0) else None,
+            }
+    except Exception:
+        pass
 with open(output_path, "w", encoding="utf-8") as json_file:
     json.dump(json_payload, json_file, indent=4)
 
@@ -1050,21 +1230,48 @@ def _latex_escape(value: str) -> str:
 
 
 def _format_value(value):
+    # Treat None as missing
     if value is None:
         return "-"
-    if isinstance(value, (int, float)):
-        # Thesis table formatting: no scientific notation and at most two decimals.
-        x = round(float(value), 2)
-        if abs(x) < 1e-9:
-            return "0"
-        text = f"{x:.2f}".rstrip("0").rstrip(".")
-        return text.replace(".", ",") if text else "0"
+
+    # Normalize common textual non-numeric markers (e.g. 'nan', 'inf')
+    if isinstance(value, str):
+        sval = value.strip().lower()
+        if sval in {"nan", "+nan", "-nan", "inf", "+inf", "-inf", "infty"}:
+            return "-"
+
+    # If it's a numeric type, handle finiteness and formatting
+    # Accept numpy numeric types and other number-like objects by coercing to float
+    try:
+        # Coerce to float where possible
+        if isinstance(value, (int, float)) or hasattr(value, "__float__"):
+            x_f = float(value)
+            if not math.isfinite(x_f):
+                return "-"
+            # Thesis table formatting: no scientific notation and at most two decimals.
+            x = round(x_f, 2)
+            if abs(x) < 1e-9:
+                return "0"
+            text = f"{x:.2f}".rstrip("0").rstrip(".")
+            return text.replace(".", ",") if text else "0"
+    except Exception:
+        return "-"
+
+    # Fallback: if object is non-numeric, attempt to detect textual nan/inf inside its string form
+    sval = str(value).strip().lower()
+    if sval in {"nan", "+nan", "-nan", "inf", "+inf", "-inf", "infty"}:
+        return "-"
     return _latex_escape(str(value))
 
 
 def _format_molfrac_value(value):
     if value is None:
         return "-"
+    # Treat textual 'nan' or 'inf' as missing
+    if isinstance(value, str):
+        sval = value.strip().lower()
+        if sval in {"nan", "inf", "+inf", "-inf", "infty"}:
+            return "-"
     if isinstance(value, (int, float)):
         x = float(value)
         if abs(x) < 1e-12:
@@ -1253,60 +1460,7 @@ def _build_molar_fractions_table(connections: dict) -> str:
 
 def _build_component_results_table(components: dict) -> str:
     # keep original column layout; we'll inject custom values into the standard columns
-    header = " & ".join([
-        "Component",
-        "Type",
-        r"$\dot{E}_F$",
-        r"$\dot{E}_P$",
-        r"$\dot{E}_D$",
-        r"$\varepsilon$",
-        r"$y_{D,k}$",
-    ]) + " \\\\"
-    unit_row = " & ".join(["", "", "(W)", "(W)", "(W)", "(-)", "(-)"]) + " \\\\" 
-
-    def _find_stream_conn(stream_name: str):
-        conn_direct = ean.connections.get(stream_name)
-        if isinstance(conn_direct, dict):
-            return conn_direct
-        for key, conn in ean.connections.items():
-            if not isinstance(conn, dict):
-                continue
-            name = str(conn.get("name", key))
-            if name == stream_name or str(key) == stream_name:
-                return conn
-        return None
-
-    def _power_stream_abs(stream_name: str):
-        conn = _find_stream_conn(stream_name)
-        if not isinstance(conn, dict):
-            return None
-        val = conn.get("energy_flow")
-        if isinstance(val, (int, float)):
-            return abs(float(val))
-        return None
-
-    def _stream_total_exergy_from_table(stream_name: str):
-        conn = _find_stream_conn(stream_name)
-        if not isinstance(conn, dict):
-            return None
-        m_val = conn.get("m")
-        e_ph = conn.get("e_PH")
-        e_ch = conn.get("e_CH")
-        e_ph_eff = None
-        if isinstance(e_ph, (int, float)):
-            e_ph_eff = float(e_ph)
-        else:
-            e_t = conn.get("e_T")
-            e_m = conn.get("e_M")
-            if isinstance(e_t, (int, float)) and isinstance(e_m, (int, float)):
-                e_ph_eff = float(e_t) + float(e_m)
-            elif isinstance(e_ch, (int, float)):
-                e_ph_eff = 0.0
-
-        if all(isinstance(v, (int, float)) for v in [m_val, e_ph_eff, e_ch]):
-            return float(m_val) * (float(e_ph_eff) + float(e_ch))
-        return None
-
+    # compute E_F_tot from available power/material streams for y calculation
     W1 = _power_stream_abs("W1")
     W2 = _power_stream_abs("W2")
     E_S1 = _stream_total_exergy_from_table("S1")
@@ -1316,26 +1470,59 @@ def _build_component_results_table(components: dict) -> str:
         E_F_tot = getattr(ean, "E_F", None)
 
     rows = []
+    # Header and units for component results table
+    header = " & ".join([
+        "Component",
+        "Type",
+        r"$\dot{E}_F$",
+        r"$\dot{E}_P$",
+        r"$\dot{E}_D$",
+        r"$\varepsilon$",
+        r"$y_{D,k}$",
+    ]) + " \\\""
+    unit_row = " & ".join(["", "", "(W)", "(W)", "(W)", "(-)", "(-)"]) + " \\\""
+    # Support two input formats:
+    # - runtime component objects (component instances with attributes)
+    # - exported component dicts (as produced by ean._serialize())
     for comp_name, component in components.items():
-        if component.__class__.__name__ in {"CycleCloser", "Splitter"}:
+        # Skip CycleCloser/Splitter and RECON as before
+        name_key = str(comp_name).strip()
+        if name_key.upper() == "RECON":
             continue
-        if str(comp_name).strip().upper() == "RECON":
-            continue
-        # standard values
-        E_F = getattr(component, "E_F", None)
-        E_P = getattr(component, "E_P", None)
-        E_D = getattr(component, "E_D", None)
-        E_L = getattr(component, "E_L", None)
-        epsilon = getattr(component, "epsilon", None)
 
-        # if this component has custom values (e.g. RC), use them for display in the standard columns
-        E_F_custom = getattr(component, "E_F_custom", None)
-        E_P_custom = getattr(component, "E_P_custom", None)
-        E_D_custom = getattr(component, "E_D_custom", None)
-        E_L_custom = getattr(component, "E_L_custom", None)
-        epsilon_custom = getattr(component, "epsilon_custom", None)
+        # Determine if this entry is an exported dict
+        if isinstance(component, dict):
+            comp_type = component.get("type") or component.get("__class__", "")
+            ex = component.get("exergy_results", {}) or {}
+            E_F = ex.get("E_F")
+            E_P = ex.get("E_P")
+            E_D = ex.get("E_D")
+            epsilon = ex.get("epsilon")
+            comp_class_name = comp_type
+            # custom overrides (not present in exported dicts)
+            E_F_custom = None
+            E_P_custom = None
+            E_D_custom = None
+            E_L_custom = None
+            epsilon_custom = None
+        else:
+            # runtime object path
+            if component.__class__.__name__ in {"CycleCloser", "Splitter"}:
+                continue
+            comp_class_name = component.__class__.__name__
+            E_F = getattr(component, "E_F", None)
+            E_P = getattr(component, "E_P", None)
+            E_D = getattr(component, "E_D", None)
+            E_L = getattr(component, "E_L", None)
+            epsilon = getattr(component, "epsilon", None)
+            E_F_custom = getattr(component, "E_F_custom", None)
+            E_P_custom = getattr(component, "E_P_custom", None)
+            E_D_custom = getattr(component, "E_D_custom", None)
+            E_L_custom = getattr(component, "E_L_custom", None)
+            epsilon_custom = getattr(component, "epsilon_custom", None)
 
-        use_custom = all(v is not None for v in (E_F_custom, E_P_custom, E_D_custom))
+        # Use custom display values only when custom triplet is numeric and finite
+        use_custom = all(isinstance(v, (int, float)) and math.isfinite(v) for v in (E_F_custom, E_P_custom, E_D_custom))
         if use_custom:
             display_E_F = E_F_custom
             display_E_P = E_P_custom
@@ -1349,8 +1536,9 @@ def _build_component_results_table(components: dict) -> str:
             display_E_F = E_F
             display_E_P = E_P
             display_E_D = E_D
-            display_E_L = E_L if E_L is not None else 0.0
+            display_E_L = E_L if 'E_L' in locals() and E_L is not None else 0.0
             display_epsilon = epsilon
+
         y_D_k = (display_E_D / E_F_tot) if (
             isinstance(display_E_D, (int, float))
             and isinstance(E_F_tot, (int, float))
@@ -1360,13 +1548,15 @@ def _build_component_results_table(components: dict) -> str:
         rows.append(
             " & ".join([
                 _latex_escape(str(comp_name)),
-                _latex_escape(component.__class__.__name__),
+                _latex_escape(str(comp_class_name)),
                 _format_value(display_E_F),
                 _format_value(display_E_P),
                 _format_value(display_E_D),
                 _format_value(display_epsilon),
                 _format_value(y_D_k),
-            ]) + r" \\\\" )
+            ]) + r" \\")
+
+    # end unified build
 
     col_spec = "l" + "l" + "r" * 5
     lines = [
@@ -1435,7 +1625,7 @@ def _build_global_check_table(components: dict) -> str:
         E_D_custom = getattr(component, "E_D_custom", None)
         E_L_custom = getattr(component, "E_L_custom", None)
 
-        use_custom = all(v is not None for v in (E_F_custom, E_P_custom, E_D_custom))
+        use_custom = all(isinstance(v, (int, float)) and math.isfinite(v) for v in (E_F_custom, E_P_custom, E_D_custom))
         if use_custom:
             display_E_F = E_F_custom
             display_E_P = E_P_custom
@@ -1518,7 +1708,12 @@ def _build_global_check_table(components: dict) -> str:
     def _format_int_de(value):
         if not isinstance(value, (int, float)):
             return "-"
-        return f"{int(round(value)):,}"
+        try:
+            if not math.isfinite(value):
+                return "-"
+            return f"{int(round(value)):,}"
+        except Exception:
+            return "-"
 
     def _format_pct_de(value):
         if not isinstance(value, (int, float)):

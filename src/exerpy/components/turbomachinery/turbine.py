@@ -87,97 +87,174 @@ class Turbine(Component):
         split_physical_exergy : bool
             Flag indicating whether physical exergy is split into thermal and mechanical components.
         """
-        # Get net power flow
-        net_power = 0.0  # Initialize to 0.0, not None
-        for idx, conn in self.inl.items():
-            if conn is not None and conn.get("kind") == "power" and "energy_flow" in conn:
-                net_power -= conn["energy_flow"]  # Subtract inlet power
-        for idx, conn in self.outl.items():
-            if conn is not None and conn.get("kind") == "power" and "energy_flow" in conn:
-                net_power += conn["energy_flow"]  # Add outlet power
+        # Helper for numeric checks
+        def _is_number(x):
+            return isinstance(x, (int, float, np.floating)) and not np.isnan(x)
 
-        # Use net_power if available, otherwise calculate from enthalpy balance
+        # Get net power flow (only include numeric energy_flow values)
+        net_power = 0.0
+        for idx, conn in self.inl.items():
+            if conn is not None and conn.get("kind") == "power":
+                val = conn.get("energy_flow")
+                if _is_number(val):
+                    net_power -= val
+        for idx, conn in self.outl.items():
+            if conn is not None and conn.get("kind") == "power":
+                val = conn.get("energy_flow")
+                if _is_number(val):
+                    net_power += val
+
+        # Use net_power if available, otherwise attempt enthalpy balance
         if net_power != 0.0:
             self.P = abs(net_power)
         else:
-            self.P = self._total_outlet("m", "h") - self.inl[0]["m"] * self.inl[0]["h"]
+            try:
+                total_out_h = self._total_outlet("m", "h")
+                in_m = self.inl[0].get("m")
+                in_h = self.inl[0].get("h")
+                if in_m is None or in_h is None:
+                    raise ValueError("missing inlet mass or enthalpy")
+                self.P = total_out_h - in_m * in_h
+            except Exception:
+                logging.warning("Missing mass flow or enthalpy for turbine '%s'; setting power P to NaN.", self.name)
+                self.P = np.nan
 
-        # Case 1: Both temperatures above ambient
-        if self.inl[0]["T"] >= T0 and self.outl[0]["T"] >= T0 and self.inl[0]["T"] >= self.outl[0]["T"]:
-            self.E_P = abs(self.P)
-            self.E_F = self.inl[0]["m"] * self.inl[0]["e_PH"] - self._total_outlet("m", "e_PH")
-
-        # Case 2: Inlet above, outlet at/below ambient
-        elif self.inl[0]["T"] > T0 and self.outl[0]["T"] <= T0:
-            if split_physical_exergy:
-                self.E_P = abs(self.P) + self._total_outlet("m", "e_T")
-                self.E_F = (
-                    self.inl[0]["m"] * self.inl[0]["e_T"]
-                    + self.inl[0]["m"] * self.inl[0]["e_M"]
-                    - self._total_outlet("m", "e_M")
-                )
-            else:
-                logging.warning(
-                    "While dealing with expander below ambient, "
-                    "physical exergy should be split into thermal and mechanical components!"
-                )
-                self.E_P = np.nan
-                self.E_F = np.nan
-
-        # Case 3: Both temperatures at/below ambient
-        elif self.inl[0]["T"] <= T0 and self.outl[0]["T"] <= T0:
-            if split_physical_exergy:
-                self.E_P = abs(self.P) + (self._total_outlet("m", "e_T") - self.inl[0]["m"] * self.inl[0]["e_T"])
-                self.E_F = self.inl[0]["m"] * self.inl[0]["e_M"] - self._total_outlet("m", "e_M")
-            else:
-                logging.warning(
-                    "While dealing with expander below ambient, "
-                    "physical exergy should be split into thermal and mechanical components!"
-                )
-                self.E_P = np.nan
-                self.E_F = np.nan
-        # Invalid case: outlet temperature larger than inlet
-        else:
+        # Safeguard temperature-dependent branches
+        Tin = self.inl[0].get("T")
+        Tout = self.outl[0].get("T")
+        if Tin is None or Tout is None:
             logging.warning(
-                "Exergy balance of a turbine where outlet temperature is larger "
-                "than inlet temperature is not implemented."
+                "Missing inlet/outlet temperatures for turbine '%s'; setting E_P and E_F to NaN.",
+                self.name,
             )
             self.E_P = np.nan
             self.E_F = np.nan
+        else:
+            # Case 1: Both temperatures above ambient
+            if Tin >= T0 and Tout >= T0 and Tin >= Tout:
+                self.E_P = abs(self.P) if _is_number(self.P) else np.nan
+                in_m = self.inl[0].get("m")
+                in_eph = self.inl[0].get("e_PH")
+                if _is_number(in_m) and _is_number(in_eph):
+                    self.E_F = in_m * in_eph - self._total_outlet("m", "e_PH")
+                else:
+                    logging.warning("Missing mass or e_PH for turbine '%s'; E_F set to NaN.", self.name)
+                    self.E_F = np.nan
 
-        # Calculate exergy destruction and efficiency
-        self.E_D = self.E_F - self.E_P
-        if np.nan == self.E_F:
-            self.E_D = self.inl[0]["m"] * self.inl[0]["e_PH"] - self._total_outlet("m", "e_PH") - abs(self.P)
+            # Case 2: Inlet above, outlet at/below ambient
+            elif Tin > T0 and Tout <= T0:
+                if split_physical_exergy:
+                    self.E_P = (abs(self.P) if _is_number(self.P) else np.nan) + self._total_outlet("m", "e_T")
+                    in_m = self.inl[0].get("m")
+                    in_eT = self.inl[0].get("e_T")
+                    in_eM = self.inl[0].get("e_M")
+                    if _is_number(in_m) and _is_number(in_eT) and _is_number(in_eM):
+                        self.E_F = in_m * in_eT + in_m * in_eM - self._total_outlet("m", "e_M")
+                    else:
+                        logging.warning("Missing m/e_T/e_M for turbine '%s'; E_F set to NaN.", self.name)
+                        self.E_F = np.nan
+                else:
+                    logging.warning(
+                        "While dealing with expander below ambient, physical exergy should be split into thermal and mechanical components!"
+                    )
+                    self.E_P = np.nan
+                    self.E_F = np.nan
+
+            # Case 3: Both temperatures at/below ambient
+            elif Tin <= T0 and Tout <= T0:
+                if split_physical_exergy:
+                    eT_out = self._total_outlet("m", "e_T")
+                    in_m = self.inl[0].get("m")
+                    in_eT = self.inl[0].get("e_T")
+                    in_eM = self.inl[0].get("e_M")
+                    self.E_P = (abs(self.P) if _is_number(self.P) else np.nan) + (
+                        eT_out - (in_m * in_eT if _is_number(in_m) and _is_number(in_eT) else np.nan)
+                    )
+                    if _is_number(in_m) and _is_number(in_eM):
+                        self.E_F = in_m * in_eM - self._total_outlet("m", "e_M")
+                    else:
+                        logging.warning("Missing m/e_M for turbine '%s'; E_F set to NaN.", self.name)
+                        self.E_F = np.nan
+                else:
+                    logging.warning(
+                        "While dealing with expander below ambient, physical exergy should be split into thermal and mechanical components!"
+                    )
+                    self.E_P = np.nan
+                    self.E_F = np.nan
+            # Invalid case: outlet temperature larger than inlet
+            else:
+                logging.warning(
+                    "Exergy balance of a turbine where outlet temperature is larger than inlet temperature is not implemented."
+                )
+                self.E_P = np.nan
+                self.E_F = np.nan
+
+        # Calculate exergy destruction and efficiency (best-effort)
+        try:
+            if isinstance(self.E_F, (int, float)) and isinstance(self.E_P, (int, float)):
+                self.E_D = self.E_F - self.E_P
+            else:
+                # fallback attempt: compute from inlet e_PH and outlet totals if available
+                try:
+                    in_m = self.inl[0].get("m")
+                    in_eph = self.inl[0].get("e_PH")
+                    if isinstance(in_m, (int, float)) and isinstance(in_eph, (int, float)):
+                        self.E_D = float(in_m) * float(in_eph) - self._total_outlet("m", "e_PH") - (
+                            abs(self.P) if isinstance(self.P, (int, float)) else 0.0
+                        )
+                    else:
+                        self.E_D = np.nan
+                except Exception:
+                    self.E_D = np.nan
+        except Exception:
+            self.E_D = np.nan
+
         self.epsilon = self.calc_epsilon()
 
-        # Determine branch for logging
-        Tin = self.inl[0]["T"]
-        Tout = self.outl[0]["T"]
-        if Tin >= T0 and Tout >= T0 and Tin >= Tout:
-            branch = "both_above_non_increasing"
-        elif Tin > T0 and Tout <= T0:
-            branch = "in_above_out_at_or_below"
-        elif Tin <= T0 and Tout <= T0:
-            branch = "both_below_eq"
-        else:
-            branch = "unexpected"
+        # Determine branch for logging using safe numeric checks
+        def _is_num(v):
+            return isinstance(v, (int, float, np.floating)) and not np.isnan(v)
 
-        # Block log: minimal but explicit
-        out_m_sum = sum(outlet.get('m', 0) for outlet in self.outl.values() if outlet and outlet.get('kind', 'material') != 'power' and outlet.get('m') is not None)
-        e_ph_in = self.inl[0].get('e_PH')
-        e_t_in = self.inl[0].get('e_T')
-        e_ph_in_str = f"{e_ph_in:.2f}" if isinstance(e_ph_in, (int, float, np.floating)) and not np.isnan(e_ph_in) else "None"
-        e_t_in_str = f"{e_t_in:.2f}" if isinstance(e_t_in, (int, float, np.floating)) and not np.isnan(e_t_in) else "None"
-        e_ph_out_total = self._total_outlet('m', 'e_PH')
-        e_t_out_total = self._total_outlet('m', 'e_T')
+        Tin_val = self.inl[0].get("T")
+        Tout_val = self.outl[0].get("T")
+        branch = "unknown"
+        if _is_num(Tin_val) and _is_num(Tout_val):
+            if Tin_val >= T0 and Tout_val >= T0 and Tin_val >= Tout_val:
+                branch = "both_above_non_increasing"
+            elif Tin_val > T0 and Tout_val <= T0:
+                branch = "in_above_out_at_or_below"
+            elif Tin_val <= T0 and Tout_val <= T0:
+                branch = "both_below_eq"
+            else:
+                branch = "unexpected"
+
+        # Block log: minimal but explicit (format safely)
+        out_m_sum = sum(
+            outlet.get("m", 0)
+            for outlet in self.outl.values()
+            if outlet and outlet.get("kind", "material") != "power" and outlet.get("m") is not None
+        )
+        e_ph_in = self.inl[0].get("e_PH")
+        e_t_in = self.inl[0].get("e_T")
+        e_ph_in_str = f"{e_ph_in:.2f}" if _is_num(e_ph_in) else "None"
+        e_t_in_str = f"{e_t_in:.2f}" if _is_num(e_t_in) else "None"
+        e_ph_out_total = self._total_outlet("m", "e_PH")
+        e_t_out_total = self._total_outlet("m", "e_T")
+        Tin_str = f"{Tin_val:.2f}K" if _is_num(Tin_val) else "None"
+        Tout_str = f"{Tout_val:.2f}K" if _is_num(Tout_val) else "None"
+        P_str = f"{self.P:.2f}" if _is_num(self.P) else "None"
+        E_F_str = f"{self.E_F:.2f}" if _is_num(self.E_F) else "None"
+        E_P_str = f"{self.E_P:.2f}" if _is_num(self.E_P) else "None"
+        E_D_str = f"{self.E_D:.2f}" if _is_num(self.E_D) else "None"
+        eps_str = f"{self.epsilon:.2%}" if _is_num(self.epsilon) else "None"
+
         logging.info(
-            f"Turbine {self.name} | branch={branch} | T_in={Tin:.2f}K T_out={Tout:.2f}K | P={self.P:.2f} W | "
+            f"Turbine {self.name} | branch={branch} | T_in={Tin_str} T_out={Tout_str} | P={P_str} W | "
             f"in_m={self.inl[0].get('m')}, out_m_sum={out_m_sum:.6f} kg/s | "
-            f"e_PH_in={e_ph_in_str} J/kg, E_PH_out={e_ph_out_total:.2f} W | "
-            f"e_T_in={e_t_in_str} J/kg, E_T_out={e_t_out_total:.2f} W | "
-            f"E_F={self.E_F:.2f} W, E_P={self.E_P if np.isnan(self.E_P) else f'{self.E_P:.2f}'} W, "
-            f"E_D={self.E_D:.2f} W, eps={self.epsilon:.2%}"
+            f"e_PH_in={e_ph_in_str} J/kg, E_PH_out={e_ph_out_total if _is_num(e_ph_out_total) else 'None'} W | "
+            f"e_T_in={e_t_in_str} J/kg, E_T_out={e_t_out_total if _is_num(e_t_out_total) else 'None'} W | "
+            f"E_F={E_F_str} W, E_P={E_P_str} W, "
+            f"E_D={E_D_str} W, eps={eps_str}"
         )
 
     def _total_outlet(self, mass_flow: str, property_name: str) -> float:

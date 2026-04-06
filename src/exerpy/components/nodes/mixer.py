@@ -134,23 +134,38 @@ class Mixer(Component):
         # Assume that all outlets share the same thermodynamic state.
         outlet_list = list(self.outl.values())
         first_outlet = outlet_list[0]
-        T_out = first_outlet["T"]
+        T_out = first_outlet.get("T")
         e_out_PH = _effective_e_ph(first_outlet)
-        if e_out_PH is None:
-            msg = f"Mixer {self.name}: outlet physical exergy missing (e_PH and e_T/e_M unavailable)."
-            logging.error(msg)
-            raise ValueError(msg)
+        if not isinstance(T_out, (int, float, np.floating)) or e_out_PH is None:
+            logging.warning(
+                f"Mixer {self.name}: missing outlet temperature or physical exergy; setting E_P/E_F to NaN."
+            )
+            self.E_P = np.nan
+            self.E_F = np.nan
+            self.E_D = self.E_F - self.E_P
+            self.epsilon = self.calc_epsilon()
+            return
         # Verify that all outlets have the same thermodynamic state.
         for outlet in outlet_list:
             outlet_e_ph = _effective_e_ph(outlet)
             if outlet_e_ph is None:
-                msg = f"Mixer {self.name}: outlet physical exergy missing (e_PH and e_T/e_M unavailable)."
-                logging.error(msg)
-                raise ValueError(msg)
-            if outlet["T"] != T_out or outlet_e_ph != e_out_PH:
-                msg = "All outlets in Mixer must have the same thermodynamic state."
-                logging.error(msg)
-                raise ValueError(msg)
+                logging.warning(
+                    f"Mixer {self.name}: one outlet missing physical exergy; setting E_P/E_F to NaN."
+                )
+                self.E_P = np.nan
+                self.E_F = np.nan
+                self.E_D = self.E_F - self.E_P
+                self.epsilon = self.calc_epsilon()
+                return
+            if outlet.get("T") != T_out or outlet_e_ph != e_out_PH:
+                logging.warning(
+                    f"Mixer {self.name}: outlets have inconsistent thermodynamic states; setting E_P/E_F to NaN."
+                )
+                self.E_P = np.nan
+                self.E_F = np.nan
+                self.E_D = self.E_F - self.E_P
+                self.epsilon = self.calc_epsilon()
+                return
         # Sum the mass of all outlet streams (if needed for further analysis)
         sum(outlet.get("m", 0) for outlet in outlet_list)
 
@@ -163,9 +178,14 @@ class Mixer(Component):
             for _, inlet in self.inl.items():
                 e_in_PH = _effective_e_ph(inlet)
                 if e_in_PH is None:
-                    msg = f"Mixer {self.name}: inlet physical exergy missing (e_PH and e_T/e_M unavailable)."
-                    logging.error(msg)
-                    raise ValueError(msg)
+                    logging.warning(
+                        f"Mixer {self.name}: inlet missing physical exergy; setting E_P/E_F to NaN."
+                    )
+                    self.E_P = np.nan
+                    self.E_F = np.nan
+                    self.E_D = self.E_F - self.E_P
+                    self.epsilon = self.calc_epsilon()
+                    return
                 # Case when inlet temperature is lower than outlet temperature.
                 if inlet["T"] < T_out:
                     if inlet["T"] >= T0:
@@ -183,9 +203,14 @@ class Mixer(Component):
             for _, inlet in self.inl.items():
                 e_in_PH = _effective_e_ph(inlet)
                 if e_in_PH is None:
-                    msg = f"Mixer {self.name}: inlet physical exergy missing (e_PH and e_T/e_M unavailable)."
-                    logging.error(msg)
-                    raise ValueError(msg)
+                    logging.warning(
+                        f"Mixer {self.name}: inlet missing physical exergy; setting E_P/E_F to NaN."
+                    )
+                    self.E_P = np.nan
+                    self.E_F = np.nan
+                    self.E_D = self.E_F - self.E_P
+                    self.epsilon = self.calc_epsilon()
+                    return
                 self.E_F += inlet["m"] * e_in_PH
 
         # Case 3: Outlet temperature is less than ambient.
@@ -193,9 +218,14 @@ class Mixer(Component):
             for _, inlet in self.inl.items():
                 e_in_PH = _effective_e_ph(inlet)
                 if e_in_PH is None:
-                    msg = f"Mixer {self.name}: inlet physical exergy missing (e_PH and e_T/e_M unavailable)."
-                    logging.error(msg)
-                    raise ValueError(msg)
+                    logging.warning(
+                        f"Mixer {self.name}: inlet missing physical exergy; setting E_P/E_F to NaN."
+                    )
+                    self.E_P = np.nan
+                    self.E_F = np.nan
+                    self.E_D = self.E_F - self.E_P
+                    self.epsilon = self.calc_epsilon()
+                    return
                 if inlet["T"] > T_out:
                     if inlet["T"] >= T0:
                         self.E_P += inlet["m"] * e_out_PH

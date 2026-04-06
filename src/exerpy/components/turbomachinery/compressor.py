@@ -115,7 +115,16 @@ class Compressor(Component):
         ):
             self.P = self.inl[1]["energy_flow"]
         else:
-            self.P = self.outl[0]["m"] * (self.outl[0]["h"] - self.inl[0]["h"])
+            m_out = self.outl[0].get("m")
+            h_out = self.outl[0].get("h")
+            h_in = self.inl[0].get("h")
+            if m_out is None or h_out is None or h_in is None:
+                logging.warning(
+                    f"Missing mass flow or enthalpy for compressor '{self.name}'; setting power P to NaN."
+                )
+                self.P = np.nan
+            else:
+                self.P = m_out * (h_out - h_in)
 
         def _effective_e_ph(stream: dict):
             e_ph = stream.get("e_PH")
@@ -127,8 +136,21 @@ class Compressor(Component):
                 return e_t + e_m
             return None
 
+        # Ensure inlet/outlet temperatures are available before further calculations.
+        Tin = self.inl[0].get("T")
+        Tout = self.outl[0].get("T")
+        if not isinstance(Tin, (int, float, np.floating)) or not isinstance(Tout, (int, float, np.floating)):
+            logging.warning(
+                f"Missing inlet/outlet temperatures for compressor '{self.name}'; setting E_P and E_F to NaN."
+            )
+            self.E_P = np.nan
+            self.E_F = np.nan
+            self.E_D = self.E_F - self.E_P
+            self.epsilon = self.calc_epsilon()
+            return
+
         # First, check for the invalid case: outlet temperature smaller than inlet temperature.
-        if self.inl[0]["T"] > self.outl[0]["T"]:
+        if Tin > Tout:
             logging.warning(
                 f"Exergy balance of compressor '{self.name}' where outlet temperature ({self.outl[0]['T']}) "
                 f"is smaller than inlet temperature ({self.inl[0]['T']}) is not implemented."

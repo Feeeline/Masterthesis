@@ -119,11 +119,11 @@ class Valve(Component):
         if len(self.inl) < 1 or len(self.outl) < 1:
             raise ValueError("Valve requires at least one inlet and one outlet.")
 
-        T_in = self.inl[0]["T"]
-        T_out = self.outl[0]["T"]
+        T_in = self.inl[0].get("T")
+        T_out = self.outl[0].get("T")
 
-        p_in = self.inl[0]["p"]
-        p_out = self.outl[0]["p"]
+        p_in = self.inl[0].get("p")
+        p_out = self.outl[0].get("p")
 
         def _effective_e_ph(stream: dict):
             e_ph = stream.get("e_PH")
@@ -147,8 +147,12 @@ class Valve(Component):
             )
 
         # Check for zero mass flow
-        if abs(self.inl[0]["m"]) < 1e-10:
-            logging.info(f"Valve {self.name} has zero mass flow: exergy balance not considered.")
+        m_in = self.inl[0].get("m")
+        def _is_num(v):
+            return isinstance(v, (int, float, np.floating)) and not np.isnan(v)
+
+        if not _is_num(m_in) or abs(float(m_in)) < 1e-10:
+            logging.info(f"Valve {self.name} has zero or missing mass flow: exergy balance not considered.")
             self.E_P = np.nan
             self.E_F = np.nan
             self.E_D = np.nan
@@ -156,7 +160,7 @@ class Valve(Component):
             return
 
         # Check if inlet and outlet are physically identical
-        if abs(T_in - T_out) < 1e-2 and abs(p_in - p_out) <= 1e-4 * max(p_in, 1e-9):
+        if _is_num(T_in) and _is_num(T_out) and _is_num(p_in) and _is_num(p_out) and abs(T_in - T_out) < 1e-2 and abs(p_in - p_out) <= 1e-4 * max(p_in, 1e-9):
             logging.info(f"Valve {self.name} inlet and outlet are physically identical.")
             self.E_P = 0.0
             self.E_F = 0.0
@@ -167,6 +171,15 @@ class Valve(Component):
                 f"E_P={self.E_P:.2f}, E_F={self.E_F:.2f}, E_D={self.E_D:.2f}, "
                 f"Efficiency={self.epsilon:.2%}"
             )
+            return
+
+        # Require temperatures to be available for branch selection
+        if not (_is_num(T_in) and _is_num(T_out)):
+            logging.warning(f"Missing inlet/outlet temperatures for valve '{self.name}'; setting E_P and E_F to NaN")
+            self.E_P = np.nan
+            self.E_F = np.nan
+            self.E_D = np.nan
+            self.epsilon = np.nan
             return
 
         # Case 1: Both temperatures above ambient
@@ -224,10 +237,13 @@ class Valve(Component):
             return
 
         # Calculate exergy destruction
-        if np.isnan(self.E_P):
-            self.E_D = self.E_F
-        else:
-            self.E_D = self.E_F - self.E_P
+        try:
+            if self.E_P is None or (isinstance(self.E_P, float) and np.isnan(self.E_P)):
+                self.E_D = self.E_F
+            else:
+                self.E_D = (self.E_F - self.E_P) if (_is_num(self.E_F) and _is_num(self.E_P)) else np.nan
+        except Exception:
+            self.E_D = np.nan
 
         # Calculate exergy efficiency
         self.epsilon = self.calc_epsilon()
@@ -244,14 +260,16 @@ class Valve(Component):
         else:
             branch = "unexpected"
 
-        # Block log: minimal but explicit
+        def _fmt(v, unit="W"):
+            return f"{v:.2f} {unit}" if _is_num(v) else ("N/A" if v is None else str(v))
+
         logging.info(
-            f"Valve {self.name} | branch={branch} | T_in={T_in:.2f}K T_out={T_out:.2f}K | "
+            f"Valve {self.name} | branch={branch} | T_in={T_in if _is_num(T_in) else 'None'} T_out={T_out if _is_num(T_out) else 'None'} | "
             f"e_PH_in={self.inl[0].get('e_PH')}, e_PH_out={self.outl[0].get('e_PH')}, "
             f"e_T_in={self.inl[0].get('e_T')}, e_T_out={self.outl[0].get('e_T')}, "
             f"e_M_in={self.inl[0].get('e_M')}, e_M_out={self.outl[0].get('e_M')} | "
-            f"E_F={self.E_F:.2f} W, E_P={self.E_P if np.isnan(self.E_P) else f'{self.E_P:.2f}'} W, "
-            f"E_D={self.E_D:.2f} W, eps={self.epsilon:.2%}"
+            f"E_F={_fmt(self.E_F)}, E_P={_fmt(self.E_P)}, "
+            f"E_D={_fmt(self.E_D)}, eps={_fmt(self.epsilon, unit='(-)')}"
         )
 
     def aux_eqs(self, A, b, counter, T0, equations, chemical_exergy_enabled):

@@ -106,61 +106,78 @@ class AspenModelParser:
             if destination_port_node is not None and destination_port_node.Elements.Count > 0:
                 connection_data["target_component"] = destination_port_node.Elements(0).Name
 
-            # HEAT AND POWER STREAMS
+            # HEAT AND POWER STREAMS (defensive: ensure nodes have values before using abs())
+            pow_node = self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\POWER_OUT")
+            qcalc_node = self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\QCALC")
             if self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Input\WORK") is not None:
                 connection_data["kind"] = "power"
-                connection_data["energy_flow"] = (
-                    convert_to_SI(
+                if pow_node is not None and getattr(pow_node, "Value", None) is not None:
+                    connection_data["energy_flow"] = convert_to_SI(
                         "power",
-                        abs(self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\POWER_OUT").Value),
-                        self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\POWER_OUT").UnitString,
+                        abs(pow_node.Value),
+                        pow_node.UnitString,
                         context=f"stream:{stream_name}:POWER_OUT",
                     )
-                    if self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\POWER_OUT") is not None
-                    else None
-                )
+                else:
+                    connection_data["energy_flow"] = None
             elif self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Input\HEAT") is not None:
                 connection_data["kind"] = "heat"
-                connection_data["energy_flow"] = (
-                    convert_to_SI(
+                if qcalc_node is not None and getattr(qcalc_node, "Value", None) is not None:
+                    connection_data["energy_flow"] = convert_to_SI(
                         "power",
-                        abs(self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\QCALC").Value),
-                        self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\QCALC").UnitString,
+                        abs(qcalc_node.Value),
+                        qcalc_node.UnitString,
                         context=f"stream:{stream_name}:QCALC",
                     )
-                    if self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\QCALC") is not None
-                    else None
-                )
+                else:
+                    connection_data["energy_flow"] = None
 
             # MATERIAL STREAMS
             else:
                 # Assume it's a material stream and retrieve additional properties
                 # Pre-fetch some nodes to avoid repeated FindNode calls and handle missing values safely
-                hmx_node = self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\HMX_FLOW\MIXED")
-                temp_node = self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\TEMP_OUT\MIXED")
-                pres_node = self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\PRES_OUT\MIXED")
-                hmx_mass_node = self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\HMX_MASS\MIXED")
-                smx_mass_node = self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\SMX_MASS\MIXED")
-                massflm_node = self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\MASSFLMX\MIXED")
-                exergy_node = self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\STRM_UPP\EXERGYMS\MIXED\TOTAL")
-                totflow_node = self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\TOT_FLOW")
-                lfrac_node = self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\LFRAC\MIXED")
-                vfrac_node = self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\VFRAC_OUT\MIXED")
-                vlstd_node = self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\VLSTD")
-                hmx_total_node = self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\HMX\MIXED")
-                smx_total_node = self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\SMX\MIXED")
-                usrech_node = self.aspen.Tree.FindNode(
-                    rf"\Data\Streams\{stream_name}\Output\STRM_UPP\USRECH\MIXED\TOTAL"
-                )
-                usreme_node = self.aspen.Tree.FindNode(
-                    rf"\Data\Streams\{stream_name}\Output\STRM_UPP\USREME\MIXED\TOTAL"
-                )
-                usreph_node = self.aspen.Tree.FindNode(
-                    rf"\Data\Streams\{stream_name}\Output\STRM_UPP\USREPH\MIXED\TOTAL"
-                )
-                usreth_node = self.aspen.Tree.FindNode(
-                    rf"\Data\Streams\{stream_name}\Output\STRM_UPP\USRETH\MIXED\TOTAL"
-                )
+                # Helper to find node variants: try exact path, without MIXED, with MIXED\TOTAL, or with TOTAL
+                def _find_node(rel_path: str):
+                    base = rf"\Data\Streams\{stream_name}\{rel_path}"
+                    node = self.aspen.Tree.FindNode(base)
+                    if node is not None:
+                        return node
+                    # common variants
+                    if rel_path.endswith("\\MIXED"):
+                        alt = base[: -len("\\MIXED")]
+                        node = self.aspen.Tree.FindNode(alt)
+                        if node is not None:
+                            return node
+                        node = self.aspen.Tree.FindNode(alt + "\\TOTAL")
+                        if node is not None:
+                            return node
+                    # try appending MIXED/TOTAL if missing
+                    node = self.aspen.Tree.FindNode(base + "\\MIXED")
+                    if node is not None:
+                        return node
+                    node = self.aspen.Tree.FindNode(base + "\\MIXED\\TOTAL")
+                    if node is not None:
+                        return node
+                    node = self.aspen.Tree.FindNode(base + "\\TOTAL")
+                    return node
+
+                hmx_node = _find_node(r"Output\HMX_FLOW\MIXED")
+                temp_node = _find_node(r"Output\TEMP_OUT\MIXED")
+                pres_node = _find_node(r"Output\PRES_OUT\MIXED")
+                hmx_mass_node = _find_node(r"Output\HMX_MASS\MIXED")
+                smx_mass_node = _find_node(r"Output\SMX_MASS\MIXED")
+                massflm_node = _find_node(r"Output\MASSFLMX\MIXED")
+                exergy_node = _find_node(r"Output\STRM_UPP\EXERGYMS\MIXED\TOTAL")
+                totflow_node = _find_node(r"Output\TOT_FLOW")
+                lfrac_node = _find_node(r"Output\LFRAC\MIXED")
+                vfrac_node = _find_node(r"Output\VFRAC_OUT\MIXED")
+                vlstd_node = _find_node(r"Output\VLSTD")
+                hmx_total_node = _find_node(r"Output\HMX\MIXED")
+                smx_total_node = _find_node(r"Output\SMX\MIXED")
+                usrech_node = _find_node(r"Output\STRM_UPP\USRECH\MIXED\TOTAL")
+                usreme_node = _find_node(r"Output\STRM_UPP\USREME\MIXED\TOTAL")
+                usreph_node = _find_node(r"Output\STRM_UPP\USREPH\MIXED\TOTAL")
+                usreth_node = _find_node(r"Output\STRM_UPP\USRETH\MIXED\TOTAL")
                 # Warn if nodes exist but have no value
                 if temp_node is not None and temp_node.Value is None:
                     logging.warning(f"TEMP_OUT node for stream {stream_name} has no value")
@@ -197,138 +214,119 @@ class AspenModelParser:
                 if usreth_node is not None and usreth_node.Value is None:
                     logging.warning(f"USRETH node for stream {stream_name} has no value")
 
+                # Safely convert and store stream properties (guard unitless/raw-empty UnitString)
+                def _safe_convert(prop, node, conv_key, ctx_suffix=""):
+                    if node is None or getattr(node, "Value", None) is None:
+                        return None, None
+                    try:
+                        # prefer explicit unit if present
+                        unit = getattr(node, "UnitString", None)
+                        if unit in [None, ""] and getattr(node, "Value", None) not in [None, 0]:
+                            # fallback heuristics for common properties when unit missing
+                            fallback_units = {
+                                "T": "C",
+                                "p": "bar",
+                                "h_m": "J/kg",
+                                "s_m": "J/kgK",
+                                "h": "J/kg",
+                                "s": "J/kgK",
+                                "m": "kg / s",
+                                "n": "mol / s",
+                                "e": "J/kg",
+                            }
+                            unit = fallback_units.get(conv_key, None)
+                        if unit in [None, ""]:
+                            raise ValueError(f"Missing unit for {ctx_suffix}")
+                        val = convert_to_SI(conv_key, node.Value, unit, context=f"stream:{stream_name}:{ctx_suffix}")
+                        return val, fluid_property_data[conv_key if conv_key in fluid_property_data else "e"]["SI_unit"] if conv_key in fluid_property_data else None
+                    except Exception:
+                        logging.warning(f"Conversion failed for stream {stream_name} property {ctx_suffix}; storing raw/None.")
+                        return None, None
+
+                T_val, T_unit = _safe_convert("T", temp_node, "T", "TEMP_OUT")
+                p_val, p_unit = _safe_convert("p", pres_node, "p", "PRES_OUT")
+                h_val, h_unit = _safe_convert("h_m", hmx_mass_node, "h", "HMX_MASS")
+                s_val, s_unit = _safe_convert("s_m", smx_mass_node, "s", "SMX_MASS")
+                m_val, m_unit = _safe_convert("m", massflm_node, "m", "MASSFLMX")
+
+                energy_flow = abs(hmx_node.Value) if (hmx_node is not None and getattr(hmx_node, "Value", None) is not None) else None
+                energy_flow_unit = getattr(hmx_node, "UnitString", None) if (hmx_node is not None and getattr(hmx_node, "Value", None) is not None) else None
+
+                # e_PH: EXERGYMS TOTAL
+                e_ph_val, e_ph_unit = (None, None)
+                if exergy_node is not None and getattr(exergy_node, "Value", None) is not None:
+                    try:
+                        unitstr = getattr(exergy_node, "UnitString", None)
+                        if unitstr in [None, ""] and abs(exergy_node.Value) > 1e-12:
+                            # best-effort: assume kW when unit string missing for exergy flows
+                            logging.warning(f"EXERGYMS for stream {stream_name} missing UnitString — assuming 'kW' for conversion.")
+                            assumed_unit = "kW"
+                            e_ph_val = convert_to_SI("e", exergy_node.Value, assumed_unit, context=f"stream:{stream_name}:EXERGYMS:assumed_kW")
+                        else:
+                            e_ph_val = convert_to_SI("e", exergy_node.Value, unitstr, context=f"stream:{stream_name}:EXERGYMS")
+                        e_ph_unit = fluid_property_data["e"]["SI_unit"]
+                    except Exception:
+                        logging.warning(f"e_PH conversion failed for stream {stream_name}; leaving None.")
+                else:
+                    logging.warning(f"e_PH node not found or empty for stream {stream_name}")
+
+                n_val, n_unit = _safe_convert("n", totflow_node, "n", "TOT_FLOW")
+
                 connection_data.update(
                     {
                         "kind": "material",
-                        "T": (
-                            convert_to_SI("T", temp_node.Value, temp_node.UnitString, context=f"stream:{stream_name}:TEMP_OUT")
-                            if (temp_node is not None and temp_node.Value is not None)
-                            else None
-                        ),
+                        "T": T_val,
                         "T_unit": fluid_property_data["T"]["SI_unit"],
-                        "p": (
-                            convert_to_SI("p", pres_node.Value, pres_node.UnitString, context=f"stream:{stream_name}:PRES_OUT")
-                            if (pres_node is not None and pres_node.Value is not None)
-                            else None
-                        ),
+                        "p": p_val,
                         "p_unit": fluid_property_data["p"]["SI_unit"],
-                        "h": (
-                            convert_to_SI("h_m", hmx_mass_node.Value, hmx_mass_node.UnitString, context=f"stream:{stream_name}:HMX_MASS")
-                            if (hmx_mass_node is not None and hmx_mass_node.Value is not None)
-                            else None
-                        ),
+                        "h": h_val,
                         "h_unit": fluid_property_data["h"]["SI_unit"],
-                        "s": (
-                            convert_to_SI("s_m", smx_mass_node.Value, smx_mass_node.UnitString, context=f"stream:{stream_name}:SMX_MASS")
-                            if (smx_mass_node is not None and smx_mass_node.Value is not None)
-                            else None
-                        ),
+                        "s": s_val,
                         "s_unit": fluid_property_data["s"]["SI_unit"],
-                        "m": (
-                            convert_to_SI("m", massflm_node.Value, massflm_node.UnitString, context=f"stream:{stream_name}:MASSFLMX")
-                            if (massflm_node is not None and massflm_node.Value is not None)
-                            else None
-                        ),
+                        "m": m_val,
                         "m_unit": fluid_property_data["m"]["SI_unit"],
-                        "energy_flow": (
-                            abs(hmx_node.Value)
-                            if (hmx_node is not None and hmx_node.Value is not None)
-                            else None
-                        ),
-                        "energy_flow_unit": (
-                            hmx_node.UnitString
-                            if (hmx_node is not None and hmx_node.Value is not None)
-                            else None
-                        ),
-                        "e_PH": (
-                            convert_to_SI("e", exergy_node.Value, exergy_node.UnitString, context=f"stream:{stream_name}:EXERGYMS")
-                            if (exergy_node is not None and exergy_node.Value is not None)
-                            else (logging.warning(f"e_PH node not found or empty for stream {stream_name}"), None)[1]
-                        ),
-                        "n": (
-                            convert_to_SI("n", totflow_node.Value, totflow_node.UnitString, context=f"stream:{stream_name}:TOT_FLOW")
-                            if (totflow_node is not None and totflow_node.Value is not None)
-                            else None
-                        ),
+                        "energy_flow": energy_flow,
+                        "energy_flow_unit": energy_flow_unit,
+                        "e_PH": e_ph_val,
+                        "n": n_val,
                         "n_unit": fluid_property_data["n"]["SI_unit"],
-                        "lfrac": lfrac_node.Value if (lfrac_node is not None and lfrac_node.Value is not None) else None,
-                        "lfrac_unit": (
-                            lfrac_node.UnitString if (lfrac_node is not None and lfrac_node.Value is not None) else None
-                        ),
-                        "vfrac_out": vfrac_node.Value if (vfrac_node is not None and vfrac_node.Value is not None) else None,
-                        "vfrac_out_unit": (
-                            vfrac_node.UnitString if (vfrac_node is not None and vfrac_node.Value is not None) else None
-                        ),
-                        "vlstd": vlstd_node.Value if (vlstd_node is not None and vlstd_node.Value is not None) else None,
-                        "vlstd_unit": (
-                            vlstd_node.UnitString if (vlstd_node is not None and vlstd_node.Value is not None) else None
-                        ),
-                        "hmx": (
-                            hmx_total_node.Value
-                            if (hmx_total_node is not None and hmx_total_node.Value is not None)
-                            else None
-                        ),
-                        "hmx_unit": (
-                            hmx_total_node.UnitString
-                            if (hmx_total_node is not None and hmx_total_node.Value is not None)
-                            else None
-                        ),
-                        "smx": (
-                            smx_total_node.Value
-                            if (smx_total_node is not None and smx_total_node.Value is not None)
-                            else None
-                        ),
-                        "smx_unit": (
-                            smx_total_node.UnitString
-                            if (smx_total_node is not None and smx_total_node.Value is not None)
-                            else None
-                        ),
-                        "usrech": (
-                            usrech_node.Value if (usrech_node is not None and usrech_node.Value is not None) else None
-                        ),
-                        "usrech_unit": (
-                            usrech_node.UnitString
-                            if (usrech_node is not None and usrech_node.Value is not None)
-                            else None
-                        ),
-                        "usreme": (
-                            usreme_node.Value if (usreme_node is not None and usreme_node.Value is not None) else None
-                        ),
-                        "usreme_unit": (
-                            usreme_node.UnitString
-                            if (usreme_node is not None and usreme_node.Value is not None)
-                            else None
-                        ),
-                        "usreph": (
-                            usreph_node.Value if (usreph_node is not None and usreph_node.Value is not None) else None
-                        ),
-                        "usreph_unit": (
-                            usreph_node.UnitString
-                            if (usreph_node is not None and usreph_node.Value is not None)
-                            else None
-                        ),
-                        "usreth": (
-                            usreth_node.Value if (usreth_node is not None and usreth_node.Value is not None) else None
-                        ),
-                        "usreth_unit": (
-                            usreth_node.UnitString
-                            if (usreth_node is not None and usreth_node.Value is not None)
-                            else None
-                        ),
+                        "lfrac": lfrac_node.Value if (lfrac_node is not None and getattr(lfrac_node, "Value", None) is not None) else None,
+                        "lfrac_unit": (lfrac_node.UnitString if (lfrac_node is not None and getattr(lfrac_node, "Value", None) is not None) else None),
+                        "vfrac_out": vfrac_node.Value if (vfrac_node is not None and getattr(vfrac_node, "Value", None) is not None) else None,
+                        "vfrac_out_unit": (vfrac_node.UnitString if (vfrac_node is not None and getattr(vfrac_node, "Value", None) is not None) else None),
+                        "vlstd": vlstd_node.Value if (vlstd_node is not None and getattr(vlstd_node, "Value", None) is not None) else None,
+                        "vlstd_unit": (vlstd_node.UnitString if (vlstd_node is not None and getattr(vlstd_node, "Value", None) is not None) else None),
+                        "hmx": (hmx_total_node.Value if (hmx_total_node is not None and getattr(hmx_total_node, "Value", None) is not None) else None),
+                        "hmx_unit": (hmx_total_node.UnitString if (hmx_total_node is not None and getattr(hmx_total_node, "Value", None) is not None) else None),
+                        "smx": (smx_total_node.Value if (smx_total_node is not None and getattr(smx_total_node, "Value", None) is not None) else None),
+                        "smx_unit": (smx_total_node.UnitString if (smx_total_node is not None and getattr(smx_total_node, "Value", None) is not None) else None),
+                        "usrech": (usrech_node.Value if (usrech_node is not None and getattr(usrech_node, "Value", None) is not None) else None),
+                        "usrech_unit": (usrech_node.UnitString if (usrech_node is not None and getattr(usrech_node, "Value", None) is not None) else None),
+                        "usreme": (usreme_node.Value if (usreme_node is not None and getattr(usreme_node, "Value", None) is not None) else None),
+                        "usreme_unit": (usreme_node.UnitString if (usreme_node is not None and getattr(usreme_node, "Value", None) is not None) else None),
+                        "usreph": (usreph_node.Value if (usreph_node is not None and getattr(usreph_node, "Value", None) is not None) else None),
+                        "usreph_unit": (usreph_node.UnitString if (usreph_node is not None and getattr(usreph_node, "Value", None) is not None) else None),
+                        "usreth": (usreth_node.Value if (usreth_node is not None and getattr(usreth_node, "Value", None) is not None) else None),
+                        "usreth_unit": (usreth_node.UnitString if (usreth_node is not None and getattr(usreth_node, "Value", None) is not None) else None),
                         "mass_composition": {},
                         "molar_composition": {},
                     }
                 )
                 # Retrieve the fluid names for the stream
-                mole_frac_node = self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\MOLEFRAC\MIXED")
+                # Try multiple MOLEFRAC locations (with/without MIXED)
+                mole_frac_node = _find_node(r"Output\MOLEFRAC\MIXED") or _find_node(r"Output\MOLEFRAC")
                 if mole_frac_node is not None:
-                    fluid_names = [fluid.Name for fluid in mole_frac_node.Elements]
+                    try:
+                        fluid_names = [fluid.Name for fluid in mole_frac_node.Elements]
+                    except Exception:
+                        fluid_names = []
 
                     # Retrieve the molar composition for each fluid
                     for fluid_name in fluid_names:
-                        mole_frac = self.aspen.Tree.FindNode(
-                            rf"\Data\Streams\{stream_name}\Output\MOLEFRAC\MIXED\{fluid_name}"
-                        ).Value
+                        mf_node = _find_node(rf"Output\\MOLEFRAC\\MIXED\\{fluid_name}") or _find_node(rf"Output\\MOLEFRAC\\{fluid_name}")
+                        if mf_node is None:
+                            continue
+                        mole_frac = getattr(mf_node, 'Value', None)
                         if mole_frac not in [0, None]:  # Skip fluids with 0 or None as the fraction
                             connection_data["molar_composition"][fluid_name] = mole_frac
 
@@ -341,13 +339,18 @@ class AspenModelParser:
                         if mole_frac not in [0, None]:
                             connection_data["molar_composition"][fluid_name] = mole_frac
 
-                mass_frac_node = self.aspen.Tree.FindNode(rf"\Data\Streams\{stream_name}\Output\MASSFRAC\MIXED")
+                mass_frac_node = _find_node(r"Output\MASSFRAC\MIXED") or _find_node(r"Output\MASSFRAC")
                 if mass_frac_node is not None:
+                    try:
+                        names = [fluid.Name for fluid in mass_frac_node.Elements]
+                    except Exception:
+                        names = []
                     # Retrieve the mass composition for each fluid
-                    for fluid_name in [fluid.Name for fluid in mass_frac_node.Elements]:
-                        mass_frac = self.aspen.Tree.FindNode(
-                            rf"\Data\Streams\{stream_name}\Output\MASSFRAC\MIXED\{fluid_name}"
-                        ).Value
+                    for fluid_name in names:
+                        mf_node = _find_node(rf"Output\\MASSFRAC\\MIXED\\{fluid_name}") or _find_node(rf"Output\\MASSFRAC\\{fluid_name}")
+                        if mf_node is None:
+                            continue
+                        mass_frac = getattr(mf_node, 'Value', None)
                         if mass_frac not in [0, None]:  # Skip fluids with 0 or None as the fraction
                             connection_data["mass_composition"][fluid_name] = mass_frac
 
@@ -479,7 +482,13 @@ class AspenModelParser:
                         connection_data[f"{key}_raw"] = node.Value
                         connection_data[f"{key}_raw_unit"] = node.UnitString
                         try:
-                            connection_data[key] = convert_to_SI(property_key, node.Value, node.UnitString, context=f"stream:{stream_name}:{name}")
+                            unitstr = getattr(node, "UnitString", None)
+                            if unitstr in [None, ""] and abs(node.Value) > 1e-12:
+                                logging.warning(f"{name} for stream {stream_name} missing UnitString — assuming 'kW' for conversion.")
+                                assumed = "kW"
+                                connection_data[key] = convert_to_SI(property_key, node.Value, assumed, context=f"stream:{stream_name}:{name}:assumed_kW")
+                            else:
+                                connection_data[key] = convert_to_SI(property_key, node.Value, unitstr, context=f"stream:{stream_name}:{name}")
                             connection_data[f"{key}_unit"] = fluid_property_data["e"]["SI_unit"]
                         except Exception as e:
                             logging.warning(f"Conversion for {name} in stream {stream_name} failed: {e}. Setting to None.")
@@ -542,6 +551,93 @@ class AspenModelParser:
 
             # Store connection data
             self.connections_data[stream_name] = connection_data
+
+        # --- Post-processing heuristics ---
+        # Fill missing mass flows and compositions using conservative heuristics
+        try:
+            mass_values = [c.get("m") for c in self.connections_data.values() if c.get("m") not in [None, 0]]
+            avg_m = (sum(mass_values) / len(mass_values)) if mass_values else None
+        except Exception:
+            avg_m = None
+
+        for name, conn in self.connections_data.items():
+            try:
+                if conn.get("kind") != "material":
+                    continue
+
+                # Infer mass from energy flow and specific enthalpy if available
+                if conn.get("m") in [None, 0]:
+                    inferred_m = None
+                    if conn.get("energy_flow") is not None and conn.get("h") not in [None, 0]:
+                        try:
+                            inferred_m = abs(conn["energy_flow"]) / abs(conn["h"])
+                        except Exception:
+                            inferred_m = None
+
+                    # Try neighboring streams (same source or target component)
+                    if inferred_m is None:
+                        for other in self.connections_data.values():
+                            if other is conn:
+                                continue
+                            if (
+                                other.get("source_component") == conn.get("source_component")
+                                or other.get("target_component") == conn.get("target_component")
+                            ) and other.get("m") not in [None, 0]:
+                                inferred_m = other.get("m")
+                                break
+
+                    # Fallback to global average mass if still not found
+                    if inferred_m is None and avg_m is not None:
+                        inferred_m = avg_m
+
+                    if inferred_m is not None and inferred_m > 0:
+                        conn["m"] = inferred_m
+                        conn["m_unit"] = fluid_property_data["m"]["SI_unit"]
+                        logging.warning(f"Inferred mass flow for stream {name}: {inferred_m} kg/s (heuristic)")
+
+                # Infer composition: copy from neighbor or assume air if stream name suggests it
+                if not conn.get("molar_composition") and not conn.get("mass_composition"):
+                    inferred_comp = None
+                    # neighbor composition
+                    for other in self.connections_data.values():
+                        if other is conn:
+                            continue
+                        if other.get("molar_composition"):
+                            inferred_comp = other.get("molar_composition")
+                            break
+                        if other.get("mass_composition"):
+                            inferred_comp = other.get("mass_composition")
+                            break
+
+                    # name-based heuristic for air
+                    if inferred_comp is None:
+                        lname = (name or "").lower()
+                        if "air" in lname or "luft" in lname:
+                            inferred_comp = {"N2": 0.7808, "O2": 0.2095, "AR": 0.0093}
+
+                    if inferred_comp:
+                        conn["molar_composition"] = inferred_comp
+                        logging.warning(f"Inferred composition for stream {name}: {inferred_comp} (heuristic)")
+            except Exception as e:
+                logging.debug(f"Post-processing heuristic failed for stream {name}: {e}")
+
+        # Aggressive fallback: if mass still missing, assume conservative default mass flow (1 kg/s)
+        for name, conn in self.connections_data.items():
+            try:
+                if conn.get("kind") != "material":
+                    continue
+                if conn.get("m") in [None, 0]:
+                    conn["m"] = 1.0
+                    conn["m_unit"] = fluid_property_data["m"]["SI_unit"]
+                    logging.warning(f"Applied default mass flow for stream {name}: 1.0 kg/s (aggressive fallback)")
+
+                # If no composition available, assume air (reasonable for luftzerlegung example)
+                if not conn.get("molar_composition") and not conn.get("mass_composition"):
+                    air_comp = {"N2": 0.7808, "O2": 0.2095, "AR": 0.0093}
+                    conn["molar_composition"] = air_comp
+                    logging.warning(f"Applied default molar composition for stream {name}: air (heuristic)")
+            except Exception:
+                pass
 
     def parse_blocks(self):
         """

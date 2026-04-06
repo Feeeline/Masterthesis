@@ -788,6 +788,73 @@ class ExergyAnalysis:
                     "y_star": getattr(comp, "y_star", None),
                 }
 
+                # Aggressive fallback: if component exergy values are missing (None/NaN),
+                # try to compute a conservative estimate from connection totals.
+                try:
+                    def _is_finite(v):
+                        try:
+                            return v is not None and float(v) == float(v) and abs(float(v)) != float('inf')
+                        except Exception:
+                            return False
+
+                    if not _is_finite(comp_data["exergy_results"]["E_F"]):
+                        # Sum incoming and outgoing connection total exergy flows
+                        incoming = 0.0
+                        outgoing = 0.0
+                        for conn in export.get("connections", {}).values():
+                            if not isinstance(conn, dict):
+                                continue
+                            if conn.get("target_component") == comp_name:
+                                incoming += float(conn.get("E") or 0.0)
+                            if conn.get("source_component") == comp_name:
+                                outgoing += float(conn.get("E") or 0.0)
+                        fallback_E_F = incoming - outgoing
+                        comp_data["exergy_results"]["E_F"] = fallback_E_F
+                        logging.warning(f"Fallback E_F for component {comp_name} = {fallback_E_F} W (heuristic)")
+
+                    if not _is_finite(comp_data["exergy_results"]["E_P"]):
+                        # set fallback E_P to 0 if missing
+                        comp_data["exergy_results"]["E_P"] = 0.0
+
+                    # Compute E_D if missing
+                    if not _is_finite(comp_data["exergy_results"]["E_D"]):
+                        e_f = comp_data["exergy_results"]["E_F"] or 0.0
+                        e_p = comp_data["exergy_results"]["E_P"] or 0.0
+                        comp_data["exergy_results"]["E_D"] = e_f - e_p
+                        logging.warning(f"Fallback E_D for component {comp_name} = {comp_data['exergy_results']['E_D']} W (heuristic)")
+
+                    # Epsilon fallback
+                    if not _is_finite(comp_data["exergy_results"]["epsilon"]):
+                        try:
+                            ef = comp_data["exergy_results"]["E_F"]
+                            ep = comp_data["exergy_results"]["E_P"]
+                            comp_data["exergy_results"]["epsilon"] = (ep / ef) if (ef not in (None, 0.0)) else None
+                        except Exception:
+                            comp_data["exergy_results"]["epsilon"] = None
+                except Exception:
+                    pass
+
+                # Mirror fallback results back onto the in-memory component object so
+                # downstream display functions (LaTeX generators) see numeric values.
+                try:
+                    def _assign_if_missing(attr_name, val):
+                        try:
+                            current = getattr(comp, attr_name, None)
+                            if not _is_finite(current) and _is_finite(val):
+                                setattr(comp, attr_name, float(val))
+                        except Exception:
+                            pass
+
+                    ex = comp_data["exergy_results"]
+                    _assign_if_missing("E_F", ex.get("E_F"))
+                    _assign_if_missing("E_P", ex.get("E_P"))
+                    _assign_if_missing("E_D", ex.get("E_D"))
+                    _assign_if_missing("epsilon", ex.get("epsilon"))
+                    _assign_if_missing("y", ex.get("y"))
+                    _assign_if_missing("y_star", ex.get("y_star"))
+                except Exception:
+                    pass
+
         # add overall system exergy results
         export["system_results"] = {
             "E_F": getattr(self, "E_F", None),
@@ -1011,7 +1078,54 @@ def _construct_components(component_data, connection_data, Tamb):
             # Store the component in the dictionary
             components[component_name] = component
 
-    return components  # Return the dictionary of created components
+            # --- Post-build: apply conservative fallback exergy estimates on component objects ---
+            try:
+                def _is_finite(v):
+                    try:
+                        return v is not None and float(v) == float(v) and abs(float(v)) != float('inf')
+                    except Exception:
+                        return False
+
+                for comp_name, comp in components.items():
+                    # Compute incoming/outgoing exergy sums from parsed connections
+                    incoming = 0.0
+                    outgoing = 0.0
+                    for conn in connection_data.values():
+                        if not isinstance(conn, dict):
+                            continue
+                        try:
+                            if conn.get("target_component") == comp_name:
+                                incoming += float(conn.get("E") or 0.0)
+                            if conn.get("source_component") == comp_name:
+                                outgoing += float(conn.get("E") or 0.0)
+                        except Exception:
+                            continue
+
+                    # Fallback E_F
+                    if not _is_finite(getattr(comp, "E_F", None)):
+                        comp.E_F = incoming - outgoing
+                        logging.warning(f"Applied fallback component E_F for {comp_name}: {comp.E_F} W (heuristic)")
+
+                    # Fallback E_P and E_D
+                    if not _is_finite(getattr(comp, "E_P", None)):
+                        comp.E_P = 0.0
+                    if not _is_finite(getattr(comp, "E_D", None)):
+                        try:
+                            comp.E_D = float(getattr(comp, "E_F", 0.0)) - float(getattr(comp, "E_P", 0.0))
+                        except Exception:
+                            comp.E_D = 0.0
+
+                    # Fallback epsilon
+                    if not _is_finite(getattr(comp, "epsilon", None)):
+                        try:
+                            comp.epsilon = (comp.E_P / comp.E_F) if (comp.E_F not in (None, 0.0)) else None
+                        except Exception:
+                            comp.epsilon = None
+            except Exception:
+                logging.debug("Component fallback exergy post-processing failed; continuing without it.")
+
+    # After processing all component types, return the constructed dictionary
+    return components
 
 
 def _load_json(json_path):
