@@ -59,8 +59,8 @@
             }
         },
         "MHeatX": {
-            "MW": {
-                "name": "MW",
+            "MH": {
+                "name": "MH",
                 "type": "MHeatX",
                 "eta_s": null,
                 "eta_mech": null,
@@ -77,8 +77,8 @@
                     "y_star": 0.0
                 }
             },
-            "RC": {
-                "name": "RC",
+            "RECO": {
+                "name": "RECO",
                 "type": "MHeatX",
                 "eta_s": null,
                 "eta_mech": null,
@@ -157,8 +157,8 @@
             }
         },
         "SimpleHeatExchanger": {
-            "RC": {
-                "name": "RC",
+            "RECON": {
+                "name": "RECON",
                 "type": "Heater",
                 "eta_s": null,
                 "eta_mech": null,
@@ -233,8 +233,8 @@
             }
         },
         "Turbine": {
-            "T": {
-                "name": "T",
+            "TURB": {
+                "name": "TURB",
                 "type": "Turbine",
                 "eta_s": 0.85,
                 "eta_mech": 0.99,
@@ -297,7 +297,7 @@
             "kind": "heat",
             "source_component": "KOL",
             "source_connector": 2,
-            "target_component": "RC",
+            "target_component": "RECON",
             "target_connector": null,
             "energy_flow": 1687537.39,
             "E": null,
@@ -309,7 +309,7 @@
         "RECON_HEAT": {
             "name": "RECON_HEAT",
             "kind": "heat",
-            "source_component": "RC",
+            "source_component": "RECON",
             "source_connector": 1,
             "target_component": null,
             "target_connector": null,
@@ -544,7 +544,7 @@
         "S11": {
             "name": "S11",
             "kind": "material",
-            "source_component": "MW",
+            "source_component": "MH",
             "source_connector": 0,
             "target_component": "KOL",
             "target_connector": 0,
@@ -766,7 +766,7 @@
             "kind": "material",
             "source_component": "D1",
             "source_connector": 0,
-            "target_component": "RC",
+            "target_component": "RECON",
             "target_connector": 0,
             "T": 93.4309893,
             "T_unit": "K",
@@ -874,9 +874,9 @@
         "S14": {
             "name": "S14",
             "kind": "material",
-            "source_component": "RC",
+            "source_component": "RECON",
             "source_connector": 0,
-            "target_component": "MW",
+            "target_component": "MH",
             "target_connector": 2,
             "T": 96.5749671,
             "T_unit": "K",
@@ -984,7 +984,7 @@
         "S15": {
             "name": "S15",
             "kind": "material",
-            "source_component": "MW",
+            "source_component": "MH",
             "source_connector": 3,
             "target_component": "SPLIT",
             "target_connector": 0,
@@ -1096,7 +1096,7 @@
             "kind": "material",
             "source_component": "SPLIT",
             "source_connector": 0,
-            "target_component": "T",
+            "target_component": "TURB",
             "target_connector": 0,
             "T": 287.489692,
             "T_unit": "K",
@@ -1204,7 +1204,7 @@
         "S17": {
             "name": "S17",
             "kind": "material",
-            "source_component": "T",
+            "source_component": "TURB",
             "source_connector": 0,
             "target_component": "MIX",
             "target_connector": 0,
@@ -1648,7 +1648,7 @@
             "kind": "material",
             "source_component": "MIX",
             "source_connector": 0,
-            "target_component": "MW",
+            "target_component": "MH",
             "target_connector": 3,
             "T": 257.061112,
             "T_unit": "K",
@@ -1756,7 +1756,7 @@
         "S21": {
             "name": "S21",
             "kind": "material",
-            "source_component": "MW",
+            "source_component": "MH",
             "source_connector": 2,
             "target_component": null,
             "target_connector": null,
@@ -1868,7 +1868,7 @@
             "kind": "material",
             "source_component": "KOL",
             "source_connector": 0,
-            "target_component": "MW",
+            "target_component": "MH",
             "target_connector": 1,
             "T": 96.7122197,
             "T_unit": "K",
@@ -1976,7 +1976,7 @@
         "S24": {
             "name": "S24",
             "kind": "material",
-            "source_component": "MW",
+            "source_component": "MH",
             "source_connector": 1,
             "target_component": null,
             "target_connector": null,
@@ -2648,7 +2648,7 @@
             "kind": "material",
             "source_component": "GW2",
             "source_connector": 2,
-            "target_component": "MW",
+            "target_component": "MH",
             "target_connector": 0,
             "T": 308.003098,
             "T_unit": "K",
@@ -2866,7 +2866,7 @@
             "kind": "material",
             "source_component": null,
             "source_connector": null,
-            "target_component": "RC",
+            "target_component": "RECO",
             "target_connector": 0,
             "T": 96.7122197,
             "T_unit": "K",
@@ -2974,7 +2974,7 @@
         "SZ26": {
             "name": "SZ26",
             "kind": "material",
-            "source_component": "RC",
+            "source_component": "RECO",
             "source_connector": 0,
             "target_component": null,
             "target_connector": null,
@@ -3086,7 +3086,7 @@
             "kind": "material",
             "source_component": null,
             "source_connector": null,
-            "target_component": "RC",
+            "target_component": "RECO",
             "target_connector": 1,
             "T": 93.4309893,
             "T_unit": "K",
@@ -3194,7 +3194,7 @@
         "SZ28": {
             "name": "SZ28",
             "kind": "material",
-            "source_component": "RC",
+            "source_component": "RECO",
             "source_connector": 1,
             "target_component": null,
             "target_connector": null,
@@ -3332,7 +3332,7 @@
         "W3": {
             "name": "W3",
             "kind": "power",
-            "source_component": "T",
+            "source_component": "TURB",
             "source_connector": 1,
             "target_component": null,
             "target_connector": null,
