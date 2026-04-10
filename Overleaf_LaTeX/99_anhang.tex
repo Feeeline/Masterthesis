@@ -73,7 +73,7 @@ x \in \{CH, T, M\}.
 Komponente & $\dot{E}_{F,k}$ & $\dot{E}_{P,k}$ \\
 \midrule
 MW &
-\dot{E}_{F,MW}=
+$\dot{E}_{F,MW}=
 \begin{aligned}
 (&\dot{E}^{PH}_{14}-\dot{E}^{PH}_{15})
 +(\dot{E}^{PH}_{20}-\dot{E}^{PH}_{21}) \\
@@ -81,7 +81,7 @@ MW &
 +(\dot{E}^{M}_{8}-\dot{E}^{M}_{11})
 +\dot{E}^{T}_{8}
 \end{aligned}$ &
-\dot{E}_{P,MW}=\dot{E}^{T}_{11}$ \\
+$\dot{E}_{P,MW}=\dot{E}^{T}_{11}$ \\
 GW1 &
 $\dot{E}_{F,GW1} = \dot{E}^{PH}_{5} - \dot{E}^{PH}_{6} - \dot{E}^{PH}_{7}$ &
 $\dot{E}_{P,GW1} = \dot{m}_{6}\,(e^{CH}_{6} - e^{CH}_{5})$ \\
@@ -102,13 +102,11 @@ $\dot{E}_{F,MH}=
 $\dot{E}_{P,MH}=\dot{E}^{T}_{11}$ \\
 
 RC &
-<<<<<<< HEAD
-\dot{E}_{F,RC}=\dot{E}^{PH}_{SZ27}-\dot{E}^{PH}_{SZ28}+\dot{E}^{M}_{SZ25}-\dot{E}^{M}_{SZ26}$ &
-\dot{E}_{P,RC}=\dot{E}^{T}_{SZ26}-\dot{E}^{T}_{SZ25}$ \\
-=======
+$\dot{E}_{F,RC}=\dot{E}^{PH}_{SZ27}-\dot{E}^{PH}_{SZ28}+\dot{E}^{M}_{SZ25}-\dot{E}^{M}_{SZ26}$ &
+$\dot{E}_{P,RC}=\dot{E}^{T}_{SZ26}-\dot{E}^{T}_{SZ25}$ \\
 $\dot{E}_{F,RECO}=\dot{E}^{PH}_{SZ27}-\dot{E}^{PH}_{SZ28}+\dot{E}^{M}_{SZ25}-\dot{E}^{M}_{SZ26}$ &
 $\dot{E}_{P,RECO}=\dot{E}^{T}_{SZ26}-\dot{E}^{T}_{SZ25}$ \\
->>>>>>> ded3fb2853a937c9ef8e228f18fae890345ec32b
+
 
 KOL &
 $\dot{E}_{F,KOL}=
@@ -134,8 +132,8 @@ $\dot{E}_{P,D2}=\dot{E}^{T}_{19}-\dot{E}^{T}_{18}$ \\
 
 \addlinespace
 T &
-\dot{E}_{F,T}=\dot{E}^{M}_{16}-\dot{E}^{M}_{17}$ &
-\dot{E}_{P,T}=\dot{W}_{T}+\dot{E}^{T}_{17}-\dot{E}^{T}_{16}$ \\
+$\dot{E}_{F,T}=\dot{E}^{M}_{16}-\dot{E}^{M}_{17}$ &
+$\dot{E}_{P,T}=\dot{W}_{T}+\dot{E}^{T}_{17}-\dot{E}^{T}_{16}$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -295,3 +293,28 @@ $\dot{E}^{PH}_{31}-\dot{E}^{PH}_{30}$ \\
 
 \chapter{Wirtschaftlichkeitsanalyse}
 \label{ch:a_kosten}
+
+
+\begin{longtable}{llrr}
+\caption{Globale Exergiebilanz des Doppelkolonnenmodells} \\
+\hline
+Kategorie & Bezeichnung & Symbol & Wert \\
+\hline
+\textbf{Zugeführte Exergie} & Feed-Strom Luft (S1) & $\dot{E}_{S1}$ & 186,2 kW \\
+\textbf{(Input)} & Verdichter-Wellenleistung & $\dot{W}_{LK1} + \dot{W}_{LK2} + \dot{W}_{PK1}$ & 10.868,3 kW \\
+ & \textbf{Summe Input} & $\sum \dot{E}_{in}$ & \textbf{12.182,0 kW} \\
+\hline
+\textbf{Abgeführte Exergie} & $N_2$-Produktstrom (S32) & $\dot{E}_{S32}$ & 2.836,5 kW \\
+\textbf{(Output)} & Turbinen-Wellenleistung & $\dot{W}_3$ & 106,2 kW \\
+ & Exergievernichtung (Komponenten) & $\dot{E}_{D,tot}$ & 7.371,4 kW \\
+ & Exergieverlust & $\dot{E}_{L,tot}$ & 1.974,1 kW \\
+ & \textbf{Summe physikalischer Output} & $\sum \dot{E}_{out}$ & \textbf{4.916,8 kW} \\
+\hline
+\textbf{Bilanzabgleich} & \textbf{Exergievernichtung (aus Komponenten)}\footnotemark & $\sum \dot{E}_{D,k}$ & \textbf{7.371,4 kW} \\
+\textbf{(Residuum)} & \textbf{Globale Differenz (Ein - Aus)} & $\sum \dot{E}_{in} - \sum \dot{E}_{out}$ & \textbf{7.265,2 kW} \\
+ & \textbf{Absolute Bilanzabweichung} & $\Delta \dot{E}$ & \textbf{106,2 kW} \\
+ & \textbf{Relativer Bilanzfehler (bezogen auf Input)} & $\frac{\Delta \dot{E}}{\sum \dot{E}_{in}}$ & \textbf{0,87 \%} \\
+\hline
+\hline
+\end{longtable}
+
