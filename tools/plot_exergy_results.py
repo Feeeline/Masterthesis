@@ -316,6 +316,34 @@ def parse_stream_data_from_json(json_path: Path, stream_names: list[str]) -> dic
     )
 
 
+def parse_component_work_table(tex_path: Path) -> dict:
+    """Parse a components_work LaTeX table and return mapping component->W (float).
+
+    Expected simple longtable with 3 columns: Component & Type & W
+    """
+    rows = {}
+    with tex_path.open("r", encoding="utf-8") as f:
+        for raw in f:
+            line = raw.strip()
+            if not line or line.startswith("\\"):
+                continue
+            parts = [p.strip() for p in re.split(r"&", line)]
+            if len(parts) < 3:
+                continue
+            # remove trailing \\ from last part
+            parts[-1] = re.sub(r"\\\\$", "", parts[-1]).strip()
+            comp = parts[0]
+            try:
+                val = _to_float(parts[2])
+            except Exception:
+                val = None
+            if comp and isinstance(val, (int, float)):
+                rows[comp] = float(val)
+    if not rows:
+        raise ValueError(f"Keine verwertbaren Arbeitsstromdaten in {tex_path}")
+    return rows
+
+
 def parse_stream_thermo_data(tex_path: Path) -> dict:
     """Return dict: stream -> {'m_dot': float, 'T': float, 'p_Pa': float}"""
     data = {}
@@ -353,9 +381,20 @@ def parse_stream_thermo_data(tex_path: Path) -> dict:
 
             E_W = None
             if isinstance(m_dot, (int, float)):
-                speci = [v for v in (e_ph, e_ch, e_t, e_m) if isinstance(v, (int, float))]
-                if speci:
-                    E_W = float(m_dot) * sum(speci)
+                # Compute total specific physical exergy: prefer e_PH; otherwise try e_T + e_M
+                e_ph_eff = None
+                if isinstance(e_ph, (int, float)):
+                    e_ph_eff = float(e_ph)
+                else:
+                    if isinstance(e_t, (int, float)) and isinstance(e_m, (int, float)):
+                        e_ph_eff = float(e_t) + float(e_m)
+
+                # chemical exergy (may be present or None)
+                e_ch_eff = float(e_ch) if isinstance(e_ch, (int, float)) else 0.0
+
+                if e_ph_eff is not None:
+                    # total specific exergy = physical + chemical
+                    E_W = float(m_dot) * (e_ph_eff + e_ch_eff)
 
             if stream and m_dot is not None and T is not None and p_Pa is not None:
                 data[stream] = {"m_dot": m_dot, "n_mol_s": n_mol_s, "T": T, "p_Pa": p_Pa, "e_ph": e_ph, "e_ch": e_ch, "e_t": e_t, "e_m": e_m, "E_W": E_W}
@@ -739,6 +778,67 @@ def plot_block_yd_comparison(ed_single: dict, ed_double: dict, out_path: Path):
         edgecolor="black",
     )
     fig.subplots_adjust(left=0.14, right=0.97, bottom=0.22, top=0.96)
+    fig.savefig(out_path, dpi=300)
+    plt.close(fig)
+
+
+def plot_component_work_side_by_side(single_tex: Path, double_tex: Path, out_path: Path):
+    """Create a side-by-side component work bar plot.
+
+    Left: Singlekolonne components (green). Right: Doppelkolonne components (blue).
+    Uses the same visual style as other plots.
+    """
+    # determine whether these are work tables (contain 'work' in filename)
+    if "work" in single_tex.name.lower() or "work" in double_tex.name.lower():
+        vals_map_s = parse_component_work_table(single_tex)
+        vals_map_d = parse_component_work_table(double_tex)
+    else:
+        vals_map_s = parse_component_ed_map(single_tex)
+        vals_map_d = parse_component_ed_map(double_tex)
+
+    comps_s = list(vals_map_s.keys())
+    vals_s = [vals_map_s[c] for c in comps_s]
+
+    comps_d = list(vals_map_d.keys())
+    vals_d = [vals_map_d[c] for c in comps_d]
+
+    _apply_plot_theme()
+    fig, (axL, axR) = plt.subplots(1, 2, figsize=(12.0, 6.0), sharey=True)
+
+    # Left: Single
+    x_s = list(range(len(comps_s)))
+    bar_width = 0.40
+    bars_s = axL.bar(x_s, vals_s, width=bar_width, color=COLOR_SINGLE, edgecolor="none")
+    axL.set_xticks(x_s)
+    axL.set_xticklabels(comps_s, rotation=45, ha="right")
+    axL.set_title("Singlekolonne")
+    axL.set_ylabel(r"$\dot{E}$ [W]")
+    _style_axis(axL, grid_axis="y")
+
+    # Right: Double
+    x_d = list(range(len(comps_d)))
+    bars_d = axR.bar(x_d, vals_d, width=bar_width, color=COLOR_DOUBLE, edgecolor="none")
+    axR.set_xticks(x_d)
+    axR.set_xticklabels(comps_d, rotation=45, ha="right")
+    axR.set_title("Doppelkolonne")
+    _style_axis(axR, grid_axis="y")
+
+    # Shared Y formatting: use same ticks on both axes
+    # determine nice y-limits based on global max
+    max_val = max([abs(v) for v in vals_s + vals_d] or [1.0])
+    # allow negative values (e.g., turbine work)
+    min_val = min([v for v in vals_s + vals_d] or [0.0])
+    lower = min(0.0, min_val * 1.08)
+    axL.set_ylim(lower, max_val * 1.08)
+
+    # small legend centered below
+    from matplotlib.lines import Line2D
+
+    legend_handles = [Line2D([0], [0], color=COLOR_SINGLE, marker='s', markersize=8, linestyle='None'), Line2D([0], [0], color=COLOR_DOUBLE, marker='s', markersize=8, linestyle='None')]
+    legend_labels = ["Singlekolonne", "Doppelkolonne"]
+    fig.legend(legend_handles, legend_labels, loc="upper center", bbox_to_anchor=(0.5, -0.06), ncol=2, frameon=True, fancybox=False, edgecolor="black")
+
+    fig.subplots_adjust(left=0.08, right=0.98, bottom=0.22, top=0.92, wspace=0.22)
     fig.savefig(out_path, dpi=300)
     plt.close(fig)
 
@@ -1596,6 +1696,15 @@ def main():
     with WERTE_TEX.open("w", encoding="utf-8") as f:
         f.write(werte_tex)
     print("Werte-Datei gespeichert:", WERTE_TEX)
+
+    # additional comparison plot: component work side-by-side
+    try:
+        out_cmp = OUT_DIR / "vergleich_component_work_side_by_side.png"
+        # Use the dedicated component work tables (single and double)
+        plot_component_work_side_by_side(TAB_DIR / "aspen_luftzerlegung_components_work_single.tex", TAB_DIR / "aspen_luftzerlegung_components_work.tex", out_cmp)
+        print("Component work comparison saved:", out_cmp)
+    except Exception as e:
+        print("Fehler beim Erstellen des Vergleichsplots:", e)
 
     print("Plots gespeichert in:")
     print(OUT_DIR)

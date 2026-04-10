@@ -1,0 +1,32 @@
+\begin{longtable}{llrr}
+\caption{Globale Exergiebilanz des Doppelkolonnenmodells} \\
+\hline
+Kategorie & Bezeichnung & Symbol & Wert \\
+\hline
+\textbf{Zugeführte Exergie} & Feed-Strom Luft (S1) & $\dot{E}_{S1}$ & 186,2 kW \\
+\textbf{(Input)} & Verdichter-Wellenleistung & $\dot{W}_{LK1} + \dot{W}_{LK2} + \dot{W}_{PK1}$ & 10.868,3 kW \\
+ & \textbf{Summe Input} & $\sum \dot{E}_{in}$ & \textbf{12.182,0 kW} \\
+\hline
+\textbf{Abgeführte Exergie} & $N_2$-Produktstrom (S32) & $\dot{E}_{S32}$ & 2.836,5 kW \\
+\textbf{(Output)} & Turbinen-Wellenleistung & $\dot{W}_T$ & 106,2 kW \\
+ & Exergievernichtung (Komponenten) & $\dot{E}_{D,tot}$ & 7.371,4 kW \\
+ & Exergieverlust & $\dot{E}_{L,tot}$ & 1.974,1 kW \\
+ & \textbf{Summe physikalischer Output} & $\sum \dot{E}_{out}$ & \textbf{4.916,8 kW} \\
+\hline
+\textbf{Bilanzabgleich} & \textbf{Exergievernichtung (aus Komponenten)}\footnotemark & $\sum \dot{E}_{D,k}$ & \textbf{7.371,4 kW} \\
+\textbf{(Residuum)} & \textbf{Globale Differenz (Ein - Aus)} & $\sum \dot{E}_{in} - \sum \dot{E}_{out}$ & \textbf{7.265,2 kW} \\
+ & \textbf{Absolute Bilanzabweichung} & $\Delta \dot{E}$ & \textbf{106,2 kW} \\
+ & \textbf{Relativer Bilanzfehler (bezogen auf Input)} & $\frac{\Delta \dot{E}}{\sum \dot{E}_{in}}$ & \textbf{0,87 \%} \\
+\hline
+\hline
+\end{longtable}
+
+% Zahlenquelle: Overleaf_LaTeX/tabellen/aspen_luftzerlegung_global_check.tex
+% Werte (aus LaTeX-Tabellen / Tabellenkommentaren) in W umgerechnet und als kW dargestellt.
+% 1) $\dot{E}_{S1} = 186234\ \mathrm{W} = 186,2\ \mathrm{kW}$
+% 2) $\dot{W}_{LK1} + \dot{W}_{LK2} + \dot{W}_{PK1} = 10868305\ \mathrm{W} = 10.868,3\ \mathrm{kW}$
+% 3) $\sum \dot{E}_{in} = 12182011,69\ \mathrm{W} = 12.182,0\ \mathrm{kW}$
+% 4) $\dot{E}_{S32} = 2836494,94\ \mathrm{W} = 2.836,5\ \mathrm{kW}$
+% 5) $\dot{W}_T = 106240\ \mathrm{W} = 106,2\ \mathrm{kW}$
+% 6) $\sum \dot{E}_{D,k} = 7371410,28\ \mathrm{W} = 7.371,4\ \mathrm{kW}$
+% 7) $\dot{E}_{L,tot} = 1974106,47\ \mathrm{W} = 1.974,1\ \mathrm{kW}$

@@ -1606,19 +1606,18 @@ def _build_component_results_table(components: dict) -> str:
         E_F_tot = getattr(ean, "E_F", None)
 
     rows = []
-    # Header and units for component results table
+    # Header and units for component results table (E_L removed)
     header = " & ".join([
         "Component",
         "Type",
         r"$\dot{E}_F$",
         r"$\dot{E}_P$",
         r"$\dot{E}_D$",
-        r"$\dot{E}_L$",
         r"$\varepsilon$",
         r"$y_{D,k}$",
         r"$y^*_{D,k}$",
     ]) + " \\\\"
-    unit_row = " & ".join(["", "", "(W)", "(W)", "(W)", "(W)", "(-)", "(-)", "(-)"]) + " \\\\"
+    unit_row = " & ".join(["", "", "(W)", "(W)", "(W)", "(-)", "(-)", "(-)"]) + " \\\\"
     # Support two input formats:
     # - runtime component objects (component instances with attributes)
     # - exported component dicts (as produced by ean._serialize())
@@ -1686,18 +1685,17 @@ def _build_component_results_table(components: dict) -> str:
             display_E_L = E_L if 'E_L' in locals() and E_L is not None else 0.0
             display_epsilon = epsilon
 
-        # collect for second pass
-        display_items.append((comp_name, comp_class_name, display_E_F, display_E_P, display_E_D, display_E_L, display_epsilon))
+        # collect for second pass (E_L omitted)
+        display_items.append((comp_name, comp_class_name, display_E_F, display_E_P, display_E_D, display_epsilon))
 
     # compute total absolute E_D for y* normalization
     E_D_tot = sum(abs(v) for _, _, _, _, v, _, _ in display_items if isinstance(v, (int, float)))
 
     rows = []
     sum_E_D = 0.0
-    sum_E_L = 0.0
     sum_y = 0.0
     sum_y_star = 0.0
-    for comp_name, comp_class_name, display_E_F, display_E_P, display_E_D, display_E_L, display_epsilon in display_items:
+    for comp_name, comp_class_name, display_E_F, display_E_P, display_E_D, display_epsilon in display_items:
         y_D_k = (display_E_D / E_F_tot) if (
             isinstance(display_E_D, (int, float)) and isinstance(E_F_tot, (int, float)) and E_F_tot != 0
         ) else None
@@ -1705,8 +1703,7 @@ def _build_component_results_table(components: dict) -> str:
 
         if isinstance(display_E_D, (int, float)):
             sum_E_D += display_E_D
-        if isinstance(display_E_L, (int, float)):
-            sum_E_L += display_E_L
+        # E_L column removed; no accumulation here
         if isinstance(y_D_k, (int, float)):
             sum_y += y_D_k
         if isinstance(y_D_k_star, (int, float)):
@@ -1719,17 +1716,16 @@ def _build_component_results_table(components: dict) -> str:
                 _format_value(display_E_F),
                 _format_value(display_E_P),
                 _format_value(display_E_D),
-                _format_value(display_E_L),
                 _format_value_fixed(display_epsilon, 4) if display_epsilon is not None else "",
                 _format_value_fixed(y_D_k, 4),
                 _format_value_fixed(y_D_k_star, 4),
             ]) + " \\\\"
         )
 
-    # sum row (only E_D, E_L, y_D_k, y*_D_k)
-    sum_row_cells = [r"\textbf{Summe}", "", "", "", _format_value(sum_E_D), _format_value(sum_E_L), "", _format_value_fixed(sum_y, 4), _format_value_fixed(sum_y_star, 4)]
+    # sum row (only E_D, y_D_k, y*_D_k) — E_L removed
+    sum_row_cells = [r"\textbf{Summe}", "", "", "", _format_value(sum_E_D), "", _format_value_fixed(sum_y, 4), _format_value_fixed(sum_y_star, 4)]
 
-    col_spec = "l" + "l" + "r" * 7
+    col_spec = "l" + "l" + "r" * 6
     lines = [
         f"\\begin{{longtable}}{{{col_spec}}}",
         "\\caption{Berechnete exergetische Kennzahlen der Komponenten des Single-Kolonnenmodells} " + r"\\",
@@ -1808,7 +1804,50 @@ def _build_global_check_table(components: dict) -> str:
             display_E_F = E_F
             display_E_P = E_P
             display_E_D = E_D
+            # Default: component attribute E_L if present
             display_E_L = E_L if E_L is not None else 0.0
+            # But prefer system-exiting outlet streams for component E_L when available
+            try:
+                comp_name_str = str(comp_name)
+                comp_exit_el = 0.0
+                for sname, conn in connections_now.items():
+                    if not isinstance(conn, dict):
+                        continue
+                    # check source component and target component fields (robust keys)
+                    src = conn.get("source_component") or conn.get("source") or conn.get("from")
+                    tgt = conn.get("target_component") or conn.get("target") or conn.get("to")
+                    if src is None:
+                        continue
+                    try:
+                        src_str = str(src).strip()
+                    except Exception:
+                        src_str = ""
+                    # if this connection originates from this component and has no target -> system exit
+                    if src_str == comp_name_str and not tgt:
+                        # determine total exergy flow for this stream
+                        val = conn.get("E") or conn.get("energy_flow")
+                        if not isinstance(val, (int, float)):
+                            m_val = conn.get("m")
+                            e_ph = conn.get("e_PH")
+                            e_ch = conn.get("e_CH")
+                            e_ph_eff = None
+                            if isinstance(e_ph, (int, float)):
+                                e_ph_eff = float(e_ph)
+                            else:
+                                e_t = conn.get("e_T")
+                                e_m = conn.get("e_M")
+                                if isinstance(e_t, (int, float)) and isinstance(e_m, (int, float)):
+                                    e_ph_eff = float(e_t) + float(e_m)
+                                elif isinstance(e_ch, (int, float)):
+                                    e_ph_eff = 0.0
+                            if all(isinstance(v, (int, float)) for v in [m_val, e_ph_eff, e_ch]):
+                                val = float(m_val) * (float(e_ph_eff) + float(e_ch))
+                        if isinstance(val, (int, float)):
+                            comp_exit_el += float(val)
+                if comp_exit_el > 0:
+                    display_E_L = comp_exit_el
+            except Exception:
+                pass
 
         display_by_name[str(comp_name)] = {
             "E_F": display_E_F,

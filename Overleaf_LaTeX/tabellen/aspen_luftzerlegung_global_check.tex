@@ -1,17 +1,17 @@
-% parsed_raw: {'E_s1': 186234.0, 'E_comp': 10868305.0, 'E_prod': 5265146.0983, 'W_turb': 106240.0, 'E_dest': 7371410.279999999, 'E_loss': 3879258.4941, 'E_in_sum': 16515814.872399999}
-% computed_from_tables: {'E_F': 16515814.872399999, 'E_P': 5265146.0983, 'E_D': 7371410.279999999, 'E_L': 3879258.4941, 'E_in_sum': 16515814.872399999, 'product_stream': 'S32'}
 \begin{longtable}{llr | llr}
-\caption{Exergetische Bilanz des Gesamtsystems der Doppelkolonne} \\
+\caption{Exergetische Bilanz des Gesamtsystems des Doppelkolonnenmodells} \\
 \hline
-\multicolumn{3}{l|}{\textbf{Aufwandseite}} & \multicolumn{3}{l}{\textbf{Nutzen, Vernichtung \& Verlust}} \\
+\multicolumn{3}{l|}{\textbf{Exergetischer Aufwand ($E_{in}$)}} & \multicolumn{3}{l}{\textbf{Exergetischer Verbleib}} \\
 \hline
-Posten & Symbol & Wert (W) & Posten & Symbol & Wert (W) \\
+Posten & Quelle & Wert (W) & Posten & Typ & Wert (W) \\
 \hline
-Feed-Strom 1 & $\dot{E}_{S1}$ & 186.234 & Produktstrom N$_2$ & $\dot{E}_{S32}$ & 5.265.146 \\
-Verdichterleistung & $\dot{W}_1 + \dot{W}_2$ & 10.868.305 & Turbinenleistung & $\dot{W}_3$ & 106.240 \\
- &  &  & Exergievernichtung & $\dot{E}_{D,tot}$ & 7.371.410 \\
- &  &  & Exergieverlust & $\dot{E}_{L,tot}$ & 3.879.258 \\
+Strom 1 & $\dot{E}_{S1}$ & 186,234 & Produkt N2 & $\dot{E}_{S32}$ & 2,836,495 \\
+Verdichtung & $E_{F,LK+PK}$ & 10,868,305 & Turbinenarbeit & $\dot{W}_{T}$ & 106,240 \\
+ &  &  & Exerget. Vernichtung & $\sum \dot{E}_{D,k}$ & 7,371,410 \\
+ &  &  & Austrittsverluste & $\sum \dot{E}_{L,ges}$ & 735,107 \\
 \hline
-\textbf{Gesamtaufwand} & \dot{E}_{F,tot} & \textbf{16.515.815} & \textbf{Summe Aus} & \begin{tabular}{@{}l@{}}\dot{E}_{P,tot} + \dot{E}_{D,tot} \\ + \dot{E}_{L,tot}\end{tabular} & \textbf{16.515.815} \\
+\textbf{Summe Ein} &  & \textbf{11,054,539} & \textbf{Summe Aus} &  & \textbf{11,049,252} \\
+\hline
+\multicolumn{3}{l}{} & \textbf{Differenz ($\Delta$)} &  & \textbf{5,287 (0,05 \%)} \\
 \hline
 \end{longtable}

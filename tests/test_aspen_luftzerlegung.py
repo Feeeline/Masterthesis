@@ -175,6 +175,47 @@ logging.info(f"  Check: E_D_tot_final + E_L_tot_final = {None if not (isinstance
 export_now = ean._serialize()
 connections_now = export_now.get("connections", {})
 
+def _power_stream_abs(stream_name: str):
+    # Return absolute power/energy flow for a named power connection if present.
+    conn = connections_now.get(stream_name) or ean.connections.get(stream_name)
+    if not isinstance(conn, dict):
+        return None
+    val = conn.get("energy_flow") or conn.get("E")
+    if isinstance(val, (int, float)):
+        return abs(float(val))
+    return None
+
+def _stream_total_exergy_from_table(stream_name: str):
+    # Find connection by name/key in the exported connections and compute total exergy m*(e_PH+e_CH)
+    conn = connections_now.get(stream_name)
+    if not isinstance(conn, dict):
+        for key, c in connections_now.items():
+            if not isinstance(c, dict):
+                continue
+            name = str(c.get("name", key))
+            if name == stream_name or str(key) == stream_name:
+                conn = c
+                break
+    if not isinstance(conn, dict):
+        return None
+    m_val = conn.get("m")
+    e_ph = conn.get("e_PH")
+    e_ch = conn.get("e_CH")
+    e_ph_eff = None
+    if isinstance(e_ph, (int, float)):
+        e_ph_eff = float(e_ph)
+    else:
+        e_t = conn.get("e_T")
+        e_m = conn.get("e_M")
+        if isinstance(e_t, (int, float)) and isinstance(e_m, (int, float)):
+            e_ph_eff = float(e_t) + float(e_m)
+        elif isinstance(e_ch, (int, float)):
+            e_ph_eff = 0.0
+
+    if all(isinstance(v, (int, float)) for v in [m_val, e_ph_eff, e_ch]):
+        return float(m_val) * (float(e_ph_eff) + float(e_ch))
+    return None
+
 def _find_conn_by_suffix(suffix: str):
     for key, conn in connections_now.items():
         name = str(conn.get("name", key))
@@ -1347,6 +1388,27 @@ def _format_molfrac_value(value):
     return _latex_escape(str(value))
 
 
+def _format_value_fixed(value, ndigits: int):
+    """Format a numeric value with a fixed number of decimals (no scientific notation).
+
+    Returns a string with a comma as decimal separator. Caller may pass None and
+    should handle it if desired.
+    """
+    if value is None:
+        return ""
+    try:
+        x = float(value)
+        if not math.isfinite(x):
+            return ""
+        fmt = f"{x:.{ndigits}f}"
+        # Remove leading + sign if any, keep negative sign
+        if fmt.startswith("+"):
+            fmt = fmt[1:]
+        return fmt.replace('.', ',')
+    except Exception:
+        return ""
+
+
 def _build_streams_latex_table(connections: dict) -> str:
     columns = [
         ("name", "Stream", None),
@@ -1566,18 +1628,195 @@ def _build_molar_fractions_table(connections: dict) -> str:
 
 def _build_component_results_table(components: dict) -> str:
     # keep original column layout; we'll inject custom values into the standard columns
+    # compute E_F_tot from available power/material streams for y calculation
+    W1 = _power_stream_abs("W1")
+    W2 = _power_stream_abs("W2")
+    E_S1 = _stream_total_exergy_from_table("S1")
+    if all(isinstance(v, (int, float)) for v in [W1, W2, E_S1]):
+        E_F_tot = W1 + W2 + E_S1
+    else:
+        E_F_tot = getattr(ean, "E_F", None)
+
+    rows = []
+    # Header and units for component results table (E_L removed)
     header = " & ".join([
         "Component",
         "Type",
         r"$\dot{E}_F$",
         r"$\dot{E}_P$",
         r"$\dot{E}_D$",
-        r"$\dot{E}_L$",
         r"$\varepsilon$",
         r"$y_{D,k}$",
         r"$y^*_{D,k}$",
     ]) + " \\\\"
-    unit_row = " & ".join(["", "", "(W)", "(W)", "(W)", "(W)", "(-)", "(-)", "(-)"]) + " \\\\"
+    unit_row = " & ".join(["", "", "(W)", "(W)", "(W)", "(-)", "(-)", "(-)"]) + " \\\\"
+    # Support two input formats:
+    # - runtime component objects (component instances with attributes)
+    # - exported component dicts (as produced by ean._serialize())
+    # two-pass: collect display values first (need total absolute E_D for y* normalization)
+    display_items = []
+    for comp_name, component in components.items():
+        # Skip CycleCloser/Splitter and RECON as before
+        name_key = str(comp_name).strip()
+        if name_key.upper() == "RECON":
+            continue
+
+        # Determine if this entry is an exported dict
+        if isinstance(component, dict):
+            comp_type = component.get("type") or component.get("__class__", "")
+            ex = component.get("exergy_results", {}) or {}
+            E_F = ex.get("E_F")
+            E_P = ex.get("E_P")
+            E_D = ex.get("E_D")
+            epsilon = ex.get("epsilon")
+            comp_class_name = comp_type
+            # custom overrides (not present in exported dicts)
+            E_F_custom = None
+            E_P_custom = None
+            E_D_custom = None
+            E_L_custom = None
+            epsilon_custom = None
+        else:
+            # runtime object path
+            if component.__class__.__name__ in {"CycleCloser", "Splitter"}:
+                continue
+            comp_class_name = component.__class__.__name__
+            E_F = getattr(component, "E_F", None)
+            E_P = getattr(component, "E_P", None)
+            E_D = getattr(component, "E_D", None)
+            E_L = getattr(component, "E_L", None)
+            epsilon = getattr(component, "epsilon", None)
+            E_F_custom = getattr(component, "E_F_custom", None)
+            E_P_custom = getattr(component, "E_P_custom", None)
+            E_D_custom = getattr(component, "E_D_custom", None)
+            E_L_custom = getattr(component, "E_L_custom", None)
+            epsilon_custom = getattr(component, "epsilon_custom", None)
+
+        # Use custom display values only when custom triplet is numeric and finite
+        use_custom = all(isinstance(v, (int, float)) and math.isfinite(v) for v in (E_F_custom, E_P_custom, E_D_custom))
+        # Special-case: for MIX enforce use of custom values if any custom value was computed
+        try:
+            name_up = str(comp_name).strip().upper()
+        except Exception:
+            name_up = ""
+        if name_up == "MIX" and any(isinstance(v, (int, float)) and math.isfinite(v) for v in (E_F_custom, E_P_custom, E_D_custom)):
+            use_custom = True
+        if use_custom:
+            display_E_F = E_F_custom
+            display_E_P = E_P_custom
+            display_E_D = E_D_custom
+            display_E_L = E_L_custom if E_L_custom is not None else 0.0
+            if epsilon_custom is not None:
+                display_epsilon = epsilon_custom
+            else:
+                display_epsilon = (display_E_P / display_E_F) if (display_E_F not in (None, 0)) else None
+        else:
+            display_E_F = E_F
+            display_E_P = E_P
+            display_E_D = E_D
+            display_E_L = E_L if 'E_L' in locals() and E_L is not None else 0.0
+            display_epsilon = epsilon
+
+        # collect for second pass (E_L omitted)
+        display_items.append((comp_name, comp_class_name, display_E_F, display_E_P, display_E_D, display_epsilon))
+
+    # compute total absolute E_D for y* normalization
+    E_D_tot = sum(abs(v) for _, _, _, _, v, _ in display_items if isinstance(v, (int, float)))
+
+    # Prefer the module-level custom overall total when available
+    if not E_D_tot:
+        if isinstance(E_D_tot_final, (int, float)) and math.isfinite(E_D_tot_final) and E_D_tot_final != 0:
+            E_D_tot = abs(E_D_tot_final)
+
+    # Fallback: if still zero or missing, compute total directly from the raw component objects/dicts
+    if not E_D_tot:
+        total_abs = 0.0
+        for comp_name, component in components.items():
+            if isinstance(component, dict):
+                ex = component.get("exergy_results", {}) or {}
+                v = ex.get("E_D")
+            else:
+                v = getattr(component, 'E_D', None)
+            if isinstance(v, (int, float)) and math.isfinite(v):
+                total_abs += abs(v)
+        if total_abs:
+            E_D_tot = total_abs
+
+    # Debug: log totals used for normalization and per-component values
+    try:
+        logging.info(f"[DEBUG] Component table: E_F_tot={E_F_tot}, E_D_tot={E_D_tot}")
+        # Also print a concise debug line to stdout to ensure visibility in captured logs
+        print(f"[DEBUG-TABLE] E_F_tot={E_F_tot} E_D_tot={E_D_tot}")
+        for idx, (comp_name, comp_class_name, display_E_F, display_E_P, display_E_D, display_epsilon) in enumerate(display_items):
+            y_val = (display_E_D / E_F_tot) if (
+                isinstance(display_E_D, (int, float)) and isinstance(E_F_tot, (int, float)) and E_F_tot != 0
+            ) else None
+            y_star_val = (abs(display_E_D) / E_D_tot) if (isinstance(display_E_D, (int, float)) and E_D_tot and E_D_tot != 0) else None
+            logging.info(
+                "[DEBUG] comp=%s type=%s E_F=%s E_P=%s E_D=%s eps=%s y=%s y*=%s",
+                comp_name,
+                comp_class_name,
+                _format_value(display_E_F),
+                _format_value(display_E_P),
+                _format_value(display_E_D),
+                (f"{display_epsilon:.6g}" if isinstance(display_epsilon, (int, float)) else str(display_epsilon)),
+                _format_value_fixed(y_val, 6),
+                _format_value_fixed(y_star_val, 6),
+            )
+            if idx >= 4:
+                # limit stdout noise
+                break
+    except Exception:
+        pass
+
+    rows = []
+    sum_E_D = 0.0
+    sum_y = 0.0
+    sum_y_star = 0.0
+    for comp_name, comp_class_name, display_E_F, display_E_P, display_E_D, display_epsilon in display_items:
+        y_D_k = (display_E_D / E_F_tot) if (
+            isinstance(display_E_D, (int, float)) and isinstance(E_F_tot, (int, float)) and E_F_tot != 0
+        ) else None
+        y_D_k_star = (abs(display_E_D) / E_D_tot) if (isinstance(display_E_D, (int, float)) and E_D_tot and E_D_tot != 0) else None
+
+        if isinstance(display_E_D, (int, float)):
+            sum_E_D += display_E_D
+        # E_L column removed; no accumulation here
+        if isinstance(y_D_k, (int, float)):
+            sum_y += y_D_k
+        if isinstance(y_D_k_star, (int, float)):
+            sum_y_star += y_D_k_star
+
+        rows.append(
+            " & ".join([
+                _latex_escape(str(comp_name)),
+                _latex_escape(str(comp_class_name)),
+                _format_value(display_E_F),
+                _format_value(display_E_P),
+                _format_value(display_E_D),
+                _format_value_fixed(display_epsilon, 4) if display_epsilon is not None else "",
+                _format_value_fixed(y_D_k, 4),
+                _format_value_fixed(y_D_k_star, 4),
+            ]) + " \\\\"
+        )
+    # sum row (only E_D, y_D_k, y*_D_k) — E_L removed
+    sum_row_cells = [r"\\textbf{Summe}", "", "", "", _format_value(sum_E_D), "", _format_value_fixed(sum_y, 4), _format_value_fixed(sum_y_star, 4)]
+
+    col_spec = "l" + "l" + "r" * 6
+    lines = [
+        f"\\begin{{longtable}}{{{col_spec}}}",
+        "\\caption{Berechnete exergetische Kennzahlen der Komponenten des Doppelkolonnenmodells} " + r"\\",
+        "\\hline",
+        header,
+        unit_row,
+        "\\hline",
+        *rows,
+        "\\hline",
+        " & ".join(sum_row_cells) + r"\\",
+        "\\hline",
+        "\\end{longtable}",
+    ]
+    return "\n".join(lines)
 
     E_F_tot = E_F_tot_final if isinstance(E_F_tot_final, (int, float)) else getattr(ean, "E_F", None)
 
@@ -1618,18 +1857,23 @@ def _build_component_results_table(components: dict) -> str:
             display_E_D = E_D
             display_E_L = E_L if E_L is not None else 0.0
             display_epsilon = epsilon
-        # append to display list
-        display_items.append((comp_name, component.__class__.__name__, display_E_F, display_E_P, display_E_D, display_E_L, display_epsilon))
+            # If epsilon missing, compute from available E_P / E_F when possible
+            if display_epsilon is None and isinstance(display_E_P, (int, float)) and isinstance(display_E_F, (int, float)) and display_E_F != 0:
+                try:
+                    display_epsilon = float(display_E_P) / float(display_E_F)
+                except Exception:
+                    display_epsilon = None
+        # append to display list (E_L omitted from displayed table)
+        display_items.append((comp_name, component.__class__.__name__, display_E_F, display_E_P, display_E_D, display_epsilon))
 
     # compute E_D total for y* normalization
-    E_D_tot = sum(abs(v) for _, _, _, _, v, _, _ in display_items if isinstance(v, (int, float)))
+    E_D_tot = sum(abs(v) for _, _, _, _, v, _ in display_items if isinstance(v, (int, float)))
 
     rows = []
     sum_E_D = 0.0
-    sum_E_L = 0.0
     sum_y = 0.0
     sum_y_star = 0.0
-    for comp_name, comp_class_name, display_E_F, display_E_P, display_E_D, display_E_L, display_epsilon in display_items:
+    for comp_name, comp_class_name, display_E_F, display_E_P, display_E_D, display_epsilon in display_items:
         y_D_k = (display_E_D / E_F_tot) if (
             isinstance(display_E_D, (int, float)) and isinstance(E_F_tot, (int, float)) and E_F_tot != 0
         ) else None
@@ -1638,8 +1882,7 @@ def _build_component_results_table(components: dict) -> str:
         # accumulate sums for columns requested
         if isinstance(display_E_D, (int, float)):
             sum_E_D += display_E_D
-        if isinstance(display_E_L, (int, float)):
-            sum_E_L += display_E_L
+        # E_L column removed from displayed table
         if isinstance(y_D_k, (int, float)):
             sum_y += y_D_k
         if isinstance(y_D_k_star, (int, float)):
@@ -1652,16 +1895,15 @@ def _build_component_results_table(components: dict) -> str:
                 _format_value(display_E_F),
                 _format_value(display_E_P),
                 _format_value(display_E_D),
-                _format_value(display_E_L),
                 _format_value_fixed(display_epsilon, 4) if display_epsilon is not None else "",
                 _format_value_fixed(y_D_k, 4),
                 _format_value_fixed(y_D_k_star, 4),
             ]) + " \\\\"
         )
-    # build sum row: put bold 'Summe' in first column, only fill E_D, E_L, y_D_k, y_D_k_star
-    sum_row_cells = [r"\textbf{Summe}", "", "", "", _format_value(sum_E_D), _format_value(sum_E_L), "", _format_value_fixed(sum_y, 4), _format_value_fixed(sum_y_star, 4)]
+    # build sum row: E_L omitted from displayed table
+    sum_row_cells = [r"\textbf{Summe}", "", "", "", _format_value(sum_E_D), "", _format_value_fixed(sum_y, 4), _format_value_fixed(sum_y_star, 4)]
 
-    col_spec = "l" + "l" + "r" * 7
+    col_spec = "l" + "l" + "r" * 6
     lines = [
         f"\\begin{{longtable}}{{{col_spec}}}",
         "\\caption{Berechnete exergetische Kennzahlen der Komponenten des Doppelkolonnenmodells} " + r"\\",
@@ -2038,6 +2280,12 @@ components_output_path = os.path.abspath(
     )
 )
 components_table = _build_component_results_table(ean.components)
+print("===COMPONENTS_TABLE_PREVIEW===")
+print(components_table)
+# Also write a preview file to ensure the generated table is persisted for inspection
+preview_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "Overleaf_LaTeX", "tabellen", "aspen_luftzerlegung_components_preview.tex"))
+with open(preview_path, "w", encoding="utf-8") as pf:
+    pf.write(components_table)
 with open(components_output_path, "w", encoding="utf-8") as tex_file:
     tex_file.write(components_table)
 

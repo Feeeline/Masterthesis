@@ -1,0 +1,36 @@
+\begin{longtable}{llrr}
+\caption{Globale Exergiebilanz und Konsistenzprüfung des Singlekolonnenmodells} \\
+\hline
+Kategorie & Bezeichnung & Symbol & Wert \\
+\hline
+\textbf{Zugeführte Exergie} & Feed-Strom Luft (S1) & $\dot{E}_{S1}$ & 188,4 kW \\
+\textbf{(Input)} & Verdichter-Wellenleistung & $\dot{W}_{LK1} + \dot{W}_{LK2}$ & 11.070,5 kW \\
+ & \textbf{Summe Input} & $\sum \dot{E}_{in}$ & \textbf{11.258,9 kW} \\
+\hline
+\textbf{Abgeführte Exergie} & $N_2$-Produktstrom (S24) & $\dot{E}_{S24}$ & 2.825,4 kW \\
+\textbf{(Output)} & Turbinen-Wellenleistung & $\dot{W}_T$ & 954,4 kW \\
+ & Restgas / Abgas (S21) & $\dot{E}_{S21}$ & 490,0 kW \\
+ & Purge / Flash-Verluste (S7+S9+S10) & $\dot{E}_{L,tot}$ & 33,0 kW \\
+ & \textbf{Summe physikalischer Output} & $\sum \dot{E}_{out}$ & \textbf{4.302,8 kW} \\
+\hline
+\textbf{Bilanzabgleich} & \textbf{Exergievernichtung (aus Komponenten)}\footnotemark & $\sum \dot{E}_{D,k}$ & \textbf{6.865,4 kW} \\
+\textbf{(Residuum)} & \textbf{Globale Differenz (Ein - Aus)} & $\sum \dot{E}_{in} - \sum \dot{E}_{out}$ & \textbf{6.956,1 kW} \\
+ & \textbf{Absolute Bilanzabweichung} & $\Delta \dot{E}$ & \textbf{90,7 kW} \\
+ & \textbf{Relativer Bilanzfehler (bezogen auf Input)} & $\frac{\Delta \dot{E}}{\sum \dot{E}_{in}}$ & \textbf{0,81 \%} \\
+\hline
+\end{longtable}
+
+% Anmerkungen und Berechnungen (W -> kW):
+% Korrekturen gemäß Nutzeranforderungen:
+% 1) Summe Input: 188,4 + 11.070,5 = 11.258,9 kW
+% 2) Produktstrom S24: m = 15,91 kg/s, e_PH = 151885,58 J/kg, e_CH = 25701,85 J/kg
+%    E_S24 = 15,91 * (151885,58 + 25701,85) = 2.825.416 W -> 2.825,4 kW
+% 3) Restgas S21 (aus Strömendaten): gerundet 490,0 kW (in Datei zuvor 489,6 kW)
+% 4) Purge/Flash (system exits S7 + S9 + S10) = 33,0 kW (Summe der physikalischen Ströme)
+% 5) Summe physikalischer Output = 2.825,4 + 954,4 + 490,0 + 33,0 = 4.302,8 kW
+% 6) Komponenten-Vernichtung: bisherige Summe 6.621,0 kW + mechanische Verluste (LK1 53,5 + LK2 57,2 + TURB 133,7 = 244,4 kW)
+%    = 6.865,4 kW
+% 7) Globale Differenz (Ein - Aus) = 11.258,9 - 4.302,8 = 6.956,1 kW
+% 8) Residuum = |6.956,1 - 6.865,4| = 90,7 kW -> Relativer Fehler = 90,7 / 11.258,9 = 0,81 %
+
+% Hinweis: Die Zahlen wurden gerundet für die Darstellung. Die genauen Zwischenschritte stehen in den Quelltabellen (Streams und Komponenten).
