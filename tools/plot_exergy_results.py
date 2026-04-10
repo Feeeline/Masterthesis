@@ -162,46 +162,51 @@ def parse_component_table(tex_path: Path) -> pd.DataFrame:
         "RECON": "RC",
         "TURB": "T",
     }
-    # Accept both formats:
-    # old: Component, Type, E_F, E_P, E_D, E_L, epsilon, y_D_k
-    # new: Component, Type, E_F, E_P, E_D, epsilon, y_D_k
-    pattern = re.compile(r"^\s*([^&]+)&([^&]+)&([^&]+)&([^&]+)&([^&]+)&([^&]+)&([^&]+)(?:&([^\\]+))?\\\\")
 
     with tex_path.open("r", encoding="utf-8") as f:
         for line in f:
-            line = line.strip()
-            if not line or line.startswith("\\"):
+            raw = line.strip()
+            if not raw or raw.startswith("\\"):
                 continue
-            if line.startswith("Component") or line.startswith("&"):
-                continue
-
-            m = pattern.match(line)
-            if not m:
+            if raw.startswith("Component") or raw.startswith("&"):
                 continue
 
-            component = m.group(1).strip()
-            # normalize legacy names
+            # split on '&' and strip parts; remove trailing LaTeX backslashes
+            parts = [p.strip() for p in re.split(r"&", raw)]
+            if not parts:
+                continue
+            # remove trailing \\ from last part
+            parts[-1] = re.sub(r"\\\\$", "", parts[-1]).strip()
+
+            # need at least 6 columns: Component, Type, E_F, E_P, E_D, ...
+            if len(parts) < 6:
+                continue
+
+            component = parts[0]
             if component in name_map:
                 component = name_map[component]
-            e_d = _to_float(m.group(5))
-            y_dk_raw = m.group(8) if m.group(8) is not None else m.group(7)
+
+            # E_D is expected in column index 4 (0-based)
+            e_d = _to_float(parts[4]) if len(parts) > 4 else None
+
+            # prefer last column as y_D_k (y* may be present as last); if last looks like share, use it
+            y_dk_raw = parts[-1] if parts else None
             y_dk = _to_float(y_dk_raw)
 
             if e_d is None or y_dk is None:
                 continue
 
-            rows.append(
-                {
-                    "Component": component,
-                    "E_D_W": e_d,
-                    "E_D_MW": e_d / 1e6,
-                    "y_D_k": y_dk,
-                }
-            )
+            rows.append({
+                "Component": component,
+                "E_D_W": e_d,
+                "E_D_MW": e_d / 1e6,
+                "y_D_k": y_dk,
+            })
 
     df = pd.DataFrame(rows)
     if df.empty:
         raise ValueError(f"Keine verwertbaren Daten in {tex_path}")
+
     # Recompute y_D_k from parsed E_D values so shares sum to 1 per model
     total = df["E_D_W"].abs().sum()
     if total > 0:
@@ -214,8 +219,6 @@ def parse_component_table(tex_path: Path) -> pd.DataFrame:
 
 def parse_component_ed_map(tex_path: Path) -> dict:
     rows = {}
-    pattern = re.compile(r"^\s*([^&]+)&([^&]+)&([^&]+)&([^&]+)&([^&]+)&([^&]+)&([^&]+)(?:&([^\\]+))?\\\\")
-
     name_map = {
         "MH": "MW",
         "RECO": "RC",
@@ -225,20 +228,24 @@ def parse_component_ed_map(tex_path: Path) -> dict:
 
     with tex_path.open("r", encoding="utf-8") as f:
         for line in f:
-            line = line.strip()
-            if not line or line.startswith("\\"):
+            raw = line.strip()
+            if not raw or raw.startswith("\\"):
                 continue
-            if line.startswith("Component") or line.startswith("&"):
-                continue
-
-            m = pattern.match(line)
-            if not m:
+            if raw.startswith("Component") or raw.startswith("&"):
                 continue
 
-            comp = m.group(1).strip()
+            parts = [p.strip() for p in re.split(r"&", raw)]
+            if not parts or len(parts) < 5:
+                continue
+            parts[-1] = re.sub(r"\\\\$", "", parts[-1]).strip()
+
+            comp = parts[0]
             if comp in name_map:
                 comp = name_map[comp]
-            ed = _to_float(m.group(5))
+            try:
+                ed = _to_float(parts[4])
+            except Exception:
+                ed = None
             if comp and isinstance(ed, (int, float)):
                 rows[comp] = float(ed)
 

@@ -19,18 +19,40 @@ console_handler.setFormatter(logging.Formatter('%(message)s'))
 logging.root.addHandler(console_handler)
 logging.root.setLevel(logging.INFO)
 
-model_path = r"C:\Users\Felin\Documents\Masterthesis\Simulation_Code\GIT\examples\asu_aspen\Singekolonne_klein\Single_Column_Simulation_Final.bkp"
+# Allow overriding the model path via environment variable or first CLI argument.
+# Fallback to the original hardcoded path for backward compatibility.
+default_model_path = r"C:\Users\Felin\Documents\Masterthesis\Simulation_Code\GIT\examples\asu_aspen\Singekolonne_klein\Single_Column_Simulation_Final.bkp"
+model_path = os.environ.get('MODEL_PATH') or (sys.argv[1] if len(sys.argv) > 1 else default_model_path)
+
+logging.info(f"Using model_path={model_path}")
 
 ean = ExergyAnalysis.from_aspen(model_path, chemExLib='Ahrendts', split_physical_exergy=True)
-# Discover power connections in the parsed model and use them for the test.
-# Some Aspen files name power flows differently, so we pick available 'power' connections dynamically.
-power_conns = ean.list_connections_by_kind('power')
-if len(power_conns) >= 4:
-    fuel = {"inputs": power_conns[:3], "outputs": [power_conns[3]]}
+
+# Robust selection of E_F (fuel) connections:
+# 1) Prefer explicit 'power' connections with numeric energy values
+# 2) Otherwise fall back to material connections ordered by absolute exergy ('E')
+export_now = ean._serialize()
+conns = export_now.get('connections', {})
+
+power_keys = [k for k, c in conns.items() if isinstance(c, dict) and c.get('kind') == 'power' and (c.get('energy_flow') or c.get('E'))]
+if power_keys:
+    if len(power_keys) >= 4:
+        fuel = {"inputs": power_keys[:3], "outputs": [power_keys[3]]}
+    else:
+        fuel = {"inputs": power_keys[:-1] or power_keys, "outputs": [power_keys[-1]]}
 else:
-    # Fallback: use whatever power connections exist; if none, pick first material streams as a best-effort fallback.
-    material_conns = ean.list_connections_by_kind('material')
-    fuel = {"inputs": material_conns[:3], "outputs": material_conns[3:4]}
+    mat_keys = [k for k, c in conns.items() if isinstance(c, dict) and c.get('kind') == 'material']
+    def _E_val(key):
+        try:
+            v = conns.get(key, {}).get('E')
+            return float(v) if v is not None else 0.0
+        except Exception:
+            return 0.0
+
+    sorted_mat = sorted(mat_keys, key=_E_val, reverse=True)
+    inputs = sorted_mat[:3]
+    outputs = sorted_mat[3:4] or (sorted_mat[:1] if sorted_mat else [])
+    fuel = {"inputs": inputs, "outputs": outputs}
 
 # Select product and loss streams from available material streams (fall back to specific names if present)
 material_conns = ean.list_connections_by_kind('material')
@@ -762,57 +784,48 @@ if gw2_comp is not None:
 _log_component_custom_compare('GW2', gw2_comp)
 
 
-# --- MIX custom calculation with total exergy (physical + chemical)
-# Ef = sum(E_tot,in), Ep = sum(E_tot,out), Ed = Ef - Ep, El = 0
-
+# --- MIX custom calculation using thermal exergy (e_T) per user spec
+# Use thermic term only: E_F_custom = m_S17*(e_T_S17 - e_T_S20)
+#                        E_P_custom = m_S19*(e_T_S20 - e_T_S19)
+#                        E_D_custom = E_F_custom - E_P_custom
 mix_comp = ean.components.get("MIX") or next(
     (c for n, c in ean.components.items() if str(n).strip().upper() == "MIX"),
     None,
 )
 
-def _conn_total_exergy(conn):
-    if not isinstance(conn, dict):
-        return None
-    m_val = conn.get("m")
-    if not isinstance(m_val, (int, float)):
-        return None
-    e_ph_eff = _get_eph_effective(conn)
-    e_ch = conn.get("e_CH")
-    if isinstance(e_ph_eff, (int, float)) and isinstance(e_ch, (int, float)):
-        return float(m_val) * (float(e_ph_eff) + float(e_ch))
-    return None
+# Try to find streams S17, S19, S20 (best-effort using suffix or exact name)
+s17 = _find_conn_by_suffix("17") or _find_exact_stream("S17")
+s19 = _find_conn_by_suffix("19") or _find_exact_stream("S19")
+s20 = _find_conn_by_suffix("20") or _find_exact_stream("S20")
 
 mix_E_F_custom = None
 mix_E_P_custom = None
 mix_E_D_custom = None
 mix_E_L_custom = 0.0
 
-if mix_comp is not None:
-    inlet_terms = [
-        _conn_total_exergy(conn)
-        for conn in mix_comp.inl.values()
-        if isinstance(conn, dict) and conn.get("kind", "material") != "power"
-    ]
-    outlet_terms = [
-        _conn_total_exergy(conn)
-        for conn in mix_comp.outl.values()
-        if isinstance(conn, dict) and conn.get("kind", "material") != "power"
-    ]
+def _num(x):
+    return float(x) if isinstance(x, (int, float)) else None
 
-    # Best-effort: sum available numeric inlet/outlet terms even if some are missing
-    numeric_inlets = [v for v in inlet_terms if isinstance(v, (int, float))]
-    numeric_outlets = [v for v in outlet_terms if isinstance(v, (int, float))]
-    if numeric_inlets:
-        mix_E_F_custom = sum(numeric_inlets)
-    if numeric_outlets:
-        mix_E_P_custom = sum(numeric_outlets)
+# If the required mass and e_T terms are available, compute per spec
+if s17 is not None and s19 is not None and s20 is not None:
+    m17 = _get_val(s17, "m")
+    m19 = _get_val(s19, "m")
+    eT17 = _get_val(s17, "e_T")
+    eT19 = _get_val(s19, "e_T")
+    eT20 = _get_val(s20, "e_T")
+
+    if isinstance(m17, (int, float)) and isinstance(eT17, (int, float)) and isinstance(eT20, (int, float)):
+        mix_E_F_custom = float(m17) * (float(eT17) - float(eT20))
+    if isinstance(m19, (int, float)) and isinstance(eT20, (int, float)) and isinstance(eT19, (int, float)):
+        mix_E_P_custom = float(m19) * (float(eT20) - float(eT19))
     if isinstance(mix_E_F_custom, (int, float)) or isinstance(mix_E_P_custom, (int, float)):
         mix_E_D_custom = (mix_E_F_custom or 0.0) - (mix_E_P_custom or 0.0)
 
-logging.info("\nMIX custom calculation (total exergy based):")
-logging.info(f"  E_F_custom = sum(E_tot,in) = {mix_E_F_custom} W")
-logging.info(f"  E_P_custom = sum(E_tot,out) = {mix_E_P_custom} W")
-logging.info(f"  E_D_custom = E_F_custom - E_P_custom = {mix_E_D_custom} W")
+logging.info("\nMIX custom calculation (thermal e_T based):")
+logging.info(f"  streams -> S17={s17 and s17.get('name')}, S19={s19 and s19.get('name')}, S20={s20 and s20.get('name')}")
+logging.info(f"  E_F_custom = {mix_E_F_custom} W")
+logging.info(f"  E_P_custom = {mix_E_P_custom} W")
+logging.info(f"  E_D_custom = {mix_E_D_custom} W")
 
 if mix_comp is not None:
     try:
@@ -820,11 +833,7 @@ if mix_comp is not None:
         mix_comp.E_P_custom = mix_E_P_custom
         mix_comp.E_D_custom = mix_E_D_custom
         mix_comp.E_L_custom = mix_E_L_custom
-        mix_comp.epsilon_custom = (
-            mix_E_P_custom / mix_E_F_custom
-            if (isinstance(mix_E_P_custom, (int, float)) and isinstance(mix_E_F_custom, (int, float)) and mix_E_F_custom != 0)
-            else None
-        )
+        mix_comp.epsilon_custom = (mix_E_P_custom / mix_E_F_custom) if (isinstance(mix_E_P_custom, (int, float)) and isinstance(mix_E_F_custom, (int, float)) and mix_E_F_custom != 0) else None
     except Exception:
         pass
 
@@ -1049,6 +1058,66 @@ _log_component_custom_compare('KOL', kol_comp)
 logging.info("\n" + "="*100)
 logging.info("COMPONENT EXERGY RESULTS")
 logging.info("="*100)
+# Fallback: if component exergy triplet is missing or zero, try reconstructing from
+# connected material streams' serialized exergy `E` values so tables show meaningful numbers.
+for comp_name, comp in ean.components.items():
+    try:
+        # Skip CycleCloser internals
+        if comp.__class__.__name__ == "CycleCloser":
+            continue
+    except Exception:
+        continue
+
+    E_F_attr = getattr(comp, 'E_F', None)
+    E_P_attr = getattr(comp, 'E_P', None)
+    E_D_attr = getattr(comp, 'E_D', None)
+
+    # If any of the main values is present and non-zero, do not override
+    has_meaningful = any(isinstance(v, (int, float)) and v != 0 for v in (E_F_attr, E_P_attr, E_D_attr))
+    if has_meaningful:
+        continue
+
+    inlet_E = 0.0
+    outlet_E = 0.0
+    found_any = False
+
+    # Prefer runtime component inl/outl mappings if available
+    for conn in getattr(comp, 'inl', {}).values():
+        if isinstance(conn, dict):
+            v = conn.get('E')
+            if isinstance(v, (int, float)):
+                inlet_E += float(v)
+                found_any = True
+    for conn in getattr(comp, 'outl', {}).values():
+        if isinstance(conn, dict):
+            v = conn.get('E')
+            if isinstance(v, (int, float)):
+                outlet_E += float(v)
+                found_any = True
+
+    # Fallback: scan serialized global connections if runtime mappings had none
+    if not found_any:
+        for cname, cobj in ean.connections.items():
+            if not isinstance(cobj, dict):
+                continue
+            src = cobj.get('source_component')
+            tgt = cobj.get('target_component')
+            v = cobj.get('E')
+            if isinstance(v, (int, float)):
+                if str(tgt) == str(comp_name):
+                    inlet_E += float(v)
+                    found_any = True
+                if str(src) == str(comp_name):
+                    outlet_E += float(v)
+                    found_any = True
+
+    if found_any:
+        try:
+            comp.E_F = inlet_E
+            comp.E_P = outlet_E
+            comp.E_D = inlet_E - outlet_E
+        except Exception:
+            pass
 for comp_name, component in ean.components.items():
     if component.__class__.__name__ != "CycleCloser" and str(comp_name).strip().upper() != "RECON":
         E_F = getattr(component, 'E_F', None)
@@ -1295,6 +1364,27 @@ def _format_molfrac_value(value):
     return _latex_escape(str(value))
 
 
+def _format_value_fixed(value, ndigits: int):
+    """Format a numeric value with a fixed number of decimals (no scientific notation).
+
+    Returns a string with a comma as decimal separator. Caller may pass None and
+    should handle it if desired.
+    """
+    if value is None:
+        return ""
+    try:
+        x = float(value)
+        if not math.isfinite(x):
+            return ""
+        fmt = f"{x:.{ndigits}f}"
+        # Remove leading + sign if any, keep negative sign
+        if fmt.startswith("+"):
+            fmt = fmt[1:]
+        return fmt.replace('.', ',')
+    except Exception:
+        return ""
+
+
 def _build_streams_latex_table(connections: dict) -> str:
     columns = [
         ("name", "Stream", None),
@@ -1377,6 +1467,52 @@ def _build_streams_latex_table(connections: dict) -> str:
     lines = [
         f"\\begin{{longtable}}{{{col_spec}}}",
             r"\caption{Thermodynamische und exergetische Kenngrößen der simulierten Prozessströme des Single-Kolonnenmodells} \\",
+        "\\hline",
+        header,
+        unit_row,
+        "\\hline",
+        *rows,
+        "\\hline",
+        "\\end{longtable}",
+    ]
+    return "\n".join(lines)
+
+
+def _build_components_work_table(connections: dict, components: dict) -> str:
+    # Similar work-table builder for the single-column model
+    power_conns = [ (k, v) for k, v in connections.items() if isinstance(v, dict) and v.get("kind") == "power" ]
+    comp_power = {}
+    for name, conn in power_conns:
+        val = conn.get("energy_flow") or conn.get("E")
+        if not isinstance(val, (int, float)):
+            continue
+        comp = conn.get("source_component") or conn.get("target_component")
+        if not comp:
+            continue
+        comp_power[comp] = comp_power.get(comp, 0.0) + float(val)
+
+    rows = []
+    for comp_name, w_val in sorted(comp_power.items()):
+        if comp_name not in components and not any(str(k) == str(comp_name) for k in components.keys()):
+            continue
+        comp_obj = components.get(comp_name) or next((c for n, c in components.items() if str(n) == str(comp_name)), None)
+        comp_type = comp_obj.__class__.__name__ if comp_obj is not None else ""
+        if "turbine" in comp_type.lower() or str(comp_name).upper().startswith("T"):
+            display_val = -abs(w_val)
+        else:
+            display_val = w_val
+        rows.append(" & ".join([
+            _latex_escape(str(comp_name)),
+            _latex_escape(comp_type),
+            _format_value(display_val),
+        ]) + r" \\")
+
+    col_spec = "lrr"
+    header = " & ".join(["Component", "Type", r"$\dot W$"]) + " " + r"\\"
+    unit_row = " & ".join(["", "", "(W)"]) + " " + r"\\"
+    lines = [
+        f"\\begin{{longtable}}{{{col_spec}}}",
+        r"\caption{Komponenten mit Arbeitsströmen (W)} \\",
         "\\hline",
         header,
         unit_row,
@@ -1477,13 +1613,17 @@ def _build_component_results_table(components: dict) -> str:
         r"$\dot{E}_F$",
         r"$\dot{E}_P$",
         r"$\dot{E}_D$",
+        r"$\dot{E}_L$",
         r"$\varepsilon$",
         r"$y_{D,k}$",
+        r"$y^*_{D,k}$",
     ]) + " \\\\"
-    unit_row = " & ".join(["", "", "(W)", "(W)", "(W)", "(-)", "(-)"]) + " \\\\"
+    unit_row = " & ".join(["", "", "(W)", "(W)", "(W)", "(W)", "(-)", "(-)", "(-)"]) + " \\\\"
     # Support two input formats:
     # - runtime component objects (component instances with attributes)
     # - exported component dicts (as produced by ean._serialize())
+    # two-pass: collect display values first (need total absolute E_D for y* normalization)
+    display_items = []
     for comp_name, component in components.items():
         # Skip CycleCloser/Splitter and RECON as before
         name_key = str(comp_name).strip()
@@ -1523,6 +1663,13 @@ def _build_component_results_table(components: dict) -> str:
 
         # Use custom display values only when custom triplet is numeric and finite
         use_custom = all(isinstance(v, (int, float)) and math.isfinite(v) for v in (E_F_custom, E_P_custom, E_D_custom))
+        # Special-case: for MIX enforce use of custom values if any custom value was computed
+        try:
+            name_up = str(comp_name).strip().upper()
+        except Exception:
+            name_up = ""
+        if name_up == "MIX" and any(isinstance(v, (int, float)) and math.isfinite(v) for v in (E_F_custom, E_P_custom, E_D_custom)):
+            use_custom = True
         if use_custom:
             display_E_F = E_F_custom
             display_E_P = E_P_custom
@@ -1539,11 +1686,31 @@ def _build_component_results_table(components: dict) -> str:
             display_E_L = E_L if 'E_L' in locals() and E_L is not None else 0.0
             display_epsilon = epsilon
 
+        # collect for second pass
+        display_items.append((comp_name, comp_class_name, display_E_F, display_E_P, display_E_D, display_E_L, display_epsilon))
+
+    # compute total absolute E_D for y* normalization
+    E_D_tot = sum(abs(v) for _, _, _, _, v, _, _ in display_items if isinstance(v, (int, float)))
+
+    rows = []
+    sum_E_D = 0.0
+    sum_E_L = 0.0
+    sum_y = 0.0
+    sum_y_star = 0.0
+    for comp_name, comp_class_name, display_E_F, display_E_P, display_E_D, display_E_L, display_epsilon in display_items:
         y_D_k = (display_E_D / E_F_tot) if (
-            isinstance(display_E_D, (int, float))
-            and isinstance(E_F_tot, (int, float))
-            and E_F_tot != 0
+            isinstance(display_E_D, (int, float)) and isinstance(E_F_tot, (int, float)) and E_F_tot != 0
         ) else None
+        y_D_k_star = (abs(display_E_D) / E_D_tot) if (isinstance(display_E_D, (int, float)) and E_D_tot and E_D_tot != 0) else None
+
+        if isinstance(display_E_D, (int, float)):
+            sum_E_D += display_E_D
+        if isinstance(display_E_L, (int, float)):
+            sum_E_L += display_E_L
+        if isinstance(y_D_k, (int, float)):
+            sum_y += y_D_k
+        if isinstance(y_D_k_star, (int, float)):
+            sum_y_star += y_D_k_star
 
         rows.append(
             " & ".join([
@@ -1552,21 +1719,27 @@ def _build_component_results_table(components: dict) -> str:
                 _format_value(display_E_F),
                 _format_value(display_E_P),
                 _format_value(display_E_D),
-                _format_value(display_epsilon),
-                _format_value(y_D_k),
-            ]) + r" \\")
+                _format_value(display_E_L),
+                _format_value_fixed(display_epsilon, 4) if display_epsilon is not None else "",
+                _format_value_fixed(y_D_k, 4),
+                _format_value_fixed(y_D_k_star, 4),
+            ]) + " \\\\"
+        )
 
-    # end unified build
+    # sum row (only E_D, E_L, y_D_k, y*_D_k)
+    sum_row_cells = [r"\textbf{Summe}", "", "", "", _format_value(sum_E_D), _format_value(sum_E_L), "", _format_value_fixed(sum_y, 4), _format_value_fixed(sum_y_star, 4)]
 
-    col_spec = "l" + "l" + "r" * 5
+    col_spec = "l" + "l" + "r" * 7
     lines = [
         f"\\begin{{longtable}}{{{col_spec}}}",
-        r"\caption{Berechnete exergetische Kennzahlen der Komponenten des Single-Kolonnenmodells} \\",
+        "\\caption{Berechnete exergetische Kennzahlen der Komponenten des Single-Kolonnenmodells} " + r"\\",
         "\\hline",
         header,
         unit_row,
         "\\hline",
         *rows,
+        "\\hline",
+        " & ".join(sum_row_cells) + r" \\",
         "\\hline",
         "\\end{longtable}",
     ]
@@ -1950,6 +2123,20 @@ components_output_path = os.path.abspath(
 components_table = _build_component_results_table(ean.components)
 with open(components_output_path, "w", encoding="utf-8") as tex_file:
     tex_file.write(components_table)
+
+# Write components work (W) table for single model
+components_work_output_path = os.path.abspath(
+    os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        "Overleaf_LaTeX",
+        "tabellen",
+        "aspen_luftzerlegung_components_work_single.tex",
+    )
+)
+components_work_table = _build_components_work_table(connections_now, ean.components)
+with open(components_work_output_path, "w", encoding="utf-8") as tex_file:
+    tex_file.write(components_work_table)
 
 global_check_output_path = os.path.abspath(
     os.path.join(

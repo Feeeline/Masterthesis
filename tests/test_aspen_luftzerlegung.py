@@ -1440,6 +1440,60 @@ def _build_streams_latex_table(connections: dict) -> str:
     return "\n".join(lines)
 
 
+def _build_components_work_table(connections: dict, components: dict) -> str:
+    # Build a simple table of components that have power connections (work streams).
+    # connections: exported connections dict (keys -> conn dict)
+    # components: mapping of component name -> component object (to get type)
+    power_conns = [ (k, v) for k, v in connections.items() if isinstance(v, dict) and v.get("kind") == "power" ]
+    # map component name -> summed energy flow (W)
+    comp_power = {}
+    for name, conn in power_conns:
+        val = conn.get("energy_flow") or conn.get("E")
+        if not isinstance(val, (int, float)):
+            continue
+        # associate to source_component if available, else target
+        comp = conn.get("source_component") or conn.get("target_component")
+        if not comp:
+            continue
+        comp_power[comp] = comp_power.get(comp, 0.0) + float(val)
+
+    # Only include components that exist in the parsed components dict and have a non-zero power
+    rows = []
+    for comp_name, w_val in sorted(comp_power.items()):
+        if comp_name not in components:
+            # still allow if name matches ignoring case
+            if not any(str(k) == str(comp_name) for k in components.keys()):
+                continue
+        comp_obj = components.get(comp_name) or next((c for n, c in components.items() if str(n) == str(comp_name)), None)
+        comp_type = comp_obj.__class__.__name__ if comp_obj is not None else ""
+        # For turbines, force negative display
+        if "turbine" in comp_type.lower() or str(comp_name).upper().startswith("T"):
+            display_val = -abs(w_val)
+        else:
+            display_val = w_val
+        rows.append(" & ".join([
+            _latex_escape(str(comp_name)),
+            _latex_escape(comp_type),
+            _format_value(display_val),
+        ]) + r" \\")
+
+    col_spec = "lrr"
+    header = " & ".join(["Component", "Type", r"$\dot W$"]) + " " + r"\\"
+    unit_row = " & ".join(["", "", "(W)"]) + " " + r"\\"
+    lines = [
+        f"\\begin{{longtable}}{{{col_spec}}}",
+        r"\caption{Komponenten mit Arbeitsströmen (W)} \\",
+        "\\hline",
+        header,
+        unit_row,
+        "\\hline",
+        *rows,
+        "\\hline",
+        "\\end{longtable}",
+    ]
+    return "\n".join(lines)
+
+
 def _build_molar_fractions_table(connections: dict) -> str:
     columns = [
         ("name", "Stream", None),
@@ -1518,15 +1572,17 @@ def _build_component_results_table(components: dict) -> str:
         r"$\dot{E}_F$",
         r"$\dot{E}_P$",
         r"$\dot{E}_D$",
+        r"$\dot{E}_L$",
         r"$\varepsilon$",
         r"$y_{D,k}$",
+        r"$y^*_{D,k}$",
     ]) + " \\\\"
-    unit_row = " & ".join(["", "", "(W)", "(W)", "(W)", "(-)", "(-)"]) + " \\\\" 
+    unit_row = " & ".join(["", "", "(W)", "(W)", "(W)", "(W)", "(-)", "(-)", "(-)"]) + " \\\\"
 
     E_F_tot = E_F_tot_final if isinstance(E_F_tot_final, (int, float)) else getattr(ean, "E_F", None)
 
-    rows = []
-
+    # two-pass: collect display values so we can compute E_D total for y* normalization
+    display_items = []
     for comp_name, component in components.items():
         if component.__class__.__name__ in {"CycleCloser", "Splitter"}:
             continue
@@ -1562,32 +1618,60 @@ def _build_component_results_table(components: dict) -> str:
             display_E_D = E_D
             display_E_L = E_L if E_L is not None else 0.0
             display_epsilon = epsilon
+        # append to display list
+        display_items.append((comp_name, component.__class__.__name__, display_E_F, display_E_P, display_E_D, display_E_L, display_epsilon))
+
+    # compute E_D total for y* normalization
+    E_D_tot = sum(abs(v) for _, _, _, _, v, _, _ in display_items if isinstance(v, (int, float)))
+
+    rows = []
+    sum_E_D = 0.0
+    sum_E_L = 0.0
+    sum_y = 0.0
+    sum_y_star = 0.0
+    for comp_name, comp_class_name, display_E_F, display_E_P, display_E_D, display_E_L, display_epsilon in display_items:
         y_D_k = (display_E_D / E_F_tot) if (
-            isinstance(display_E_D, (int, float))
-            and isinstance(E_F_tot, (int, float))
-            and E_F_tot != 0
+            isinstance(display_E_D, (int, float)) and isinstance(E_F_tot, (int, float)) and E_F_tot != 0
         ) else None
+        y_D_k_star = (abs(display_E_D) / E_D_tot) if (isinstance(display_E_D, (int, float)) and E_D_tot and E_D_tot != 0) else None
+
+        # accumulate sums for columns requested
+        if isinstance(display_E_D, (int, float)):
+            sum_E_D += display_E_D
+        if isinstance(display_E_L, (int, float)):
+            sum_E_L += display_E_L
+        if isinstance(y_D_k, (int, float)):
+            sum_y += y_D_k
+        if isinstance(y_D_k_star, (int, float)):
+            sum_y_star += y_D_k_star
 
         rows.append(
             " & ".join([
                 _latex_escape(str(comp_name)),
-                _latex_escape(component.__class__.__name__),
+                _latex_escape(comp_class_name),
                 _format_value(display_E_F),
                 _format_value(display_E_P),
                 _format_value(display_E_D),
-                _format_value(display_epsilon),
-                _format_value(y_D_k),
-            ]) + r" \\\\" )
+                _format_value(display_E_L),
+                _format_value_fixed(display_epsilon, 4) if display_epsilon is not None else "",
+                _format_value_fixed(y_D_k, 4),
+                _format_value_fixed(y_D_k_star, 4),
+            ]) + " \\\\"
+        )
+    # build sum row: put bold 'Summe' in first column, only fill E_D, E_L, y_D_k, y_D_k_star
+    sum_row_cells = [r"\textbf{Summe}", "", "", "", _format_value(sum_E_D), _format_value(sum_E_L), "", _format_value_fixed(sum_y, 4), _format_value_fixed(sum_y_star, 4)]
 
-    col_spec = "l" + "l" + "r" * 5
+    col_spec = "l" + "l" + "r" * 7
     lines = [
         f"\\begin{{longtable}}{{{col_spec}}}",
-        r"\caption{Berechnete exergetische Kennzahlen der Komponenten des Doppelkolonnenmodells} \\",
+        "\\caption{Berechnete exergetische Kennzahlen der Komponenten des Doppelkolonnenmodells} " + r"\\",
         "\\hline",
         header,
         unit_row,
         "\\hline",
         *rows,
+        "\\hline",
+        " & ".join(sum_row_cells) + r"\\",
         "\\hline",
         "\\end{longtable}",
     ]
@@ -1956,6 +2040,20 @@ components_output_path = os.path.abspath(
 components_table = _build_component_results_table(ean.components)
 with open(components_output_path, "w", encoding="utf-8") as tex_file:
     tex_file.write(components_table)
+
+# Write components work (W) table
+components_work_output_path = os.path.abspath(
+    os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        "Overleaf_LaTeX",
+        "tabellen",
+        "aspen_luftzerlegung_components_work.tex",
+    )
+)
+components_work_table = _build_components_work_table(json_payload.get("connections", {}), ean.components)
+with open(components_work_output_path, "w", encoding="utf-8") as tex_file:
+    tex_file.write(components_work_table)
 
 global_check_output_path = os.path.abspath(
     os.path.join(
