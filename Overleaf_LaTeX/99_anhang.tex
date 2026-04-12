@@ -270,7 +270,11 @@ $\dot{E}^{PH}_{31}-\dot{E}^{PH}_{30}$ \\
 \begin{table}[p]
 \centering
 \label{tab:exergy-tot_doppel}
-\input{Overleaf_LaTeX/tabellen/aspen_luftzerlegung_global_check_single}
+\end{table}
+\begin{table}[p]
+\centering
+\label{tab:exergy-tot_single}
+\input{Overleaf_LaTeX/tabellen/aspen_luftzerlegung_global_single}
 \end{table}
 
 \begin{table}[p]
@@ -282,7 +286,11 @@ $\dot{E}^{PH}_{31}-\dot{E}^{PH}_{30}$ \\
 \begin{table}[p]
 \centering
 \label{tab:exergy-tot_doppel}
-\input{Overleaf_LaTeX/tabellen/aspen_luftzerlegung_global_check}
+\end{table}
+\begin{table}[p]
+\centering
+\label{tab:exergy-tot_doppel}
+\input{Overleaf_LaTeX/tabellen/aspen_luftzerlegung_global_double}
 \end{table}
 
 \begin{table}[p]
@@ -298,23 +306,7 @@ $\dot{E}^{PH}_{31}-\dot{E}^{PH}_{30}$ \\
 \begin{longtable}{llrr}
 \caption{Globale Exergiebilanz des Doppelkolonnenmodells} \\
 \hline
-Kategorie & Bezeichnung & Symbol & Wert \\
-\hline
-\textbf{Zugeführte Exergie} & Feed-Strom Luft (S1) & $\dot{E}_{S1}$ & 186,2 kW \\
-\textbf{(Input)} & Verdichter-Wellenleistung & $\dot{W}_{LK1} + \dot{W}_{LK2} + \dot{W}_{PK1}$ & 10.868,3 kW \\
- & \textbf{Summe Input} & $\sum \dot{E}_{in}$ & \textbf{12.182,0 kW} \\
-\hline
-\textbf{Abgeführte Exergie} & $N_2$-Produktstrom (S32) & $\dot{E}_{S32}$ & 2.836,5 kW \\
-\textbf{(Output)} & Turbinen-Wellenleistung & $\dot{W}_3$ & 106,2 kW \\
- & Exergievernichtung (Komponenten) & $\dot{E}_{D,tot}$ & 7.371,4 kW \\
- & Exergieverlust & $\dot{E}_{L,tot}$ & 1.974,1 kW \\
- & \textbf{Summe physikalischer Output} & $\sum \dot{E}_{out}$ & \textbf{4.916,8 kW} \\
-\hline
-\textbf{Bilanzabgleich} & \textbf{Exergievernichtung (aus Komponenten)}\footnotemark & $\sum \dot{E}_{D,k}$ & \textbf{7.371,4 kW} \\
-\textbf{(Residuum)} & \textbf{Globale Differenz (Ein - Aus)} & $\sum \dot{E}_{in} - \sum \dot{E}_{out}$ & \textbf{7.265,2 kW} \\
- & \textbf{Absolute Bilanzabweichung} & $\Delta \dot{E}$ & \textbf{106,2 kW} \\
- & \textbf{Relativer Bilanzfehler (bezogen auf Input)} & $\frac{\Delta \dot{E}}{\sum \dot{E}_{in}}$ & \textbf{0,87 \%} \\
-\hline
-\hline
+\input{Overleaf_LaTeX/tabellen/aspen_luftzerlegung_global_double}
+\end{longtable}
 \end{longtable}
 
