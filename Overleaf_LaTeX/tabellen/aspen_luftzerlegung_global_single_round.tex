@@ -3,20 +3,30 @@
 \hline
 Kategorie & Bezeichnung & Symbol & Wert \\
 \hline
-\textbf{Zugeführte Exergie} & Feed-Strom Luft (S1) & $\dot{E}_{S1}$ & -4,3655745686179335e-11 W \\
-\textbf{(Input)} & Verdichter-Wellenleistung & $\dot{W}_{LK1} + \dot{W}_{LK2}$ & 11070497,030000001 W \\
- & \textbf{Summe Input} & $\sum \dot{E}_{in}$ & \textbf{11070497,03 W} \\
+\textbf{Zugeführte Exergie} & Feed-Strom Luft (S1) & $\dot{E}_{S1}$ & 179971,6889999984 W \\
+\textbf{(Input)} & Verdichter-Wellenleistung & $\dot{W}_{LK1} + \dot{W}_{LK2}$ & 10577187,25 W \\
+ & \textbf{Summe Input} & $\sum \dot{E}_{in}$ & \textbf{10757158,939 W} \\
 \hline
-\textbf{Abgeführte Exergie} & $N_2$-Produktstrom (S24) & $\dot{E}_{S24}$ & 3645253,9656105777 W \\
-\textbf{(Output)} & Turbinen-Wellenleistung & $\dot{W}_T$ & 954372,144 W \\
- & Restgas / Abgas (S21,00) & $\dot{E}_{S21,00}$ & 140283,05 W \\
- & Purge / Flash-Verluste (S7+S9+S10) & $\dot{E}_{L,tot}$ & 1034720,25 W \\
- & \textbf{Summe physikalischer Output} & $\sum \dot{E}_{out}$ & \textbf{5774629,41 W} \\
+\textbf{Abgeführte \& Vernichtete Exergie} & & & \\
 \hline
-\textbf{Bilanzabgleich} & \textbf{Exergievernichtung (aus Komponenten)}\footnotemark & $\sum \dot{E}_{D,k}$ & \textbf{0,9999 W} \\
-\textbf{(Residuum)} & \textbf{Globale Differenz (Ein - Aus)} & $\sum \dot{E}_{in} - \sum \dot{E}_{out}$ & \textbf{5295867,62468574 W} \\
- & \textbf{Absolute Bilanzabweichung} & $\Delta \dot{E}$ & \textbf{8465512,23 W} \\
- & \textbf{Relativer Bilanzfehler (bezogen auf Input)} & $\frac{\Delta \dot{E}}{\sum \dot{E}_{in}}$ & \textbf{76,47 \%} \\
+ & \textbf{A) Nutz-Output (Produkte + Turbine)} & & \\
+ & \quad $N_2$-Produkt (S24) & $\dot{E}_{S24}$ & 2827500,601 W \\
+ & \quad Turbinen-Wellenleistung & $\dot{W}_T$ & 482231,078 W \\
+ & \textbf{Summe Nutz-Output} & & \textbf{3.309.731,68 W} \\
+\hline
+ & \textbf{B) Stoffliche Verluste} & & \\
+ & \quad Restgas / Abgas (S21) & $\dot{E}_{S21}$ & 473395,92699999997 W \\
+ & Purge-Stream S7 & $\dot{E}_{S7}$ & 3706,6103479999997 W \\
+ & Purge-Stream S9 & $\dot{E}_{S9}$ & 12110,523851999998 W \\
+ & Purge-Stream S10 & $\dot{E}_{S10}$ & 15544,33669 W \\
+ & \quad Purge / Flash-Verluste (S7+S9+S10) & $\dot{E}_{L,tot}$ & 31361,470889999997 W \\
+ & \textbf{Summe Stoffliche Verluste} & & \textbf{504.828,98 W} \\
+\hline
+ & \textbf{C) Exergievernichtung (Komponenten)} & $\sum \dot{E}_{D,k}$ & \textbf{6210121,734230223 W} \\
+\hline
+ & extbf{Summe der Verluste} & $\sum \dot{E}_{verluste}$ & \textbf{22947067,58412022 W} \\
+\textbf{Bilanzabgleich} & \textbf{Globale Differenz} & $\Delta \dot{E}$ & \textbf{12189908,645120222 W} \\
+ & \textbf{Relativer Bilanzfehler (bezogen auf Input)} & $\frac{\Delta \dot{E}}{\sum \dot{E}_{in}}$ & \textbf{113,31903446109548 \%} \\
 \hline
 \end{longtable}
 

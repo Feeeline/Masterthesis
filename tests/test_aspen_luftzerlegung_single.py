@@ -653,12 +653,17 @@ el_gw1 = None
 if isinstance(m6, (int, float)) and (isinstance(ech6, (int, float)) or isinstance(ech5, (int, float))):
     ep_gw1 = _safe_diff_mult(m6, ech6, ech5)
 
-# Ef = fuel (physical exergy formulation) -- compute per-term if available
-t1 = _term_m_eph(s5)
-t2 = _term_m_eph(s6)
-t3 = _term_m_eph(s7)
-if any(isinstance(v, (int, float)) for v in (t1, t2, t3)):
-    ef_gw1 = (t1 or 0.0) - (t2 or 0.0) - (t3 or 0.0)
+# Ef = fuel (physical exergy formulation) -- use requested formula:
+# Ef = m6*(eph5 - eph6) + m7*(eph5 + ech5)
+ef_gw1 = None
+term1 = None
+term2 = None
+if isinstance(m6, (int, float)) and isinstance(eph5, (int, float)) and isinstance(eph6, (int, float)):
+    term1 = float(m6) * (float(eph5) - float(eph6))
+if isinstance(m7, (int, float)) and isinstance(eph5, (int, float)) and isinstance(ech5, (int, float)):
+    term2 = float(m7) * (float(eph5) + float(ech5))
+if term1 is not None or term2 is not None:
+    ef_gw1 = (term1 or 0.0) + (term2 or 0.0)
 
 # El = exergy loss in stream 7 (total exergy)
 t_el = None
@@ -742,16 +747,27 @@ el_gw2 = None
 if isinstance(m8, (int, float)) and (isinstance(ech8, (int, float)) or isinstance(ech6, (int, float))):
     ep_gw2 = _safe_diff_mult(m8, ech8, ech6)
 
-# Ef = fuel (physical exergy formulation) -- compute per-term if available
-t6 = _term_m_eph(s6)
-t8 = _term_m_eph(s8)
-t9 = _term_m_eph(s9)
-t10 = _term_m_eph(s10)
-if any(isinstance(v, (int, float)) for v in (t6, t8, t9, t10)):
-    ef_gw2 = (t6 or 0.0) - (t8 or 0.0) - (t9 or 0.0) - (t10 or 0.0)
+# Ef = fuel using user-provided custom formula:
+# Ef = m8*(eph6 - eph8) + m9*(eph6 + ech6) + m10*(eph6 + ech6)
+term_a = None
+term_b = None
+term_c = None
+if isinstance(m8, (int, float)) and isinstance(eph6, (int, float)) and isinstance(eph8, (int, float)):
+    term_a = float(m8) * (float(eph6) - float(eph8))
+if isinstance(m9, (int, float)) and isinstance(eph6, (int, float)) and isinstance(ech6, (int, float)):
+    term_b = float(m9) * (float(eph6) + float(ech6))
+if isinstance(m10, (int, float)) and isinstance(eph6, (int, float)) and isinstance(ech6, (int, float)):
+    term_c = float(m10) * (float(eph6) + float(ech6))
+
+if term_a is not None or term_b is not None or term_c is not None:
+    ef_gw2 = (term_a or 0.0) + (term_b or 0.0) + (term_c or 0.0)
     # losses as totals where possible
-    E9_total = t9 if isinstance(t9, (int, float)) else (m9 * ( (eph9 or 0.0) + (ech9 or 0.0)) if isinstance(m9, (int, float)) else None)
-    E10_total = t10 if isinstance(t10, (int, float)) else (m10 * ( (eph10 or 0.0) + (ech10 or 0.0)) if isinstance(m10, (int, float)) else None)
+    E9_total = None
+    E10_total = None
+    if isinstance(m9, (int, float)) and (isinstance(eph9, (int, float)) or isinstance(ech9, (int, float))):
+        E9_total = float(m9) * ((float(eph9) if isinstance(eph9, (int, float)) else 0.0) + (float(ech9) if isinstance(ech9, (int, float)) else 0.0))
+    if isinstance(m10, (int, float)) and (isinstance(eph10, (int, float)) or isinstance(ech10, (int, float))):
+        E10_total = float(m10) * ((float(eph10) if isinstance(eph10, (int, float)) else 0.0) + (float(ech10) if isinstance(ech10, (int, float)) else 0.0))
     losses = 0.0
     if isinstance(E9_total, (int, float)):
         losses += E9_total

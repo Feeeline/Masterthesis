@@ -1,24 +1,25 @@
 \begin{longtable}{llrr}
-\caption{Erweiterte globale Exergiebilanz des Doppelkolonnenmodells} \\
+\caption{Globale Exergiebilanz und Konsistenzprüfung des Doppelkolonnenmodells} \\
 \hline
-Kategorie & Bezeichnung & Symbol & Wert \\
 \hline
-extbf{Zugeführte Exergie} & Feed-Strom Luft & $\dot{E}_{S1,00}$ & -0,00 W \\
-extbf{(Input)} & Verdichter-Wellenleistung (Netto) & $\dot{W}_{in}$ & 10978085,47 W \\
- & \textbf{Summe Input} & $\sum \dot{E}_{in}$ & \textbf{10978085,47 W} \\
+\textbf{Zugeführte Exergie} & Feed-Strom Luft (S1) & $\dot{E}_{S1}$ & 118007,337 W \\
+\textbf{(Input)} & Verdichter-Wellenleistung & $\dot{W}_{in}$ & 7573170,386999999 W \\
+ & \textbf{Summe Input} & $\sum \dot{E}_{in}$ & \textbf{7691177,723999999 W} \\
 \hline
-extbf{Abgeführte Exergie} & $N_2,00$-Produktstrom & $\dot{E}_{S32,00}$ & 77669911,11 W \\
-extbf{(Output)} & Turbinen-Wellenleistung (Netto) & $\dot{W}_{out}$ & 106239,89 W \\
- & Restgas / Abgas & $\dot{E}_{S28,00}$ & 8310769,79 W \\
- & Verluste & $\dot{E}_{L,tot}$ & 45281,08 W \\
- & \textbf{Summe physikalischer Output} & $\sum \dot{E}_{out}$ & \textbf{86132201,87 W} \\
+\textbf{Abgeführte Exergie} & $N_2$-Produktstrom (S32) & $\dot{E}_{S32}$ & 2907729,007 W \\
+\textbf{(Output)} & Turbinen-Wellenleistung & $\dot{W}_{out}$ & 67318,8243 W \\
+ & Restgas / Abgas (S28) & $\dot{E}_{S28}$ & 372700,12999999995 W \\
+ & Purge-Stream S7 & $\dot{E}_{S7}$ & 2436,1612640000003 W \\
+ & Purge-Stream S9 & $\dot{E}_{S9}$ & 7935,242739 W \\
+ & Purge-Stream S10 & $\dot{E}_{S10}$ & 10193,16081 W \\
+ & Purge / Flash-Verluste (S7+S9+S10) & $\dot{E}_{L,tot}$ & 20564,564812999997 W \\
+ & \textbf{Summe physikalischer Output} & $\sum \dot{E}_{out}$ & \textbf{3368312,526113 W} \\
 \hline
-extbf{Bilanzabgleich} & \textbf{Thermodynamische Vernichtung} & $\sum \dot{E}_{D,k}$ & \textbf{1,00 W} \\
-extbf{(Dissipation)} & \textbf{Mechanische Vernichtung} & $\dot{E}_{D,mech}$ & 88541756,69 W \\
- & \textbf{Gesamte Exergievernichtung} & $\dot{E}_{D,tot}$ & \textbf{88541757,69 W} \\
+ & \textbf{Summe der Verluste} & $\sum \dot{E}_{verluste}$ & \textbf{17934533,664200496 W} \\
+\textbf{Bilanzabgleich} & \textbf{Exergievernichtung (aus Komponenten)}\footnotemark & $\sum \dot{E}_{D,k}$ & \textbf{4152640,568387496 W} \\
+\textbf{(Residuum)} & \textbf{Globale Differenz (Ein - Aus)} & $\sum \dot{E}_{in} - \sum \dot{E}_{out}$ & \textbf{-10243355,940200496 W} \\
+ & \textbf{Absolute Bilanzabweichung} & $\Delta \dot{E}$ & \textbf{10243355,940200496 W} \\
+ & \textbf{Relativer Bilanzfehler (bezogen auf Input)} & $\frac{\Delta \dot{E}}{\sum \dot{E}_{in}}$ & \textbf{133,18319128469142 \%} \\
 \hline
-extbf{Residuum} & \textbf{Globale Differenz} & $\sum \dot{E}_{in} - \sum \dot{E}_{out}$ & \textbf{0,00 W} \\
- & \textbf{Absolute Bilanzabweichung} & $\Delta \dot{E}$ & \textbf{163695874,10 W} \\
- & \textbf{Relativer Bilanzfehler} & $\frac{\Delta \dot{E}}{\sum \dot{E}_{in}}$ & \textbf{1491,11 \%} \\
 \hline
 \end{longtable}

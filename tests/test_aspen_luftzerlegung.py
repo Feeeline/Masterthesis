@@ -706,9 +706,17 @@ el_gw1 = None
 if m6 is not None and ech6 is not None and ech5 is not None:
     ep_gw1 = m6 * (ech6 - ech5)
 
-# Ef = fuel (physical exergy formulation)
-if all(v is not None for v in [m5, m6, m7, eph5, eph6, eph7]):
-    ef_gw1 = m5*eph5 - m6*eph6 - m7*eph7
+# Ef = fuel (physical exergy formulation) -- use requested formula:
+# Ef = m6*(eph5 - eph6) + m7*(eph5 + ech5)
+ef_gw1 = None
+term1 = None
+term2 = None
+if isinstance(m6, (int, float)) and isinstance(eph5, (int, float)) and isinstance(eph6, (int, float)):
+    term1 = float(m6) * (float(eph5) - float(eph6))
+if isinstance(m7, (int, float)) and isinstance(eph5, (int, float)) and isinstance(ech5, (int, float)):
+    term2 = float(m7) * (float(eph5) + float(ech5))
+if term1 is not None or term2 is not None:
+    ef_gw1 = (term1 or 0.0) + (term2 or 0.0)
 
 # El = exergy loss in stream 7 (total exergy)
 if all(v is not None for v in [m7, eph7, ech7]):
@@ -781,12 +789,31 @@ el_gw2 = None
 if m8 is not None and ech8 is not None and ech6 is not None:
     ep_gw2 = m8 * (ech8 - ech6)
 
-# Ef = fuel (physical exergy formulation)
-if all(v is not None for v in [m6, m8, m9, m10, eph6, eph8, eph9, eph10, ech6, ech8, ech9, ech10]):
-    E9_total = m9 * (eph9 + ech9)
-    E10_total = m10 * (eph10 + ech10)
-    ef_gw2 = m6 * eph6 - m8 * eph8 - m9 * eph9 - m10 * eph10
-    el_gw2 = E9_total + E10_total
+# Ef = fuel using user-provided custom formula:
+# Ef = m8*(eph6 - eph8) + m9*(eph6 + ech6) + m10*(eph6 + ech6)
+# Note: terms are included if the required quantities exist.
+term_a = None
+term_b = None
+term_c = None
+if isinstance(m8, (int, float)) and isinstance(eph6, (int, float)) and isinstance(eph8, (int, float)):
+    term_a = float(m8) * (float(eph6) - float(eph8))
+if isinstance(m9, (int, float)) and isinstance(eph6, (int, float)) and isinstance(ech6, (int, float)):
+    term_b = float(m9) * (float(eph6) + float(ech6))
+if isinstance(m10, (int, float)) and isinstance(eph6, (int, float)) and isinstance(ech6, (int, float)):
+    term_c = float(m10) * (float(eph6) + float(ech6))
+
+if term_a is not None or term_b is not None or term_c is not None:
+    ef_gw2 = (term_a or 0.0) + (term_b or 0.0) + (term_c or 0.0)
+
+# El = total exergy carried away by streams 9 and 10 (loss streams)
+E9_total = None
+E10_total = None
+if isinstance(m9, (int, float)) and isinstance(eph9, (int, float)) and isinstance(ech9, (int, float)):
+    E9_total = float(m9) * (float(eph9) + float(ech9))
+if isinstance(m10, (int, float)) and isinstance(eph10, (int, float)) and isinstance(ech10, (int, float)):
+    E10_total = float(m10) * (float(eph10) + float(ech10))
+if E9_total is not None or E10_total is not None:
+    el_gw2 = (E9_total or 0.0) + (E10_total or 0.0)
 
 # Ed = destruction (separate from losses)
 if ef_gw2 is not None and ep_gw2 is not None and el_gw2 is not None:

@@ -102,18 +102,44 @@ def parse_stream_table(path: Path) -> Dict[str, Dict[str, float]]:
                 continue
         else:
             sid = m.group(1)
-        nums = NUMBER_RE.findall(ln)
-        nums_f = [_latex_number_to_float(n) for n in nums]
-        # heuristics
-        m_dot = nums_f[0] if len(nums_f) >= 1 else None
-        # prefer last two numbers as e_ph and e_ch, else try second-last
+        # Prefer to split the LaTeX table row by '&' so we don't accidentally
+        # match digits inside stream labels like 'S1'. Extract numeric tokens
+        # per cell and use positional column heuristics.
+        parts = [p.strip() for p in ln.split('&')]
+        m_dot = None
         e_ph = None
         e_ch = None
-        if len(nums_f) >= 2:
-            e_ph = nums_f[-2]
-            e_ch = nums_f[-1]
-        elif len(nums_f) == 1:
-            e_ph = nums_f[-1]
+        # mass flow is typically in the second column (parts[1])
+        if len(parts) >= 2:
+            nums_cell = NUMBER_RE.findall(parts[1])
+            if nums_cell:
+                m_dot = _latex_number_to_float(nums_cell[0])
+        # try to read e_ph and e_ch from the last columns (4th-last, 3rd-last)
+        if len(parts) >= 4:
+            # last numeric columns may be in the last 4th and 3rd cells
+            cell_ph = parts[-4]
+            cell_ch = parts[-3]
+            nums_ph = NUMBER_RE.findall(cell_ph)
+            nums_ch = NUMBER_RE.findall(cell_ch)
+            if nums_ph:
+                e_ph = _latex_number_to_float(nums_ph[-1])
+            if nums_ch:
+                e_ch = _latex_number_to_float(nums_ch[-1])
+        # fallback: collect all numeric tokens from the line and pick by position
+        if e_ph is None or e_ch is None or m_dot is None:
+            nums = NUMBER_RE.findall(ln)
+            nums_f = [_latex_number_to_float(n) for n in nums]
+            # skip leading numeric token that may come from the 'S1' label
+            if nums_f and nums_f[0] == 1.0 and len(nums_f) > 1:
+                nums_f = nums_f[1:]
+            if m_dot is None and len(nums_f) >= 1:
+                m_dot = nums_f[0]
+            if (e_ph is None or e_ch is None) and len(nums_f) >= 4:
+                e_ph = nums_f[-4]
+                e_ch = nums_f[-3]
+            elif (e_ph is None or e_ch is None) and len(nums_f) >= 2:
+                e_ph = nums_f[-2]
+                e_ch = nums_f[-1]
         # compute E_dot = m_dot * (e_ph + e_ch)
         e_ph_eff = e_ph or 0.0
         e_ch_eff = e_ch or 0.0
@@ -158,13 +184,39 @@ def parse_components_exergy_sum(path: Path) -> Optional[float]:
     """Parse a components exergy table and return the numeric value from the
     line labeled 'Summe' (column with E_D). Returns None if not found."""
     text = path.read_text(encoding="utf-8")
-    for ln in text.splitlines():
-        if 'Summe' in ln or 'Summe:' in ln:
+    lines = text.splitlines()
+    # first, try to detect header and find the index of the E_D column
+    ed_col_idx = None
+    for ln in lines:
+        if 'E_D' in ln or '\\dot{E}_{D' in ln or 'E_{D' in ln or 'E_D' in ln:
+            parts = [p.strip() for p in ln.split('&')]
+            for i, p in enumerate(parts):
+                if 'E_D' in p or '\\dot{E}_{D' in p or 'E_{D' in p or 'E_D' in p:
+                    ed_col_idx = i
+                    break
+            if ed_col_idx is not None:
+                break
+
+    # find the Summe line and parse the E_D column if possible
+    for ln in lines:
+        if 'Summe' in ln or 'Summe:' in ln or ln.strip().startswith('\\textbf{Summe}') or ln.strip().startswith('Summe'):
+            parts = [p.strip() for p in ln.split('&')]
+            if ed_col_idx is not None and ed_col_idx < len(parts):
+                nums = NUMBER_RE.findall(parts[ed_col_idx])
+                if nums:
+                    return _latex_number_to_float(nums[-1])
+            # fallback to token scan (pick a reasonable token: 1st numeric after possible label)
             nums = NUMBER_RE.findall(ln)
             if nums:
+                # try to pick the numeric that looks like a large W-value (more than 1e3)
+                for tok in reversed(nums):
+                    val = _latex_number_to_float(tok)
+                    if val is not None and abs(val) > 1e3:
+                        return val
                 return _latex_number_to_float(nums[-1])
+
     # fallback: try to find a line with 'Gesamt' or 'Total'
-    for ln in text.splitlines():
+    for ln in lines:
         if 'Gesamt' in ln or 'Total' in ln:
             nums = NUMBER_RE.findall(ln)
             if nums:
@@ -203,37 +255,72 @@ def compute_model_metrics(
     E_prod = streams.get(ids['product'], {}).get('E_W')
     E_rest = streams.get(ids['rest'], {}).get('E_W')
 
-    # purge losses
+    # purge losses: compute individual purge stream exergies and their sum
     purge_sum = 0.0
     purge_found = False
+    purge_values: Dict[str, Optional[float]] = {}
     for p in ids['purges']:
         v = streams.get(p, {}).get('E_W')
+        purge_values[p] = v
         if v is not None:
             purge_sum += v
             purge_found = True
     L_tot = purge_sum if purge_found else None
 
+    # log purge breakdown for debugging
+    if purge_values:
+        for k, vv in purge_values.items():
+            print(f"Purge stream {k}: {vv}")
+        if L_tot is not None:
+            print(f"Purge total L_tot: {L_tot}")
+    # include purge_values in returned metrics for later injection
+    metrics_extra = {'purge_values': purge_values}
+
     # compressors sum: look for known keys and also any component with name starting with LK or PK or type=Compressor
     comp_sum = 0.0
     comp_found = False
-    for k, v in works.items():
-        if k.upper().startswith(('LK', 'PK')) or 'compressor' in k.lower():
-            comp_sum += v
-            comp_found = True
+    # Prefer explicit sums from the components work table when available
+    if model == 'single':
+        prefer_keys = ['LK1', 'LK2']
+    else:
+        prefer_keys = ['LK1', 'LK2', 'PK1']
+    explicit_sum = 0.0
+    explicit_found = False
+    for k in prefer_keys:
+        if k in works:
+            explicit_sum += works[k]
+            explicit_found = True
+    if explicit_found:
+        comp_sum = explicit_sum
+        comp_found = True
+    else:
+        for k, v in works.items():
+            if k.upper().startswith(('LK', 'PK')) or 'compressor' in k.lower():
+                comp_sum += v
+                comp_found = True
     E_comp_sum = comp_sum if comp_found else None
 
-    # turbine: look for component 'T' or 'TURB' or 'Turbine' key in works
+    # turbine: prefer explicit turbine entries from the components work table
     turbine_val = None
-    for key in ('T', 'TURB', 'Turbine'):
+    prefer_turbine_keys = ('T', 'TURB', 'Turbine', 'WT', 'W_T', 'W_Turbine')
+    for key in prefer_turbine_keys:
         if key in works:
             turbine_val = abs(works[key])
             break
-    # else try to find a component whose name contains 'T' and negative work
+    # fallback: look for any component name containing 'turb' or 'turbin'
     if turbine_val is None:
         for k, v in works.items():
-            if 'turb' in k.lower() or (v is not None and v < 0):
+            if 'turb' in k.lower() or 'turbin' in k.lower():
                 turbine_val = abs(v)
                 break
+    # last resort: take first negative work value (assumed turbine output)
+    if turbine_val is None:
+        for k, v in works.items():
+            if v is not None and v < 0:
+                turbine_val = abs(v)
+                break
+    if turbine_val is not None:
+        print(f"Using turbine work from components table: {turbine_val}")
 
     # Sum input
     sum_input = None
@@ -243,7 +330,19 @@ def compute_model_metrics(
         else:
             sum_input = E_feed
 
-    # Sum output (product + turbine + rest + purge losses)
+    # Sum of material outputs (only stoffliche Ausgänge): product + rest + purge losses
+    sum_out_stoff = None
+    out_stoff_parts = []
+    if E_prod is not None:
+        out_stoff_parts.append(E_prod)
+    if E_rest is not None:
+        out_stoff_parts.append(E_rest)
+    if L_tot is not None:
+        out_stoff_parts.append(L_tot)
+    if out_stoff_parts:
+        sum_out_stoff = sum(out_stoff_parts)
+
+    # Sum output (for legacy display) still kept as product + turbine + rest + purge
     sum_output = None
     out_parts = []
     if E_prod is not None:
@@ -286,12 +385,34 @@ def compute_model_metrics(
     residuum = None
     abs_dev = None
     rel_err_pct = None
-    if sum_input is not None and sum_output is not None:
-        residuum = sum_input - sum_output
+    # New balance: losses consist of stoffliche Outputs + technical turbine work + internal destructions
+    sum_losses = None
+    if sum_out_stoff is not None and turbine_val is not None and E_D_total is not None:
+        sum_losses = sum_out_stoff + turbine_val + E_D_total
+    else:
+        # if some parts are missing, try partial sum where sensible
+        parts_losses = []
+        if sum_out_stoff is not None:
+            parts_losses.append(sum_out_stoff)
+        if turbine_val is not None:
+            parts_losses.append(turbine_val)
         if E_D_total is not None:
-            abs_dev = abs(residuum - E_D_total)
-            if sum_input != 0:
-                rel_err_pct = abs_dev / sum_input * 100.0
+            parts_losses.append(E_D_total)
+        if parts_losses:
+            sum_losses = sum(parts_losses)
+
+    if sum_input is not None and sum_losses is not None:
+        residuum = sum_input - sum_losses
+        # Absolute bilanzabweichung: absolute difference between input and losses
+        abs_dev = abs(residuum)
+        # Relativer Bilanzfehler (bezogen auf Input) in Prozent
+        if sum_input != 0:
+            rel_err_pct = abs_dev / sum_input * 100.0
+        # also compute deviation vs destruction for diagnostics
+        # (kept under a different name if needed)
+        # abs_dev_vs_E_D = None
+        # if E_D_total is not None:
+        #     abs_dev_vs_E_D = abs(residuum - E_D_total)
 
     return {
         'E_feed': E_feed,
@@ -302,12 +423,15 @@ def compute_model_metrics(
         'turbine': turbine_val,
         'sum_input': sum_input,
         'sum_output': sum_output,
+        'sum_out_stoff': sum_out_stoff,
+        'sum_losses': sum_losses,
         'E_D_thermo': E_D_thermo,
         'E_D_mech': E_D_mech_val,
         'E_D_total': E_D_total,
         'residuum': residuum,
         'abs_dev': abs_dev,
         'rel_err_pct': rel_err_pct,
+        'purge_values': purge_values,
     }
 
 
@@ -361,6 +485,76 @@ def _replace_label_value(tex_path: Path, label_substr: str, value_str: str, bold
         tex_path.write_text('\n'.join(lines) + '\n', encoding='utf-8')
 
 
+def _insert_purge_breakdown(tex_path: Path, purge_values: Dict[str, Optional[float]]):
+    """Insert individual purge stream lines (S7,S9,S10) before the total purge line."""
+    if not purge_values:
+        return
+    txt = tex_path.read_text(encoding='utf-8')
+    # avoid inserting if purge lines already present
+    if '$\\dot{E}_{S7}$' in txt or '$\\dot{E}_{S9}$' in txt or '$\\dot{E}_{S10}$' in txt:
+        # also clean duplicate occurrences: keep only first appearance of each purge line
+        lines = txt.splitlines()
+        seen = set()
+        out_lines = []
+        for ln in lines:
+            if 'Purge-Stream S7' in ln or 'Purge-Stream S9' in ln or 'Purge-Stream S10' in ln:
+                if ln in seen:
+                    continue
+                seen.add(ln)
+            out_lines.append(ln)
+        tex_path.write_text('\n'.join(out_lines) + '\n', encoding='utf-8')
+        return
+
+    lines = txt.splitlines()
+    for i, ln in enumerate(lines):
+        if 'Purge / Flash-Verluste' in ln or 'Purge / Flash' in ln:
+            insert_lines = []
+            for k in ('S7', 'S9', 'S10'):
+                v = purge_values.get(k)
+                if v is not None:
+                    vs = _format_w_no_round(v) + ' W'
+                    insert_lines.append(' & Purge-Stream ' + k + ' & $\\dot{E}_{' + k + '}$ & ' + vs + ' \\\\')
+            # insert before the total purge line
+            lines[i:i] = insert_lines
+            break
+    tex_path.write_text('\n'.join(lines) + '\n', encoding='utf-8')
+
+
+def _insert_summe_verluste(tex_path: Path, value: Optional[float]):
+    """Insert a 'Summe der Verluste' row near the Bilanzabgleich section.
+
+    Avoid duplicate insertion if the label already exists.
+    """
+    if value is None:
+        return
+    txt = tex_path.read_text(encoding='utf-8')
+    if 'Summe der Verluste' in txt:
+        # already inserted
+        # but still update the numeric value if present
+        _replace_label_value(tex_path, 'Summe der Verluste', _format_w_no_round(value), bold=True)
+        return
+    lines = txt.splitlines()
+    insert_idx = None
+    # find the Bilanzabgleich header and insert the losses row before it
+    for i, ln in enumerate(lines):
+        if '\\textbf{Bilanzabgleich}' in ln or 'Bilanzabgleich' in ln:
+            insert_idx = i
+            break
+    if insert_idx is None:
+        # fallback: insert before the first occurrence of '\\hline' near file end
+        for i in range(len(lines)-1, -1, -1):
+            if '\\hline' in lines[i]:
+                insert_idx = i
+                break
+    if insert_idx is None:
+        return
+    val_str = _format_w_no_round(value) + ' W'
+    # create a table row with four columns (first column empty)
+    new_line = ' & \textbf{Summe der Verluste} & $\\sum \\dot{E}_{verluste}$ & ' + val_str + ' \\\\'
+    lines.insert(insert_idx, new_line)
+    tex_path.write_text('\n'.join(lines) + '\n', encoding='utf-8')
+
+
 # --- Main -------------------------------------------------------------------
 
 def run_update():
@@ -381,9 +575,18 @@ def run_update():
     repl_single = {}
     repl_double = {}
 
-    # single: feed S1, product S24, rest S21
+    # single: prefer feed E_W from streams table (full precision), fallback to metrics
     for sym, key in [('S1', 'E_feed'), ('S24', 'E_prod'), ('S21', 'E_rest')]:
-        val = metrics_single.get(key)
+        val = None
+        # prefer exact stream energy E_W when available
+        if streams_single and isinstance(streams_single.get(sym, {}), dict):
+            ew = streams_single.get(sym, {}).get('E_W')
+            if isinstance(ew, (int, float)):
+                val = ew
+                print(f"Using stream-derived E_W for single {sym}: {val}")
+        # fallback to computed metric
+        if val is None:
+            val = metrics_single.get(key)
         if val is not None:
             repl_single[sym] = _format_w_no_round(val) + ' W'
 
@@ -416,10 +619,21 @@ def run_update():
             _replace_label_value(GLOBAL_SINGLE, r"\Delta \dot{E}", _format_w_no_round(metrics_single['abs_dev']), bold=True)
         if metrics_single.get('rel_err_pct') is not None:
             _replace_label_value(GLOBAL_SINGLE, r"\frac{\Delta \dot{E}}{\sum \dot{E}_{in}}", _format_w_no_round(metrics_single['rel_err_pct']), bold=True, unit=r' \%')
+        # insert purge breakdown lines
+        _insert_purge_breakdown(GLOBAL_SINGLE, metrics_single.get('purge_values', {}))
+        # insert Summe der Verluste and update its value
+        _insert_summe_verluste(GLOBAL_SINGLE, metrics_single.get('sum_losses'))
 
-    # double: feed S1, product S32, rest S28
+    # double: prefer feed E_W from streams table (full precision), fallback to metrics
     for sym, key in [('S1', 'E_feed'), ('S32', 'E_prod'), ('S28', 'E_rest')]:
-        val = metrics_double.get(key)
+        val = None
+        if streams_double and isinstance(streams_double.get(sym, {}), dict):
+            ew = streams_double.get(sym, {}).get('E_W')
+            if isinstance(ew, (int, float)):
+                val = ew
+                print(f"Using stream-derived E_W for double {sym}: {val}")
+        if val is None:
+            val = metrics_double.get(key)
         if val is not None:
             repl_double[sym] = _format_w_no_round(val) + ' W'
 
@@ -434,6 +648,8 @@ def run_update():
             _replace_label_value(GLOBAL_DOUBLE, r"\sum \dot{E}_{D,k}", _format_w_no_round(metrics_double['E_D_thermo']), bold=True)
         if metrics_double.get('E_D_total') is not None:
             _replace_label_value(GLOBAL_DOUBLE, r"\dot{E}_{D,tot}", _format_w_no_round(metrics_double['E_D_total']), bold=True)
+        if metrics_double.get('residuum') is not None:
+            _replace_label_value(GLOBAL_DOUBLE, r"\sum \dot{E}_{in} - \sum \dot{E}_{out}", _format_w_no_round(metrics_double['residuum']), bold=True)
         # compressors (aggregate), turbine, purge losses
         if metrics_double.get('E_comp_sum') is not None:
             _replace_label_value(GLOBAL_DOUBLE, r"\dot{W}_{in}", _format_w_no_round(metrics_double['E_comp_sum']), bold=False)
@@ -449,6 +665,10 @@ def run_update():
             _replace_label_value(GLOBAL_DOUBLE, r"\Delta \dot{E}", _format_w_no_round(metrics_double['abs_dev']), bold=True)
         if metrics_double.get('rel_err_pct') is not None:
             _replace_label_value(GLOBAL_DOUBLE, r"\frac{\Delta \dot{E}}{\sum \dot{E}_{in}}", _format_w_no_round(metrics_double['rel_err_pct']), bold=True, unit=r' \%')
+        # insert purge breakdown lines
+        _insert_purge_breakdown(GLOBAL_DOUBLE, metrics_double.get('purge_values', {}))
+        # insert Summe der Verluste and update its value
+        _insert_summe_verluste(GLOBAL_DOUBLE, metrics_double.get('sum_losses'))
 
     # Optionally: print a short summary for verification
     print('Single model metrics:')
