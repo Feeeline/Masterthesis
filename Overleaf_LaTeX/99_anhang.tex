@@ -34,19 +34,19 @@ Ozon (O$_3$)           & 0{,}003–0{,}03\,ppm \\
 
 \begin{landscape}
 \centering
-\input{Overleaf_LaTeX/tabellen/aspen_luftzerlegung_streams_single}
+\input{Overleaf_LaTeX/tabellen/aspen_luftzerlegung_streams_single_round}
 \end{landscape}
 
 \centering
-\input{Overleaf_LaTeX/tabellen/aspen_luftzerlegung_streams_molfrac_single}
+\input{Overleaf_LaTeX/tabellen/aspen_luftzerlegung_streams_molfrac_single_round}
 
 \begin{landscape}
 \centering
-\input{Overleaf_LaTeX/tabellen/aspen_luftzerlegung_streams}
+\input{Overleaf_LaTeX/tabellen/aspen_luftzerlegung_streams_round}
 \end{landscape}
 
 \centering
-\input{Overleaf_LaTeX/tabellen/aspen_luftzerlegung_streams_molfrac}
+\input{Overleaf_LaTeX/tabellen/aspen_luftzerlegung_streams_molfrac_round}
 
 
 \chapter{Exergieberechnung}
@@ -88,13 +88,13 @@ ZK2 (dissipativ) &
 $\dot{E}^{PH}_{4}-\dot{E}^{PH}_{5}$ &
 -- \\
 
-GW1 &
-$\dot{E}_{F,GW1} = \dot{E}^{PH}_{5} - \dot{E}^{PH}_{6} - \dot{E}^{PH}_{7}$ &
-$\dot{E}_{P,GW1} = \dot{m}_{6}\,(e^{CH}_{6} - e^{CH}_{5})$ \\
+GW1 & 
+$\dot{E}_{F,GW1} = \dot{m}_{6}(e^{PH}_{5} - e^{PH}_{6}) + \dot{m}_{7}(e^{PH}_{5} + e^{CH}_{5})$ & 
+$\dot{E}_{P,GW1} = \dot{m}_{6}(e^{CH}_{6} - e^{CH}_{5})$ \\
 
-GW2 &
-$\dot{E}_{F,GW2} = \dot{E}^{PH}_{6} - \dot{E}^{PH}_{8} - \dot{E}^{PH}_{9} - \dot{E}^{PH}_{10}$ &
-$\dot{E}_{P,GW2} = \dot{m}_{8}\,(e^{CH}_{8} - e^{CH}_{6})$ \\
+GW2 & 
+$\dot{E}_{F,GW2} = \dot{m}_{8}(e^{PH}_{6} - e^{PH}_{8}) + (\dot{m}_{9} + \dot{m}_{10})(e^{PH}_{6} + e^{CH}_{6})$ & 
+$\dot{E}_{P,GW2} = \dot{m}_{8}(e^{CH}_{8} - e^{CH}_{6})$ \\
 
 MH &
 $\dot{E}_{F,MH}=
@@ -173,13 +173,13 @@ ZK2 (dissipativ) &
 $\dot{E}^{PH}_{4}-\dot{E}^{PH}_{5}$ &
 -- \\
 
-GW1 &
-$\dot{E}_{F,GW1} = \dot{E}^{PH}_{5} - \dot{E}^{PH}_{6} - \dot{E}^{PH}_{7}$ &
-$\dot{E}_{P,GW1} = \dot{m}_{6}\,(e^{CH}_{6} - e^{CH}_{5})$ \\
+GW1 & 
+$\dot{E}_{F,GW1} = \dot{m}_{6}(e^{PH}_{5} - e^{PH}_{6}) + \dot{m}_{7}(e^{PH}_{5} + e^{CH}_{5})$ & 
+$\dot{E}_{P,GW1} = \dot{m}_{6}(e^{CH}_{6} - e^{CH}_{5})$ \\
 
-GW2 &
-$\dot{E}_{F,GW2} = \dot{E}^{PH}_{6} - \dot{E}^{PH}_{8} - \dot{E}^{PH}_{9} - \dot{E}^{PH}_{10}$ &
-$\dot{E}_{P,GW2} = \dot{m}_{8}\,(e^{CH}_{8} - e^{CH}_{6})$ \\
+GW2 & 
+$\dot{E}_{F,GW2} = \dot{m}_{8}(e^{PH}_{6} - e^{PH}_{8}) + (\dot{m}_{9} + \dot{m}_{10})(e^{PH}_{6} + e^{CH}_{6})$ & 
+$\dot{E}_{P,GW2} = \dot{m}_{8}(e^{CH}_{8} - e^{CH}_{6})$ \\
 
 MW &
 $\dot{E}_{F,MW}=
@@ -270,21 +270,22 @@ $\dot{E}^{PH}_{31}-\dot{E}^{PH}_{30}$ \\
 \begin{table}[p]
 \centering
 \label{tab:exergy-components}
-\input{Overleaf_LaTeX/tabellen/aspen_luftzerlegung_components_single}
+\input{Overleaf_LaTeX/tabellen/aspen_luftzerlegung_components_single_round}
 \end{table}
 
 \begin{table}[p]
 \centering
 \label{tab:exergy-components}
-\input{Overleaf_LaTeX/tabellen/aspen_luftzerlegung_components_preview}
+\input{Overleaf_LaTeX/tabellen/aspen_luftzerlegung_components_preview_round}
 \end{table}
-
 
 \begin{table}[p]
 \centering
 \label{tab:exergy-blöcke}
-\input{Overleaf_LaTeX/tabellen/aspen_luftzerlegung_blocks_ed_comparison}
+\input{Overleaf_LaTeX/tabellen/aspen_luftzerlegung_blocks_ed_comparison_round}
 \end{table}
+
+
 
 \chapter{Wirtschaftlichkeitsanalyse}
 \label{ch:a_kosten}
