@@ -32,6 +32,18 @@ Ozon (O$_3$)           & 0{,}003–0{,}03\,ppm \\
 \chapter{Modellierung}
 \label{ch:a_sim}
 
+\begin{table}[h!]
+\centering
+\label{tab:work_single}
+\input{Overleaf_LaTeX/tabellen/aspen_luftzerlegung_components_work_single}
+\end{table}
+
+\begin{table}[h!]
+\centering
+\label{tab:work_doppel}
+\input{Overleaf_LaTeX/tabellen/aspen_luftzerlegung_components_work}
+\end{table}
+
 \begin{landscape}
 \centering
 \input{Overleaf_LaTeX/tabellen/aspen_luftzerlegung_streams_single}
@@ -267,11 +279,30 @@ $\dot{E}^{PH}_{31}-\dot{E}^{PH}_{30}$ \\
 \input{Overleaf_LaTeX/tabellen/aspen_luftzerlegung_components_single}
 \end{table}
 
-\begin{table}[p]
-\centering
-\label{tab:exergy-tot_doppel}
-\input{Overleaf_LaTeX/tabellen/aspen_luftzerlegung_global_check_single}
-\end{table}
+\begin{longtable}{llrr}
+\caption{Erweiterte globale Exergiebilanz des Singlekolonnenmodells} \\
+\hline
+Kategorie & Bezeichnung & Symbol & Wert \\
+\hline
+\textbf{Zugeführte Exergie} & Feed-Strom Luft & $\dot{E}_{S1}$ & 188,4 kW \\
+\textbf{(Input)} & Verdichter-Wellenleistung (Netto) & $\dot{W}_{in}$ & 11.070,5 kW \\
+ & \textbf{Summe Input} & $\sum \dot{E}_{in}$ & \textbf{11.258,9 kW} \\
+\hline
+\textbf{Abgeführte Exergie} & $N_2$-Produktstrom & $\dot{E}_{S24}$ & 2.825,4 kW \\
+\textbf{(Output)} & Turbinen-Wellenleistung (Netto) & $\dot{W}_{out}$ & 954,4 kW \\
+ & Restgas / Abgas & $\dot{E}_{S21}$ & 490,0 kW \\
+ & Verluste & $\dot{E}_{L,tot}$ & 33,0 kW \\
+ & \textbf{Summe physikalischer Output} & $\sum \dot{E}_{out}$ & \textbf{4.302,8 kW} \\
+\hline
+\textbf{Bilanzabgleich} & \textbf{Thermodynamische Vernichtung} & $\sum \dot{E}_{D,k}$ & 6.621,0 kW \\
+\textbf{(Dissipation)} & \textbf{Mechanische Vernichtung} & $\dot{E}_{D,mech}$ & 244,4 kW \\
+ & \textbf{Gesamte Exergievernichtung} & $\dot{E}_{D,tot}$ & \textbf{6.865,4 kW} \\
+\hline
+\textbf{Residuum} & \textbf{Globale Differenz} & $\sum \dot{E}_{in} - \sum \dot{E}_{out}$ & \textbf{6.956,1 kW} \\
+ & \textbf{Absolute Bilanzabweichung} & $\Delta \dot{E}$ & \textbf{90,7 kW} \\
+ & \textbf{Relativer Bilanzfehler} & $\frac{\Delta \dot{E}}{\sum \dot{E}_{in}}$ & \textbf{0,81 \%} \\
+\hline
+\end{longtable}
 
 \begin{table}[p]
 \centering
@@ -282,7 +313,7 @@ $\dot{E}^{PH}_{31}-\dot{E}^{PH}_{30}$ \\
 \begin{table}[p]
 \centering
 \label{tab:exergy-tot_doppel}
-\input{Overleaf_LaTeX/tabellen/aspen_luftzerlegung_global_check}
+\input{Overleaf_LaTeX/tabellen/aspen_luftzerlegung_global_double}
 \end{table}
 
 \begin{table}[p]
@@ -294,4 +325,43 @@ $\dot{E}^{PH}_{31}-\dot{E}^{PH}_{30}$ \\
 \chapter{Wirtschaftlichkeitsanalyse}
 \label{ch:a_kosten}
 
+\begin{longtable}{llrr}
+\caption{Erweiterte globale Exergiebilanz des Singlekolonnenmodells} \\
+\hline
+Kategorie & Bezeichnung & Symbol & Wert (W) \\
+\hline
+\endfirsthead
 
+\hline
+Kategorie & Bezeichnung & Symbol & Wert (W) \\
+\hline
+\endhead
+
+\hline
+\endfoot
+
+\hline
+\endlastfoot
+
+\textbf{Zugeführte Exergie} & Feed-Strom Luft & $\dot{E}_{S1}$ & 188365.396 \\
+\textbf{(Input)} & Verdichter-Wellenleistung (Netto) & $\dot{W}_{in}$ & 11070497.03 \\
+ & \textbf{Summe Input} & $\sum \dot{E}_{in}$ & \textbf{11258862.426} \\
+\hline
+
+\textbf{Abgeführte Exergie} & $N_2$-Produktstrom & $\dot{E}_{S24}$ & 2825416.524 \\
+\textbf{(Output)} & Turbinen-Wellenleistung (Netto) & $\dot{W}_{out}$ & 954372.144 \\
+ & Restgas / Abgas & $\dot{E}_{S21}$ & 489956.098 \\
+ & Verluste & $\dot{E}_{L,tot}$ & 32824.140 \\
+ & \textbf{Summe physikalischer Output} & $\sum \dot{E}_{out}$ & \textbf{4302568.905} \\
+\hline
+
+\textbf{Bilanzabgleich} & \textbf{Thermodynamische Vernichtung} & $\sum \dot{E}_{D,k}$ & 6600000.0 \\
+\textbf{(Dissipation)} & \textbf{Mechanische Vernichtung} & $\dot{E}_{D,mech}$ & 0.0 \\
+ & \textbf{Gesamte Exergievernichtung} & $\dot{E}_{D,tot}$ & \textbf{6600000.0} \\
+\hline
+
+\textbf{Residuum} & \textbf{Globale Differenz} & $\sum \dot{E}_{in} - \sum \dot{E}_{out}$ & \textbf{6956293.521} \\
+ & \textbf{Absolute Bilanzabweichung} & $\Delta \dot{E}$ & \textbf{6956293.521} \\
+ & \textbf{Relativer Bilanzfehler} & $\frac{\Delta \dot{E}}{\sum \dot{E}_{in}}$ & \textbf{61.785\%} \\
+\hline
+\end{longtable}
