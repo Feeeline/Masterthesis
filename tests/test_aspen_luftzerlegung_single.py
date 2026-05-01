@@ -6,6 +6,9 @@ import math
 
 from exerpy import ExergyAnalysis
 
+# When True, formatting helpers will avoid rounding and output full float precision.
+NO_ROUNDING = True
+
 # Get the log file path
 log_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'parser_run_single.log'))
 

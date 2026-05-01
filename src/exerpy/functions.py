@@ -351,11 +351,35 @@ def add_total_exergy_flow(my_json, split_physical_exergy):
             if conn_data["kind"] == "material":
                 # For material connections: E = m * (e^PH + e^CH). Treat missing exergies as zero.
                 m_val = conn_data.get("m") or 0.0
-                e_ph_val = conn_data.get("e_PH") or 0.0
-                if conn_data.get("e_PH") is None:
-                    logging.warning(f"Connection {conn_name}: e_PH missing; using 0 for total exergy flow")
+                e_ph_val = conn_data.get("e_PH")
+                # Robust fallback: if specific physical exergy `e_PH` is missing,
+                # try to compute it from available parts (e_T + e_M) or from
+                # a total exergy value (`eph`) divided by mass flow `m`.
+                if e_ph_val is None:
+                    e_t = conn_data.get("e_T")
+                    e_m = conn_data.get("e_M")
+                    if isinstance(e_t, (int, float)) and isinstance(e_m, (int, float)):
+                        e_ph_val = float(e_t) + float(e_m)
+                        logging.info(f"Connection {conn_name}: computed e_PH from e_T+e_M = {e_ph_val}")
+                    else:
+                        # Try total exergy (parser key 'eph') divided by mass flow if present
+                        eph_total = conn_data.get("eph")
+                        # Also accept raw parser field if present
+                        if eph_total is None:
+                            eph_total = conn_data.get("eph_raw")
 
-                conn_data["E_PH"] = m_val * e_ph_val
+                        if isinstance(eph_total, (int, float)) and m_val:
+                            try:
+                                e_ph_val = float(eph_total) / float(m_val)
+                                logging.info(f"Connection {conn_name}: computed e_PH from total eph/m = {e_ph_val}")
+                            except Exception:
+                                e_ph_val = 0.0
+                                logging.warning(f"Connection {conn_name}: failed to compute e_PH from eph/m; using 0")
+                        else:
+                            logging.warning(f"Connection {conn_name}: e_PH missing and no fallback available; using 0 for total exergy flow")
+                            e_ph_val = 0.0
+
+                conn_data["E_PH"] = m_val * (e_ph_val or 0.0)
 
                 if conn_data.get("e_CH") is not None:
                     e_ch_val = conn_data.get("e_CH") or 0.0

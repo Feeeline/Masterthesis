@@ -38,6 +38,10 @@ PLOT_THEME = {
     "legend.fontsize": 11,
 }
 
+# Global flag: when True, formatting helpers return full-precision numbers
+# and rounding/rounding-pass functions are disabled.
+NO_ROUNDING = True
+
 
 def _apply_plot_theme(style: str = "seaborn-v0_8-whitegrid"):
     plt.style.use(style)
@@ -108,48 +112,50 @@ def _to_float_latex_number(value: str):
     value = re.sub(r"\\textbf\{([^}]*)\}", r"\1", value)
     value = value.replace("$", "").replace("\\%", "").replace("%", "")
     value = value.replace("\\", "").replace("{", "").replace("}", "").strip()
-    if not value or value == "-":
-        return None
+    # Treat empty or dash-like entries as zero for plotting calculations
+    if not value:
+        return 0.0
+    if value in {"-", "—", "–"}:
+        return 0.0
 
     # Threshold notation from tables, e.g. <1e-6: use 0.0 for plotting.
     if value.startswith("<"):
         return 0.0
+    # Normalize common LaTeX/European numeric formats into Python float-friendly form.
+    # Strategy:
+    # - If both '.' and ',' present assume German thousands ('.') and decimal comma (',')
+    #   -> remove thousands dots and convert comma to dot.
+    # - Else if only ',' present -> treat as decimal comma and replace with dot.
+    # - Else leave as-is (may already be english-format or scientific with dot).
+    s = value.replace(" ", "")
+    if "." in s and "," in s:
+        s = s.replace('.', '').replace(',', '.')
+    elif "," in s and "." not in s:
+        s = s.replace(',', '.')
 
-    # German thousand separator format (e.g. 7.631.750 or -7.608)
-    if re.match(r"^-?\d{1,3}(\.\d{3})+(,\d+)?$", value):
-        value = value.replace(".", "").replace(",", ".")
-        try:
-            return float(value)
-        except ValueError:
-            return None
+    # Remove stray braces/backslashes left (defensive)
+    s = s.strip()
 
-    # English thousand separator format (e.g. 7,631,750 or 7,631,750.25)
-    if re.match(r"^-?\d{1,3}(,\d{3})+(\.\d+)?$", value):
-        value = value.replace(",", "")
-        try:
-            return float(value)
-        except ValueError:
-            return None
-
-    # scientific notation or regular float
-    sci_candidate = value.replace(" ", "")
+    # Try direct float conversion (handles scientific notation like 4.62e+26)
     try:
-        return float(sci_candidate)
+        return float(s)
     except ValueError:
         pass
 
-    # decimal comma and comma-separated integer fallback
-    if "," in value and "." not in value:
+    # Fallback: handle English-style thousand separators (commas)
+    if re.match(r"^-?\d{1,3}(,\d{3})+(\.\d+)?$", value):
         try:
-            return float(value.replace(",", "."))
-        except ValueError:
-            pass
-        try:
-            return float(value.replace(",", ""))
-        except ValueError:
+            return float(value.replace(',', ''))
+        except Exception:
             return None
 
-    return None
+    # If still failing, attempt a final cleanup: strip non-numeric chars and try
+    candidate = re.sub(r"[^0-9eE+\-.,]", "", value)
+    candidate = candidate.replace(',', '.')
+    try:
+        return float(candidate)
+    except Exception:
+        return None
 
 
 def parse_component_table(tex_path: Path) -> pd.DataFrame:
@@ -303,7 +309,14 @@ def parse_stream_mass_flows(tex_path: Path) -> dict:
             stream = parts[0]
             mass_flow = _to_float(parts[1])
             if stream and isinstance(mass_flow, (int, float)):
+                # Normalize stream names: LaTeX tables often use labels like 'S32,00'.
+                # Accept both the raw string and a normalized form without
+                # trailing ',xx' formatting so lookups like 'S32' succeed.
                 rows[stream] = float(mass_flow)
+                # Create a normalized key by stripping a trailing comma+digits suffix
+                norm = re.sub(r",\d{1,3}$", "", stream).strip()
+                if norm and norm != stream and norm not in rows:
+                    rows[norm] = float(mass_flow)
 
     if not rows:
         raise ValueError(f"Keine verwertbaren Massenstromdaten in {tex_path}")
@@ -397,7 +410,12 @@ def parse_stream_thermo_data(tex_path: Path) -> dict:
                     E_W = float(m_dot) * (e_ph_eff + e_ch_eff)
 
             if stream and m_dot is not None and T is not None and p_Pa is not None:
-                data[stream] = {"m_dot": m_dot, "n_mol_s": n_mol_s, "T": T, "p_Pa": p_Pa, "e_ph": e_ph, "e_ch": e_ch, "e_t": e_t, "e_m": e_m, "E_W": E_W}
+                        entry = {"m_dot": m_dot, "n_mol_s": n_mol_s, "T": T, "p_Pa": p_Pa, "e_ph": e_ph, "e_ch": e_ch, "e_t": e_t, "e_m": e_m, "E_W": E_W}
+                        data[stream] = entry
+                        # Create a normalized key without trailing comma+decimals (e.g. 'S1,00' -> 'S1')
+                        norm = re.sub(r",\d{1,3}$", "", stream).strip()
+                        if norm and norm != stream and norm not in data:
+                            data[norm] = entry
     return data
 
 
@@ -1122,6 +1140,108 @@ def _build_yd_large_vs_small_latex_table(
         r"\end{longtable}",
     ]
     return "\n".join(lines)
+
+
+def round_latex_tables(tab_dir: Path):
+    """Round numeric entries in LaTeX tables under `tab_dir`.
+
+    - Skip files that contain 'stream_molfrac' in their filename.
+    - For component tables (filename contains 'components'), round columns
+      named 'Epsilon', 'yDK' or 'y*DK' to 4 decimals; round other numeric
+      columns to 2 decimals.
+    - For all other .tex files, round all numeric table cells to 2 decimals.
+    """
+    # If NO_ROUNDING requested, skip the rounding pass entirely.
+    if globals().get("NO_ROUNDING", False):
+        return
+
+    num_re = re.compile(r"-?\d[\d\.,eE+\-]*")
+
+    for tex_path in sorted(Path(tab_dir).glob("*.tex")):
+        name = tex_path.name
+        # skip any molfrac tables (user-specified)
+        if "molfrac" in name.lower():
+            continue
+
+        is_component = "components" in name.lower()
+
+        text = tex_path.read_text(encoding="utf-8")
+        lines = text.splitlines()
+        out_lines = []
+
+        # determine header column indices for component special columns
+        special_indices = set()
+        header_parsed = False
+        for i, ln in enumerate(lines):
+            if ln.strip().startswith("\\"):
+                out_lines.append(ln)
+                continue
+            if "&" not in ln:
+                out_lines.append(ln)
+                continue
+
+            parts = [p.strip() for p in ln.replace("\\\\", "").split("&")]
+            # if a header-like line (contains non-numeric tokens), parse it to find
+            # special columns for component tables
+            if is_component and not header_parsed:
+                # header detection: remove common LaTeX markup and inspect for
+                # varepsilon / epsilon and y_{D,k} / y^* patterns
+                hdr_text = " ".join(parts)
+                hdr_text_lower = hdr_text.lower()
+                # look for common LaTeX token names
+                if (r"\varepsilon" in hdr_text_lower) or ("epsilon" in hdr_text_lower) or ("y_{d" in hdr_text_lower) or ("y^" in hdr_text_lower) or ("y_d" in hdr_text_lower):
+                    # identify indices of special columns by cleaning tokens
+                    for idx, cell in enumerate(parts):
+                        cell_norm = re.sub(r"[\\$%\{\}_\^\s,]", "", cell).lower()
+                        if any(k in cell_norm for k in ("varepsilon", "epsilon", "ydk", "ydk", "y*dk", "yd,k", "y")):
+                            # be conservative: ensure not to match Component or Type columns
+                            if idx > 1:
+                                special_indices.add(idx)
+                    header_parsed = True
+                    out_lines.append(ln)
+                    continue
+
+            # process data lines: replace numeric tokens according to rules
+            new_parts = []
+            for idx, cell in enumerate(parts):
+                # preserve trailing backslashes removed earlier; we will add them back for last cell
+                original = cell
+                # find first numeric token in the cell
+                m = num_re.search(cell)
+                if m:
+                    num_txt = m.group(0)
+                    val = _to_float_latex_number(num_txt)
+                    if val is None:
+                        new_parts.append(original)
+                        continue
+                    # choose decimals
+                    if is_component and idx in special_indices:
+                        decimals = 4
+                    else:
+                        decimals = 2
+                    # format using existing helper (decimal comma)
+                    fmt = _format_decimal_comma(val, decimals=decimals, trim=False)
+                    # replace numeric substring with formatted string
+                    new_cell = cell[: m.start()] + fmt + cell[m.end():]
+                    new_parts.append(new_cell)
+                else:
+                    new_parts.append(original)
+
+            # reconstruct line: append trailing \\\ if original line had it
+            line_ends_with = "\\\\" if ln.rstrip().endswith("\\\\") else ""
+            out_lines.append(" & ".join(new_parts) + (" \\\\" if line_ends_with else ""))
+
+        # write back only if changed
+        new_text = "\n".join(out_lines) + "\n"
+        if new_text != text:
+            tex_path.write_text(new_text, encoding="utf-8")
+
+
+if False:  # previously: run rounding on invocation; disabled to preserve raw/unrounded LaTeX values
+    try:
+        round_latex_tables(TAB_DIR)
+    except Exception as e:
+        print("Rounding tables failed:", e)
 
 
 def compute_n2_recovery(streams_single: dict, streams_double: dict) -> dict:

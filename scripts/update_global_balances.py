@@ -335,7 +335,7 @@ def _inject_values_into_global(tex_path: Path, replacements: Dict[str, str]):
     tex_path.write_text(txt, encoding='utf-8')
 
 
-def _replace_label_value(tex_path: Path, label_substr: str, value_str: str, bold: bool = False):
+def _replace_label_value(tex_path: Path, label_substr: str, value_str: str, bold: bool = False, unit: str = ' W'):
     """Replace a numeric cell in the line that contains label_substr with value_str.
 
     If bold=True, wrap the value in \textbf{...}.
@@ -348,9 +348,9 @@ def _replace_label_value(tex_path: Path, label_substr: str, value_str: str, bold
             parts = [p.strip() for p in ln.split('&')]
             if len(parts) >= 2:
                 # last cell is the value; construct replacement
-                val = value_str + ' W'
+                val = value_str + unit
                 if bold:
-                    val = r"\textbf{" + value_str + r" W}"
+                    val = r"\textbf{" + value_str + unit + r"}"
                 # preserve original indentation for the line
                 prefix = ' & '.join(parts[:-1])
                 new_ln = prefix + ' & ' + val + ' \\\\'
@@ -390,7 +390,7 @@ def run_update():
     # write canonical single global
     if GLOBAL_SINGLE.exists():
         _inject_values_into_global(GLOBAL_SINGLE, repl_single)
-        # also update Summe Input/Output and Vernichtungen cells
+        # update Summe Input/Output and thermodynamic destruction
         if metrics_single.get('sum_input') is not None:
             _replace_label_value(GLOBAL_SINGLE, r"\sum \dot{E}_{in}", _format_w_no_round(metrics_single['sum_input']), bold=True)
         if metrics_single.get('sum_output') is not None:
@@ -399,6 +399,23 @@ def run_update():
             _replace_label_value(GLOBAL_SINGLE, r"\sum \dot{E}_{D,k}", _format_w_no_round(metrics_single['E_D_thermo']), bold=True)
         if metrics_single.get('residuum') is not None:
             _replace_label_value(GLOBAL_SINGLE, r"\sum \dot{E}_{in} - \sum \dot{E}_{out}", _format_w_no_round(metrics_single['residuum']), bold=True)
+        # compressors (aggregate), turbine, purge losses
+        if metrics_single.get('E_comp_sum') is not None:
+            _replace_label_value(GLOBAL_SINGLE, r"\dot{W}_{LK1} + \dot{W}_{LK2}", _format_w_no_round(metrics_single['E_comp_sum']), bold=False)
+        if metrics_single.get('turbine') is not None:
+            _replace_label_value(GLOBAL_SINGLE, r"\dot{W}_T", _format_w_no_round(metrics_single['turbine']), bold=False)
+        if metrics_single.get('L_tot') is not None:
+            _replace_label_value(GLOBAL_SINGLE, r"\dot{E}_{L,tot}", _format_w_no_round(metrics_single['L_tot']), bold=False)
+        # mechanical and total destruction
+        if metrics_single.get('E_D_mech') is not None:
+            _replace_label_value(GLOBAL_SINGLE, r"\dot{E}_{D,mech}", _format_w_no_round(metrics_single['E_D_mech']), bold=False)
+        if metrics_single.get('E_D_total') is not None:
+            _replace_label_value(GLOBAL_SINGLE, r"\dot{E}_{D,tot}", _format_w_no_round(metrics_single['E_D_total']), bold=True)
+        # absolute deviation and relative error (percent)
+        if metrics_single.get('abs_dev') is not None:
+            _replace_label_value(GLOBAL_SINGLE, r"\Delta \dot{E}", _format_w_no_round(metrics_single['abs_dev']), bold=True)
+        if metrics_single.get('rel_err_pct') is not None:
+            _replace_label_value(GLOBAL_SINGLE, r"\frac{\Delta \dot{E}}{\sum \dot{E}_{in}}", _format_w_no_round(metrics_single['rel_err_pct']), bold=True, unit=r' \%')
 
     # double: feed S1, product S32, rest S28
     for sym, key in [('S1', 'E_feed'), ('S32', 'E_prod'), ('S28', 'E_rest')]:
@@ -417,6 +434,21 @@ def run_update():
             _replace_label_value(GLOBAL_DOUBLE, r"\sum \dot{E}_{D,k}", _format_w_no_round(metrics_double['E_D_thermo']), bold=True)
         if metrics_double.get('E_D_total') is not None:
             _replace_label_value(GLOBAL_DOUBLE, r"\dot{E}_{D,tot}", _format_w_no_round(metrics_double['E_D_total']), bold=True)
+        # compressors (aggregate), turbine, purge losses
+        if metrics_double.get('E_comp_sum') is not None:
+            _replace_label_value(GLOBAL_DOUBLE, r"\dot{W}_{in}", _format_w_no_round(metrics_double['E_comp_sum']), bold=False)
+        if metrics_double.get('turbine') is not None:
+            _replace_label_value(GLOBAL_DOUBLE, r"\dot{W}_{out}", _format_w_no_round(metrics_double['turbine']), bold=False)
+        if metrics_double.get('L_tot') is not None:
+            _replace_label_value(GLOBAL_DOUBLE, r"\dot{E}_{L,tot}", _format_w_no_round(metrics_double['L_tot']), bold=False)
+        # mechanical destruction
+        if metrics_double.get('E_D_mech') is not None:
+            _replace_label_value(GLOBAL_DOUBLE, r"\dot{E}_{D,mech}", _format_w_no_round(metrics_double['E_D_mech']), bold=False)
+        # absolute deviation and relative error (percent)
+        if metrics_double.get('abs_dev') is not None:
+            _replace_label_value(GLOBAL_DOUBLE, r"\Delta \dot{E}", _format_w_no_round(metrics_double['abs_dev']), bold=True)
+        if metrics_double.get('rel_err_pct') is not None:
+            _replace_label_value(GLOBAL_DOUBLE, r"\frac{\Delta \dot{E}}{\sum \dot{E}_{in}}", _format_w_no_round(metrics_double['rel_err_pct']), bold=True, unit=r' \%')
 
     # Optionally: print a short summary for verification
     print('Single model metrics:')

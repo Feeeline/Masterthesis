@@ -6,7 +6,7 @@ import math
 
 from exerpy import ExergyAnalysis
 
-# When True, formatting helpers will avoid rounding and output full float precision.
+# Keep full precision for generated LaTeX tables (no rounding)
 NO_ROUNDING = True
 
 # Get the log file path

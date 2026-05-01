@@ -174,10 +174,11 @@ class AspenModelParser:
                 vlstd_node = _find_node(r"Output\VLSTD")
                 hmx_total_node = _find_node(r"Output\HMX\MIXED")
                 smx_total_node = _find_node(r"Output\SMX\MIXED")
-                usrech_node = _find_node(r"Output\STRM_UPP\USRECH\MIXED\TOTAL")
-                usreme_node = _find_node(r"Output\STRM_UPP\USREME\MIXED\TOTAL")
-                usreph_node = _find_node(r"Output\STRM_UPP\USREPH\MIXED\TOTAL")
-                usreth_node = _find_node(r"Output\STRM_UPP\USRETH\MIXED\TOTAL")
+                # Try multiple common STRM_UPP naming variants (some Aspen exports omit the extra 'E')
+                usrech_node = _find_node(r"Output\STRM_UPP\USRECH\MIXED\TOTAL") or _find_node(r"Output\STRM_UPP\USRCH\MIXED\TOTAL")
+                usreme_node = _find_node(r"Output\STRM_UPP\USREME\MIXED\TOTAL") or _find_node(r"Output\STRM_UPP\USRME\MIXED\TOTAL")
+                usreph_node = _find_node(r"Output\STRM_UPP\USREPH\MIXED\TOTAL") or _find_node(r"Output\STRM_UPP\USRPH\MIXED\TOTAL")
+                usreth_node = _find_node(r"Output\STRM_UPP\USRETH\MIXED\TOTAL") or _find_node(r"Output\STRM_UPP\USRTH\MIXED\TOTAL")
                 # Warn if nodes exist but have no value
                 if temp_node is not None and temp_node.Value is None:
                     logging.warning(f"TEMP_OUT node for stream {stream_name} has no value")
@@ -513,6 +514,49 @@ class AspenModelParser:
                         logging.warning(
                             f"USRECH provided for stream {stream_name} but mass flow is zero; cannot compute e_CH."
                         )
+
+                # Try to provide a sensible specific physical exergy `e_PH` early on so
+                # downstream diagnostics and components can use it.
+                # Prefer sum of specific thermal + mechanical (`e_T` + `e_M`)
+                # Otherwise, if a total parser value `eph` exists and mass `m` is known,
+                # compute specific: e_PH = eph_total / m
+                if connection_data.get("e_PH") is None:
+                    # Check for already-converted specific parts (e_T/e_M)
+                    e_t_spec = connection_data.get("e_T") or connection_data.get("eth")
+                    e_m_spec = connection_data.get("e_M") or connection_data.get("em")
+                    if isinstance(e_t_spec, (int, float)) and isinstance(e_m_spec, (int, float)):
+                        connection_data["e_PH"] = float(e_t_spec) + float(e_m_spec)
+                        connection_data["e_PH_unit"] = fluid_property_data["e"]["SI_unit"]
+                        logging.info(f"Stream {stream_name}: set e_PH = e_T + e_M = {connection_data['e_PH']}")
+                    else:
+                        # Fallback: if parser-provided total exergy 'eph' exists, divide by mass
+                        eph_total = connection_data.get("eph") or connection_data.get("eph_raw")
+                        m_val = connection_data.get("m") or 0.0
+                        if isinstance(eph_total, (int, float)) and m_val:
+                            try:
+                                candidate = float(eph_total) / float(m_val)
+                                # sanity-check: specific physical exergy should be within reasonable bounds
+                                # (allow up to 1e7 J/kg as an upper sanity threshold; larger values indicate parsing/unit issues)
+                                if abs(candidate) > 1e7:
+                                    logging.warning(
+                                        f"Stream {stream_name}: suspicious e_PH computed from eph/m = {candidate} (eph={eph_total}, m={m_val})."
+                                        " Falling back to e_T+e_M if available and leaving warning."
+                                    )
+                                    # if e_T and e_M exist, prefer their sum
+                                    if isinstance(e_t_spec, (int, float)) and isinstance(e_m_spec, (int, float)):
+                                        connection_data["e_PH"] = float(e_t_spec) + float(e_m_spec)
+                                        connection_data["e_PH_unit"] = fluid_property_data["e"]["SI_unit"]
+                                        logging.info(f"Stream {stream_name}: fallback e_PH = e_T + e_M = {connection_data['e_PH']}")
+                                    else:
+                                        connection_data["e_PH"] = None
+                                else:
+                                    connection_data["e_PH"] = candidate
+                                    connection_data["e_PH_unit"] = fluid_property_data["e"]["SI_unit"]
+                                    logging.info(f"Stream {stream_name}: computed e_PH from eph_total/m = {connection_data['e_PH']}")
+                            except Exception:
+                                connection_data["e_PH"] = None
+                        else:
+                            connection_data["e_PH"] = None
 
                 # Log parsed properties for visibility
                 # Build a more detailed summary including raw units and raw values when available
