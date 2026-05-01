@@ -3416,11 +3416,11 @@
             "epsilon_custom": 0.1100534538098885
         },
         "MH": {
-            "E_F_custom": 7092181.556,
+            "E_F_custom": 7737935.5018,
             "E_P_custom": 5931733.430000001,
-            "E_D_custom": 1160448.1259999992,
+            "E_D_custom": 1806202.071799999,
             "E_L_custom": null,
-            "epsilon_custom": 0.8363764214385829
+            "epsilon_custom": 0.7665782983872326
         },
         "RECO": {
             "E_F_custom": 11001899.389999997,

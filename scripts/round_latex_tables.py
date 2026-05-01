@@ -99,16 +99,16 @@ def process_table_block(block_lines, filename):
         if '&' not in line or line.strip().startswith('%'):
             out.append(line)
             continue
-        if '\\' not in line:
-            out.append(line)
-            continue
         parts = [p for p in line.split('&')]
         new_parts = []
         numeric_indices = []
         nums = []
         # first pass: detect numeric columns
         for i, p in enumerate(parts):
-            n = parse_num(p)
+            # remove trailing LaTeX backslashes and end-of-line comments for numeric detection
+            p_clean = re.sub(r"\\\\\s*$", "", p).strip()
+            p_clean = re.sub(r"%.*$", "", p_clean).strip()
+            n = parse_num(p_clean)
             if n is not None:
                 numeric_indices.append(i)
                 nums.append(n)
@@ -122,7 +122,9 @@ def process_table_block(block_lines, filename):
             # assign back
             num_iter = iter(norm)
             for i, p in enumerate(parts):
-                n = parse_num(p)
+                p_clean = re.sub(r"\\\\\s*$", "", p).strip()
+                p_clean = re.sub(r"%.*$", "", p_clean).strip()
+                n = parse_num(p_clean)
                 if n is None:
                     new_parts.append(p)
                 else:
@@ -134,12 +136,19 @@ def process_table_block(block_lines, filename):
                         s = '1'
                     else:
                         s = format_sigfig(v)
-                    new_parts.append(' ' + s + ' ')
+                    # keep original trailing backslashes if present
+                    trailing = ''
+                    m = re.search(r"(\\\\\s*)$", p)
+                    if m:
+                        trailing = m.group(1)
+                    new_parts.append(' ' + s + ' ' + trailing)
         elif nums:
             # non-molfrac numeric rounding: two decimals except special columns
             num_iter = iter(nums)
             for i, p in enumerate(parts):
-                n = parse_num(p)
+                p_clean = re.sub(r"\\\\\s*$", "", p).strip()
+                p_clean = re.sub(r"%.*$", "", p_clean).strip()
+                n = parse_num(p_clean)
                 if n is None:
                     new_parts.append(p)
                 else:
@@ -149,7 +158,12 @@ def process_table_block(block_lines, filename):
                         s = s.replace('.', ',')
                     else:
                         s = format_non_mol(n, decimals=2)
-                    new_parts.append(' ' + s + ' ')
+                    # preserve trailing backslashes if present
+                    trailing = ''
+                    m = re.search(r"(\\\\\s*)$", p)
+                    if m:
+                        trailing = m.group(1)
+                    new_parts.append(' ' + s + ' ' + trailing)
         else:
             new_parts = parts
         newline = '&'.join(new_parts)

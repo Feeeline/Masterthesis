@@ -494,8 +494,8 @@ s14 = _find_conn_by_suffix("14")
 s15 = _find_conn_by_suffix("15")
 s20 = _find_conn_by_suffix("20")
 s21 = _find_conn_by_suffix("21")
+s23 = _find_conn_by_suffix("23")
 s24 = _find_conn_by_suffix("24")
-s25 = _find_conn_by_suffix("25")
 
 def _total_eph_effective(conn):
     if not conn:
@@ -509,6 +509,20 @@ def _total_eph_effective(conn):
         return et_tot + em_tot
     return None
 
+# Prefer exact/short matches for ambiguous numeric suffixes (avoid S18 vs S8)
+def _find_conn_prefer_short(suffix: str):
+    candidates = [name for name in ean.connections.keys() if str(name).endswith(suffix)]
+    if not candidates:
+        return None
+    # prefer the shortest name (e.g., 'S8' over 'S18')
+    best = min(candidates, key=lambda x: len(str(x)))
+    return ean.connections.get(best)
+
+# override s8 with a preferred short match if available
+s8_exact = _find_conn_prefer_short("8")
+if s8_exact is not None:
+    s8 = s8_exact
+
 et8_tot = _total_from_permass(s8, "e_T")
 et11_tot = _total_from_permass(s11, "e_T")
 
@@ -517,7 +531,7 @@ eph15_tot = _total_eph_effective(s15)
 eph20_tot = _total_eph_effective(s20)
 eph21_tot = _total_eph_effective(s21)
 eph24_tot = _total_eph_effective(s24)
-eph25_tot = _total_eph_effective(s25)
+eph23_tot = _total_eph_effective(s23)
 
 em8_tot = _total_from_permass(s8, "e_M")
 em11_tot = _total_from_permass(s11, "e_M")
@@ -534,7 +548,7 @@ required_ef_terms = [
     eph15_tot,
     eph20_tot,
     eph21_tot,
-    eph25_tot,
+    eph23_tot,
     eph24_tot,
     em8_tot,
     em11_tot,
@@ -544,7 +558,7 @@ if all(v is not None for v in required_ef_terms):
     ef_mh = (
         (eph14_tot - eph15_tot)
         + (eph20_tot - eph21_tot)
-        + (eph25_tot - eph24_tot)
+        + (eph23_tot - eph24_tot)
         + (em8_tot - em11_tot)
         + et8_tot
     )
@@ -560,19 +574,19 @@ if ep_mh is None:
 
 if ef_mh is None:
     # try to sum available terms (treat missing terms as 0) but only if at least one term exists
-    required_terms = [eph14_tot, eph15_tot, eph20_tot, eph21_tot, eph25_tot, eph24_tot, em8_tot, em11_tot, et8_tot]
+    required_terms = [eph14_tot, eph15_tot, eph20_tot, eph21_tot, eph23_tot, eph24_tot, em8_tot, em11_tot, et8_tot]
     if any(isinstance(v, (int, float)) for v in required_terms):
         # use 0 for missing
         eph14_tot = eph14_tot or 0.0
         eph15_tot = eph15_tot or 0.0
         eph20_tot = eph20_tot or 0.0
         eph21_tot = eph21_tot or 0.0
-        eph25_tot = eph25_tot or 0.0
+        eph23_tot = eph23_tot or 0.0
         eph24_tot = eph24_tot or 0.0
         em8_tot = em8_tot or 0.0
         em11_tot = em11_tot or 0.0
         et8_tot = et8_tot or 0.0
-        ef_mh = (eph14_tot - eph15_tot) + (eph20_tot - eph21_tot) + (eph25_tot - eph24_tot) + (em8_tot - em11_tot) + et8_tot
+        ef_mh = (eph14_tot - eph15_tot) + (eph20_tot - eph21_tot) + (eph23_tot - eph24_tot) + (em8_tot - em11_tot) + et8_tot
 
 if ed_mh is None and ef_mh is not None and ep_mh is not None:
     ed_mh = ef_mh - ep_mh
@@ -582,7 +596,7 @@ logging.info(f"  ET11={et11_tot} -> Ep_mh={ep_mh}")
 logging.info(
     f"  Ef terms: (EPH14-EPH15)=({eph14_tot}-{eph15_tot}), "
     f"(EPH20-EPH21)=({eph20_tot}-{eph21_tot}), "
-    f"(EPH25-EPH24)=({eph25_tot}-{eph24_tot}), "
+    f"(EPH23-EPH24)=({eph23_tot}-{eph24_tot}), "
     f"(EM8-EM11)=({em8_tot}-{em11_tot}), ET8={et8_tot}"
 )
 logging.info(f"  Ef_mh = {ef_mh}")
