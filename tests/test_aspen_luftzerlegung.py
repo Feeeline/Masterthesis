@@ -6,6 +6,9 @@ import math
 
 from exerpy import ExergyAnalysis
 
+# When True, formatting helpers will avoid rounding and output full float precision.
+NO_ROUNDING = True
+
 # Get the log file path
 log_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'parser_run.log'))
 
@@ -1353,6 +1356,11 @@ def _format_value(value):
     if value is None:
         return "-"
     if isinstance(value, (int, float)):
+        # Allow optional full-precision output when requested
+        if globals().get("NO_ROUNDING", False):
+            x = float(value)
+            s = format(x, ".17g")
+            return s.replace(".", ",")
         # Thesis table formatting: no scientific notation and at most two decimals.
         x = round(float(value), 2)
         if abs(x) < 1e-9:
@@ -1369,6 +1377,9 @@ def _format_molfrac_value(value):
         x = float(value)
         if abs(x) < 1e-12:
             return "0"
+        if globals().get("NO_ROUNDING", False):
+            s = format(x, ".17g")
+            return s.replace(".", ",")
         # Composition formatting by magnitude for readable thesis tables.
         ax = abs(x)
         if ax >= 1e-2:
@@ -1400,6 +1411,16 @@ def _format_value_fixed(value, ndigits: int):
         x = float(value)
         if not math.isfinite(x):
             return ""
+        if globals().get("NO_ROUNDING", False):
+            s = format(x, ".17g")
+            # If caller expects fixed digits, still respect ndigits by trimming/padding
+            if ndigits is not None:
+                if "e" not in s and "E" not in s and "." in s:
+                    # pad or trim fractional part to ndigits if desired
+                    intpart, frac = s.split('.', 1) if '.' in s else (s, '')
+                    frac = (frac + '0' * ndigits)[:ndigits]
+                    s = intpart + ('.' + frac if ndigits > 0 else '')
+            return s.replace('.', ',')
         fmt = f"{x:.{ndigits}f}"
         # Remove leading + sign if any, keep negative sign
         if fmt.startswith("+"):
@@ -2045,11 +2066,17 @@ def _build_global_check_table(components: dict) -> str:
     def _format_int_de(value):
         if not isinstance(value, (int, float)):
             return "-"
+        if globals().get("NO_ROUNDING", False):
+            s = format(float(value), ".17g")
+            return s.replace(".", ",")
         return f"{int(round(value)):,}"
 
     def _format_pct_de(value):
         if not isinstance(value, (int, float)):
             return "-"
+        if globals().get("NO_ROUNDING", False):
+            s = format(float(value), ".17g")
+            return s.replace(".", ",")
         return f"{value:.2f}".replace(".", ",")
 
     delta_text = "-"
@@ -2309,12 +2336,10 @@ global_check_output_path = os.path.abspath(
         "..",
         "Overleaf_LaTeX",
         "tabellen",
-        "aspen_luftzerlegung_global_check.tex",
+        # global double table removed per user request
     )
 )
-global_check_table = _build_global_check_table(ean.components)
-with open(global_check_output_path, "w", encoding="utf-8") as tex_file:
-    tex_file.write(global_check_table)
+# global check table generation removed per user request
 
 block_ed_output_path = os.path.abspath(
     os.path.join(

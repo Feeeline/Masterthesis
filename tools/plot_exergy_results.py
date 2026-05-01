@@ -462,6 +462,30 @@ def compute_global_metrics_from_tables(df_components: pd.DataFrame, streams_ther
     }
 
 
+def _inject_streams_into_canonical(tex_path: Path, streams_thermo: dict, stream_keys: dict):
+    """Inject unrounded Watt strings from streams_thermo into an existing canonical LaTeX file.
+
+    Matches occurrences of the LaTeX symbol $\dot{E}_{Sxx}$ followed by an ampersand and a numeric value,
+    replacing the numeric entry with the full-precision Watt string (decimal comma) produced by
+    `_format_w_no_round_tex` plus ' W'. Falls back to a simple replace for common ' & 0 W' patterns.
+    """
+    if not tex_path.exists():
+        return
+    text = tex_path.read_text(encoding="utf-8")
+    for label, stream_id in stream_keys.items():
+        val = streams_thermo.get(stream_id, {}).get("E_W") if streams_thermo.get(stream_id) else None
+        rep = _format_w_no_round_tex(val) + " W" if val is not None else "-"
+        # pattern: $\dot{E}_{Sxx}$ & <value> \\\\  (value may contain spaces, dots, commas, minus, e notation)
+        pattern = re.compile(rf"(\$\\dot\{{E\}}_\{{{re.escape(stream_id)}\}}\$\s*&\s*)([-0-9.,eE+\s]+)(\\\\\\\\)")
+        def _repl(m):
+            return m.group(1) + rep + m.group(3)
+        text, n = pattern.subn(_repl, text)
+        if n == 0:
+            # fallback simple replace
+            text = text.replace(f"$\\dot{{E}}_{{{stream_id}}}$ & 0 W", f"$\\dot{{E}}_{{{stream_id}}}$ & {rep}")
+    tex_path.write_text(text, encoding="utf-8")
+
+
 def parse_compressor_power_from_json(json_path: Path) -> float | None:
     """Read JSON results and sum compressor electrical power `P` (W).
 
@@ -943,96 +967,9 @@ def _format_w_tex(value: float) -> str:
     return s
 
 
-def _build_global_check_tex(raw: dict, model_label: str, product_stream: str, metrics_w: dict | None = None, computed: dict | None = None) -> str:
-    """Build the requested German-formatted global check LaTeX table.
-
-    raw keys: E_s1, E_comp, E_prod, W_turb, E_dest, E_loss, E_in_sum
-    """
-    left1_label = "Feed-Strom 1"
-    left1_sym = r"$\dot{E}_{S1}$"
-    left2_label = "Verdichterleistung"
-    left2_sym = r"$\dot{W}_1 + \dot{W}_2$"
-
-    right1_label = f"Produktstrom N$_2$"
-    right1_sym = r"$\dot{E}_{%s}$" % product_stream if product_stream else r"$\dot{E}_{S24}$"
-    right2_label = "Turbinenleistung"
-    right2_sym = r"$\dot{W}_3$"
-
-    rows = []
-    # compute product total (Produkt + Turbine) if available via metrics_w, else derive from raw
-    # Accept product stream exergy alone if turbine value missing
-    product_total = None
-    if metrics_w and isinstance(metrics_w.get(r"$\dot{E}_{P,tot}$"), (int, float)):
-        product_total = metrics_w.get(r"$\dot{E}_{P,tot}$")
-    else:
-        if isinstance(raw.get('E_prod'), (int, float)):
-            product_total = (raw.get('E_prod') or 0) + (raw.get('W_turb') or 0)
-
-    # Rows
-    row = f"{left1_label} & {left1_sym} & {_format_w_tex(raw.get('E_s1'))} & {right1_label} & {right1_sym} & {_format_w_tex(raw.get('E_prod'))}"
-    rows.append(row + r" \\")
-    row = f"{left2_label} & {left2_sym} & {_format_w_tex(raw.get('E_comp'))} & {right2_label} & {right2_sym} & {_format_w_tex(raw.get('W_turb'))}"
-    rows.append(row + r" \\")
-    # use explicit symbols requested by user
-    row = f" &  &  & Exergievernichtung & $\\dot{{E}}_{{D,tot}}$ & {_format_w_tex(raw.get('E_dest'))}"
-    rows.append(row + r" \\")
-    row = f" &  &  & Exergieverlust & $\\dot{{E}}_{{L,tot}}$ & {_format_w_tex(raw.get('E_loss'))}"
-    rows.append(row + r" \\")
-
-    sum_left = _format_w_tex(raw.get('E_in_sum'))
-    # sum_right should be E_P,tot + E_D,tot + E_L,tot
-    sum_right_val = None
-    if isinstance(product_total, (int, float)) and isinstance(raw.get('E_dest'), (int, float)) and isinstance(raw.get('E_loss'), (int, float)):
-        sum_right_val = (product_total or 0) + (raw.get('E_dest') or 0) + (raw.get('E_loss') or 0)
-    # allow fallback: if turbine missing but E_prod present, use E_prod for product_total (already handled above)
-    diff_val = None
-    try:
-        if isinstance(raw.get('E_in_sum'), (int, float)) and isinstance(sum_right_val, (int, float)):
-            diff_val = (raw.get('E_in_sum') or 0) - sum_right_val
-    except Exception:
-        diff_val = None
-
-    diff_text = "-"
-    pct_text = "-"
-    if diff_val is not None:
-        diff_text = _format_w_tex(diff_val)
-        try:
-            pct = abs(diff_val) / (raw.get('E_in_sum') or 1) * 100.0
-            pct_text = f"{pct:.2f}".replace(".", ",")
-        except Exception:
-            pct_text = "-"
-
-    sum_right = _format_w_tex(sum_right_val)
-
-    # diagnostic comments: include parsed raw values and computed-from-tables values
-    debug_lines = []
-    try:
-        parsed_vals = {k: raw.get(k) for k in ("E_s1", "E_comp", "E_prod", "W_turb", "E_dest", "E_loss", "E_in_sum")}
-        debug_lines.append(f"% parsed_raw: {parsed_vals}")
-    except Exception:
-        pass
-    if isinstance(computed, dict):
-        try:
-            debug_lines.append(f"% computed_from_tables: { {k: computed.get(k) for k in ('E_F','E_P','E_D','E_L','E_in_sum','product_stream')} }")
-        except Exception:
-            pass
-
-    lines = [
-        *debug_lines,
-        r"\begin{longtable}{llr | llr}",
-        (f"\\caption{{Exergetische Bilanz des Gesamtsystems der {model_label}}} " + r"\\"),
-        r"\hline",
-        r"\multicolumn{3}{l|}{\textbf{Aufwandseite}} & \multicolumn{3}{l}{\textbf{Nutzen, Vernichtung \& Verlust}} \\",
-        r"\hline",
-        r"Posten & Symbol & Wert (W) & Posten & Symbol & Wert (W) \\",
-        r"\hline",
-        *rows,
-        r"\hline",
-        (f"\\textbf{{Gesamtaufwand}} & \\dot{{E}}_{{F,tot}} & \\textbf{{{sum_left}}} & \\textbf{{Summe Aus}} & \\begin{{tabular}}{{@{{}}l@{{}}}}\\dot{{E}}_{{P,tot}} + \\dot{{E}}_{{D,tot}} \\\\ + \\dot{{E}}_{{L,tot}}\\end{{tabular}} & \\textbf{{{sum_right}}} " + r"\\"),
-        r"\hline",
-        r"\end{longtable}",
-    ]
-    return "\n".join(lines)
+# legacy global_check builder removed — generation of intermediate
+# global_check LaTeX files is deprecated. Canonical global tables under
+# Overleaf_LaTeX/tabellen/ are the single source of truth.
 
 
 def make_plot(df: pd.DataFrame, x_col: str, xlabel: str, out_path: Path, xlim=None):
@@ -1491,8 +1428,17 @@ def main():
     df_mol_single = parse_molfrac_table(MOLFRAC_SINGLE)
     stream_mdot_double = parse_stream_mass_flows(STREAMS_DOUBLE)
     stream_mdot_single = parse_stream_mass_flows(STREAMS_SINGLE)
-    metrics_double_w, metrics_double_mw, product_stream_double, raw_double = parse_global_master_table(GLOBAL_DOUBLE)
-    metrics_single_w, metrics_single_mw, product_stream_single, raw_single = parse_global_master_table(GLOBAL_SINGLE)
+    # Legacy `global_check` files are no longer used. Canonical global tables
+    # under Overleaf_LaTeX/tabellen/ are authoritative; do not seed or generate
+    # intermediate `global_check` files.
+
+    # Parse the canonical global LaTeX tables (do not use legacy global_check files)
+    metrics_double_w, metrics_double_mw, product_stream_double, raw_double = parse_global_master_table(
+        TAB_DIR / "aspen_luftzerlegung_global_double.tex"
+    )
+    metrics_single_w, metrics_single_mw, product_stream_single, raw_single = parse_global_master_table(
+        TAB_DIR / "aspen_luftzerlegung_global_single.tex"
+    )
 
     # Also compute global metrics from component and stream tables (authoritative LaTeX sources)
     streams_double_thermo = parse_stream_thermo_data(STREAMS_DOUBLE)
@@ -1500,6 +1446,10 @@ def main():
 
     computed_double = compute_global_metrics_from_tables(df_double, streams_double_thermo, product_stream_double, "Doppelkolonne")
     computed_single = compute_global_metrics_from_tables(df_single, streams_single_thermo, product_stream_single, "Einzelkolonne")
+
+    # prefer computed product stream identifiers when parse did not provide them
+    product_stream_double = computed_double.get("product_stream") or product_stream_double
+    product_stream_single = computed_single.get("product_stream") or product_stream_single
 
     # Prefer computed values from tables when available, else fall back to parsed global file
     def _coalesce(a, b):
@@ -1544,8 +1494,7 @@ def main():
             if isinstance(raw_for_double.get("E_s1"), (int, float)) and isinstance(raw_for_double.get("E_comp"), (int, float)):
                 raw_for_double["E_in_sum"] = float(raw_for_double.get("E_s1")) + float(raw_for_double.get("E_comp"))
 
-        new_double_tex = _build_global_check_tex(raw_for_double, "Doppelkolonne", computed_double.get("product_stream"), metrics_double_w, computed_double)
-        GLOBAL_DOUBLE.write_text(new_double_tex, encoding="utf-8")
+        # do not generate legacy global_check double table
     except Exception:
         pass
     try:
@@ -1572,8 +1521,16 @@ def main():
             if isinstance(raw_for_single.get("E_s1"), (int, float)) and isinstance(raw_for_single.get("E_comp"), (int, float)):
                 raw_for_single["E_in_sum"] = float(raw_for_single.get("E_s1")) + float(raw_for_single.get("E_comp"))
 
-        new_single_tex = _build_global_check_tex(raw_for_single, "Einzelkolonne", computed_single.get("product_stream"), metrics_single_w, computed_single)
-        GLOBAL_SINGLE.write_text(new_single_tex, encoding="utf-8")
+        # do not generate legacy global_check single table
+    except Exception:
+        pass
+
+    # Inject authoritative unrounded stream E_W values into the canonical global single/double files
+    try:
+        single_keys = {"feed": "S1", "product": computed_single.get("product_stream") or "S24", "rest": "S21"}
+        double_keys = {"feed": "S1", "product": computed_double.get("product_stream") or "S32", "rest": "S28"}
+        _inject_streams_into_canonical(TAB_DIR / "aspen_luftzerlegung_global_single.tex", streams_single_thermo, single_keys)
+        _inject_streams_into_canonical(TAB_DIR / "aspen_luftzerlegung_global_double.tex", streams_double_thermo, double_keys)
     except Exception:
         pass
 

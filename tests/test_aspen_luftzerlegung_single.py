@@ -19,6 +19,9 @@ console_handler.setFormatter(logging.Formatter('%(message)s'))
 logging.root.addHandler(console_handler)
 logging.root.setLevel(logging.INFO)
 
+# When True, formatting helpers will avoid rounding and output full float precision.
+NO_ROUNDING = True
+
 # Allow overriding the model path via environment variable or first CLI argument.
 # Fallback to the original hardcoded path for backward compatibility.
 default_model_path = r"C:\Users\Felin\Documents\Masterthesis\Simulation_Code\GIT\examples\asu_aspen\Singekolonne_klein\Single_Column_Simulation_Final.bkp"
@@ -1317,6 +1320,10 @@ def _format_value(value):
             x_f = float(value)
             if not math.isfinite(x_f):
                 return "-"
+            # Allow optional full-precision output when requested
+            if globals().get("NO_ROUNDING", False):
+                s = format(x_f, ".17g")
+                return s.replace(".", ",")
             # Thesis table formatting: no scientific notation and at most two decimals.
             x = round(x_f, 2)
             if abs(x) < 1e-9:
@@ -1345,6 +1352,9 @@ def _format_molfrac_value(value):
         x = float(value)
         if abs(x) < 1e-12:
             return "0"
+        if globals().get("NO_ROUNDING", False):
+            s = format(x, ".17g")
+            return s.replace(".", ",")
         # Composition formatting by magnitude for readable thesis tables.
         ax = abs(x)
         if ax >= 1e-2:
@@ -1376,6 +1386,15 @@ def _format_value_fixed(value, ndigits: int):
         x = float(value)
         if not math.isfinite(x):
             return ""
+        if globals().get("NO_ROUNDING", False):
+            s = format(x, ".17g")
+            # If caller expects fixed digits, honor ndigits for fractional part when possible
+            if ndigits is not None:
+                if "e" not in s and "E" not in s and "." in s:
+                    intpart, frac = s.split('.', 1)
+                    frac = (frac + '0' * ndigits)[:ndigits]
+                    s = intpart + ('.' + frac if ndigits > 0 else '')
+            return s.replace('.', ',')
         fmt = f"{x:.{ndigits}f}"
         # Remove leading + sign if any, keep negative sign
         if fmt.startswith("+"):
@@ -1689,7 +1708,7 @@ def _build_component_results_table(components: dict) -> str:
         display_items.append((comp_name, comp_class_name, display_E_F, display_E_P, display_E_D, display_epsilon))
 
     # compute total absolute E_D for y* normalization
-    E_D_tot = sum(abs(v) for _, _, _, _, v, _, _ in display_items if isinstance(v, (int, float)))
+    E_D_tot = sum(abs(v) for _, _, _, _, v, _ in display_items if isinstance(v, (int, float)))
 
     rows = []
     sum_E_D = 0.0
@@ -1923,6 +1942,9 @@ def _build_global_check_table(components: dict) -> str:
         try:
             if not math.isfinite(value):
                 return "-"
+            if globals().get("NO_ROUNDING", False):
+                s = format(float(value), ".17g")
+                return s.replace(".", ",")
             return f"{int(round(value)):,}"
         except Exception:
             return "-"
@@ -1930,6 +1952,9 @@ def _build_global_check_table(components: dict) -> str:
     def _format_pct_de(value):
         if not isinstance(value, (int, float)):
             return "-"
+        if globals().get("NO_ROUNDING", False):
+            s = format(float(value), ".17g")
+            return s.replace(".", ",")
         return f"{value:.2f}".replace(".", ",")
 
     delta_text = "-"
@@ -2183,12 +2208,9 @@ global_check_output_path = os.path.abspath(
         "..",
         "Overleaf_LaTeX",
         "tabellen",
-        "aspen_luftzerlegung_global_check_single.tex",
+        # global single table removed per user request
     )
 )
-global_check_table = _build_global_check_table(ean.components)
-with open(global_check_output_path, "w", encoding="utf-8") as tex_file:
-    tex_file.write(global_check_table)
 
 block_ed_output_path = os.path.abspath(
     os.path.join(
