@@ -101,7 +101,7 @@ $\dot{E}_{F,MH}=
 \begin{aligned}
 (&\dot{E}^{PH}_{14}-\dot{E}^{PH}_{15})
 +(\dot{E}^{PH}_{20}-\dot{E}^{PH}_{21}) \\
-&+(\dot{E}^{PH}_{25}-\dot{E}^{PH}_{24})
+&+(\dot{E}^{PH}_{23}-\dot{E}^{PH}_{24})
 +(\dot{E}^{M}_{8}-\dot{E}^{M}_{11})
 +\dot{E}^{T}_{8}
 \end{aligned}$ &
@@ -110,9 +110,6 @@ $\dot{E}_{P,MH}=\dot{E}^{T}_{11}$ \\
 RC &
 $\dot{E}_{F,RC}=\dot{E}^{PH}_{SZ27}-\dot{E}^{PH}_{SZ28}+\dot{E}^{M}_{SZ25}-\dot{E}^{M}_{SZ26}$ &
 $\dot{E}_{P,RC}=\dot{E}^{T}_{SZ26}-\dot{E}^{T}_{SZ25}$ \\
-$\dot{E}_{F,RECO}=\dot{E}^{PH}_{SZ27}-\dot{E}^{PH}_{SZ28}+\dot{E}^{M}_{SZ25}-\dot{E}^{M}_{SZ26}$ &
-$\dot{E}_{P,RECO}=\dot{E}^{T}_{SZ26}-\dot{E}^{T}_{SZ25}$ \\
-
 
 KOL &
 $\dot{E}_{F,KOL}=
@@ -127,7 +124,6 @@ $\dot{E}_{P,KOL}=
 +\dot{m}_{23}(e^{T}_{23}-e^{T}_{11})
 \end{aligned}$\\
 
-\addlinespace
 D1 &
 $\dot{E}_{F,D1}=\dot{E}^{M}_{12}-\dot{E}^{M}_{13}$ &
 $\dot{E}_{P,D1}=\dot{E}^{T}_{13}-\dot{E}^{T}_{12}$ \\
@@ -136,7 +132,6 @@ D2&
 $\dot{E}_{F,D2}=\dot{E}^{M}_{18}-\dot{E}^{M}_{19}$ &
 $\dot{E}_{P,D2}=\dot{E}^{T}_{19}-\dot{E}^{T}_{18}$ \\
 
-\addlinespace
 T &
 $\dot{E}_{F,T}=\dot{E}^{M}_{16}-\dot{E}^{M}_{17}$ &
 $\dot{E}_{P,T}=\dot{W}_{T}+\dot{E}^{T}_{17}-\dot{E}^{T}_{16}$ \\
@@ -194,7 +189,6 @@ $\dot{E}_{F,MW}=
 \end{aligned}$ &
 $\dot{E}_{P,MW}=\dot{E}^{T}_{12}+\dot{E}^{T}_{20}$ \\
 
-
 KOLHP &
 $\dot{E}_{F,KOLHP}=
 (\dot{E}_{34}-\dot{E}_{33})
@@ -227,7 +221,6 @@ $\dot{E}_{P,KOLLP}=
 +\dot{m}_{29}(e^{M}_{29}-e^{M}_{mix})
 \end{aligned}$ \\
 
-
 RC1  &
 $\dot{E}_{F,RC1}=(\dot{E}^{PH}_{35}-\dot{E}^{PH}_{36})+(\dot{E}^{M}_{33}-\dot{E}^{M}_{34})$ &
 $\dot{E}_{P,RC1}=(\dot{E}^{T}_{33}-\dot{E}^{T}_{34})$ \\
@@ -235,7 +228,6 @@ $\dot{E}_{P,RC1}=(\dot{E}^{T}_{33}-\dot{E}^{T}_{34})$ \\
 RC2  &
 $\dot{E}_{F,RC2}=(\dot{E}^{PH}_{39}-\dot{E}^{PH}_{40})+(\dot{E}^{M}_{37}-\dot{E}^{M}_{38})$ &
 $\dot{E}_{P,RC2}=(\dot{E}^{T}_{37}-\dot{E}^{T}_{38})$ \\
-
 
 D1 &
 $\dot{E}_{F,D1}=\dot{E}^{M}_{13}-\dot{E}^{M}_{14}$ &
@@ -253,11 +245,9 @@ D4&
 $\dot{E}_{F,D4}=\dot{E}^{M}_{24}-\dot{E}^{M}_{25}$ &
 $\dot{E}_{P,D4}=\dot{E}^{T}_{25}-\dot{E}^{T}_{24}$ \\
 
-
 T &
 $\dot{E}_{F,T}=\dot{E}^{M}_{20}-\dot{E}^{M}_{21}$ &
 $\dot{E}_{P,T}=\dot{W}_{T}+\dot{E}^{T}_{21}-\dot{E}^{T}_{20}$ \\
-
 
 PK1 &
 $\dot{W}_{PK1}$ &
@@ -282,6 +272,91 @@ $\dot{E}^{PH}_{31}-\dot{E}^{PH}_{30}$ \\
 \input{Overleaf_LaTeX/tabellen/aspen_luftzerlegung_components_preview_round}
 \end{table}
 \end{landscape}
+
+\begin{longtable}{lllr}
+\caption{Globale exergetische Bilanzierung nach dem Fuel-Product-Prinzip} \label{tab:speco_bilanz_final_clean} \\
+\hline
+\textbf{Kategorie} & \textbf{Bezeichnung} & \textbf{Symbol} & \textbf{Wert [W]} \\
+\hline
+\endfirsthead
+\caption[]{Globale exergetische Bilanzierung (Fortsetzung)} \\
+\hline
+\textbf{Kategorie} & \textbf{Bezeichnung} & \textbf{Symbol} & \textbf{Wert [W]} \\
+\hline
+\endhead
+\hline
+\endfoot
+
+\textbf{Gesamtaufwand} & Eintrittsexergie Luft ($S1$) & $\dot{E}_{S1}$ & 179.971,69 \\
+\textbf{(Total Fuel)} & Elektrische Brutto-Leistung ($P_{C,1} + P_{C,2}$) & $\dot{P}_{in,tot}$ & 10.577.187,25 \\
+\cline{2-4}
+& \textbf{Summe Gesamtaufwand} & $\dot{E}_{F,tot}$ & \textbf{10.757.158,94} \\
+\hline
+
+\textbf{Gesamtnutzen} & Exergie Stickstoff-Produkt ($S24$) & $\dot{E}_{S24}$ & 2.827.500,60 \\
+\textbf{(Total Product)} & Netto-Turbinenleistung (Welle) & $\dot{P}_{T}$ & 482.231,08 \\
+\cline{2-4}
+& \textbf{Summe Gesamtnutzen} & $\dot{E}_{P,tot}$ & \textbf{3.309.731,68} \\
+\hline
+
+\textbf{Systemverluste} & Exergie Restgasstrom ($S21$) & $\dot{E}_{S21}$ & 473.395,93 \\
+\textbf{(Total Loss)} & Stoffliche Purge-Verluste ($S7, S9, S10$) & $\dot{E}_{L,pur}$ & 31.361,47 \\
+\cline{2-4}
+& \textbf{Summe Systemverluste} & $\dot{E}_{L,tot}$ & \textbf{504.757,40} \\
+\hline
+
+\textbf{Exergievernichtung} & Bilanzierte interne Vernichtung (Fluide) & $\sum \dot{E}_{D,k}$ & 6.836.899,19 \\
+\textbf{(Total Destruction)} & Mechanische Dissipation ($\eta_{mech}=0,99$) & $\dot{E}_{D,mech}$ & 110.642,90 \\
+\cline{2-4}
+& \textbf{Summe Exergievernichtung} & $\dot{E}_{D,tot}$ & \textbf{6.947.542,09} \\
+\hline
+
+\textbf{Bilanzkontrolle} & \textbf{Erhaltung: } $\dot{E}_{F,tot} = \dot{E}_{P,tot} + \dot{E}_{L,tot} + \dot{E}_{D,tot}$ & & \textbf{99,97 \%} \\
+\hline
+\end{longtable}
+
+
+\begin{longtable}{lllr}
+\caption{Globale exergetische Bilanzierung - Doppelkolonnenmodell} \label{tab:globale_bilanz_doppel_final} \\
+\hline
+\textbf{Kategorie} & \textbf{Bezeichnung} & \textbf{Symbol} & \textbf{Wert [W]} \\
+\hline
+\endfirsthead
+\caption[]{Globale exergetische Bilanzierung - Doppelkolonne (Fortsetzung)} \\
+\hline
+\textbf{Kategorie} & \textbf{Bezeichnung} & \textbf{Symbol} & \textbf{Wert [W]} \\
+\hline
+\endhead
+\hline
+\endfoot
+
+\textbf{Gesamtaufwand} & Eintrittsexergie Luft ($S1$) & $\dot{E}_{S1}$ & 118.007,34 \\
+\textbf{(Total Fuel)} & Elektrische Brutto-Leistung & $\dot{P}_{in,tot}$ & 7.649.667,06 \\
+\cline{2-4}
+& \textbf{Summe Gesamtaufwand} & $\dot{E}_{F,tot}$ & \textbf{7.767.674,40} \\
+\hline
+
+\textbf{Gesamtnutzen} & Exergie Stickstoff-Produkt ($S32$) & $\dot{E}_{S32}$ & 2.907.728,43 \\
+\textbf{(Total Product)} & Netto-Turbinenleistung (Welle) & $\dot{W}_{T}$ & 67.318,82 \\
+\cline{2-4}
+& \textbf{Summe Gesamtnutzen} & $\dot{E}_{P,tot}$ & \textbf{2.975.047,25} \\
+\hline
+
+\textbf{Systemverluste} & Exergie Restgasstrom ($S28$) & $\dot{E}_{S28}$ & 372.700,13 \\
+\textbf{(Total Loss)} & Stoffliche Verluste ($S7, S9, S10, S25$) & $\dot{E}_{L,pur}$ & 114.188,23 \\
+\cline{2-4}
+& \textbf{Summe Systemverluste} & $\dot{E}_{L,tot}$ & \textbf{486.888,36} \\
+\hline
+
+\textbf{Exergievernichtung} & Bilanzierte interne Vernichtung (Fluide) & $\sum \dot{E}_{D,k}$ & 4.155.988,56 \\
+\textbf{(Total Destruction)} & Mechanische Dissipation ($\eta_{mech}=0,99$) & $\dot{E}_{D,mech}$ & 76.496,67 \\
+\cline{2-4}
+& \textbf{Summe Exergievernichtung} & $\dot{E}_{D,tot}$ & \textbf{4.232.485,23} \\
+\hline
+
+\textbf{Bilanzkontrolle} & \textbf{Erhaltung: } $\dot{E}_{F,tot} = \dot{E}_{P,tot} + \dot{E}_{L,tot} + \dot{E}_{D,tot}$ & & \textbf{99,06 \%} \\
+\hline
+\end{longtable}
 
 \begin{table}[p]
 \centering
