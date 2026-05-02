@@ -16,13 +16,19 @@ from decimal import Decimal
 
 def parse_num(token):
     t = token.strip()
-    if t == '' or any(c.isalpha() for c in t):
+    if t == '':
         return None
+    # remove braces and replace unicode minus and decimal comma
     t = t.replace('{', '').replace('}', '')
     t = t.replace('−', '-')
     t = t.replace(',', '.')
+    # extract a numeric substring that may include scientific notation
+    m = re.search(r"[-+]?(?:\d+\.?\d*|\.?\d+)(?:[eE][-+]?\d+)?", t)
+    if not m:
+        return None
+    num_txt = m.group(0)
     try:
-        return float(t)
+        return float(num_txt)
     except Exception:
         return None
 
