@@ -960,6 +960,77 @@ def parse_global_master_table(tex_path: Path):
     return metrics_w, metrics_mw, product_stream, raw
 
 
+def parse_global_vergleich_txt(txt_path: Path):
+    """Parse Overleaf_LaTeX/tabellen/Global_Vergleich.txt (CSV-like) and
+    return two dicts (metrics_single_mw, metrics_double_mw) with keys
+    matching the plot labels: $\dot{E}_{F,tot}$, $\dot{E}_{P,tot}$,
+    $\dot{E}_{D,tot}$, $\dot{E}_{L,tot}$. Values returned in MW.
+    """
+    if not txt_path.exists():
+        return None, None
+
+    def _parse_num_de(s: str) -> float | None:
+        if s is None:
+            return None
+        s = s.strip().strip('"')
+        if s == '':
+            return None
+        # remove thousand dots and convert decimal comma to dot
+        s = s.replace('.', '').replace(',', '.')
+        try:
+            return float(s)
+        except Exception:
+            return None
+
+    single = {}
+    double = {}
+    # mapping keywords to plot labels
+    key_map = {
+        'gesamtaufwand': r"$\dot{E}_{F,tot}$",
+        'gesamtnutzen': r"$\dot{E}_{P,tot}$",
+        'systemverluste': r"$\dot{E}_{L,tot}$",
+        'exergievernichtung': r"$\dot{E}_{D,tot}$",
+    }
+
+    import csv
+    try:
+        with txt_path.open('r', encoding='utf-8') as f:
+            reader = csv.reader(f, delimiter=',', quotechar='"')
+            # skip header if present
+            first = next(reader, None)
+            if first is None:
+                return None, None
+            # detect header: if first cell contains 'bilanz' or 'bilanzg', treat as header
+            header_lower = str(first[0]).lower() if len(first) > 0 else ''
+            if 'bilanz' in header_lower or 'bilanzgr' in header_lower or 'bilanzgr' in header_lower:
+                pass  # already consumed header
+            else:
+                # first row is data, process it
+                rows = [first]
+                rows.extend(list(reader))
+                reader = iter(rows)
+
+            for parts in reader:
+                if not parts:
+                    continue
+                label = parts[0].strip().strip('"').lower()
+                # try to find numeric columns for single and double (last two columns)
+                if len(parts) >= 3:
+                    val_s = _parse_num_de(parts[-2])
+                    val_d = _parse_num_de(parts[-1])
+                else:
+                    continue
+                for k, out_key in key_map.items():
+                    if k in label:
+                        single[out_key] = (val_s / 1e6) if isinstance(val_s, (int, float)) else None
+                        double[out_key] = (val_d / 1e6) if isinstance(val_d, (int, float)) else None
+                        break
+    except Exception:
+        return None, None
+
+    return single, double
+
+
 def compute_specific_metrics(metrics_w: dict, product_mass_flow: float) -> dict:
     if not isinstance(product_mass_flow, (int, float)) or product_mass_flow <= 0:
         raise ValueError("Produktmassenstrom muss positiv sein.")
@@ -1690,11 +1761,36 @@ def main():
         out_path=OUT_DIR / "singlekolonne_yDk_barh.png",
     )
 
+    # Prefer canonical simple CSV-like global comparison table when present
+    gv_single, gv_double = parse_global_vergleich_txt(TAB_DIR / "Global_Vergleich.txt")
+    if isinstance(gv_single, dict) and isinstance(gv_double, dict):
+        # If the file provides the values, use them directly for the grouped plot.
+        metrics_double_mw = gv_double
+        metrics_single_mw = gv_single
+
     plot_grouped_system_metrics(
         metrics_double_mw,
         metrics_single_mw,
         out_path=OUT_DIR / "vergleich_global_kennzahlen_grouped.png",
     )
+
+    # If Global_Vergleich.txt provided values, compute specific metrics from
+    # those canonical MW values divided by product mass flows (S24 for Single,
+    # S32 for Double) to get kJ/kg.
+    if isinstance(gv_single, dict) and isinstance(gv_double, dict):
+        try:
+            mdot_single = stream_mdot_single.get(product_stream_single)
+            mdot_double = stream_mdot_double.get(product_stream_double)
+            metrics_single_spec = {}
+            metrics_double_spec = {}
+            for k in [r"$\dot{E}_{F,tot}$", r"$\dot{E}_{P,tot}$", r"$\dot{E}_{D,tot}$", r"$\dot{E}_{L,tot}$"]:
+                v_s_mw = metrics_single_mw.get(k)
+                v_d_mw = metrics_double_mw.get(k)
+                metrics_single_spec[k] = (v_s_mw * 1000.0 / mdot_single) if (isinstance(v_s_mw, (int, float)) and mdot_single) else None
+                metrics_double_spec[k] = (v_d_mw * 1000.0 / mdot_double) if (isinstance(v_d_mw, (int, float)) and mdot_double) else None
+        except Exception:
+            # fallback to previously computed specific metrics
+            pass
 
     plot_grouped_specific_system_metrics(
         metrics_double_spec,

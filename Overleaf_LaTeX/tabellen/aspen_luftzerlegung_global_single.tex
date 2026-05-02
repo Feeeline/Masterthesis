@@ -1,32 +1,43 @@
-\begin{longtable}{llrr}
-\caption{Globale Exergiebilanz und Konsistenzprüfung des Singlekolonnenmodells} \\
+\begin{longtable}{lllr}
+\caption{Globale exergetische Bilanzierung nach dem Fuel-Product-Prinzip} \label{tab:speco_bilanz_final_clean} \\
 \hline
-Kategorie & Bezeichnung & Symbol & Wert \\
+\textbf{Kategorie} & \textbf{Bezeichnung} & \textbf{Symbol} & \textbf{Wert [W]} \\
 \hline
-\textbf{Zugeführte Exergie} & Feed-Strom Luft (S1) & $\dot{E}_{S1}$ & 179971,6889999984 W \\
-\textbf{(Input)} & Verdichter-Wellenleistung & $\dot{W}_{LK1} + \dot{W}_{LK2}$ & 10577187,25 W \\
- & \textbf{Summe Input} & $\sum \dot{E}_{in}$ & \textbf{10757158,939 W} \\
+\endfirsthead
+\caption[]{Globale exergetische Bilanzierung (Fortsetzung)} \\
 \hline
-\textbf{Abgeführte \& Vernichtete Exergie} & & & \\
+\textbf{Kategorie} & \textbf{Bezeichnung} & \textbf{Symbol} & \textbf{Wert [W]} \\
 \hline
- & \textbf{A) Nutz-Output (Produkte + Turbine)} & & \\
- & \quad $N_2$-Produkt (S24) & $\dot{E}_{S24}$ & 2827500,601 W \\
- & \quad Turbinen-Wellenleistung & $\dot{W}_T$ & 482231,078 W \\
- & \textbf{Summe Nutz-Output} & & \textbf{3.309.731,68 W} \\
+\endhead
 \hline
- & \textbf{B) Stoffliche Verluste} & & \\
- & \quad Restgas / Abgas (S21) & $\dot{E}_{S21}$ & 473395,92699999997 W \\
- & Purge-Stream S7 & $\dot{E}_{S7}$ & 3706,6103479999997 W \\
- & Purge-Stream S9 & $\dot{E}_{S9}$ & 12110,523851999998 W \\
- & Purge-Stream S10 & $\dot{E}_{S10}$ & 15544,33669 W \\
- & \quad Purge / Flash-Verluste (S7+S9+S10) & $\dot{E}_{L,tot}$ & 31361,470889999997 W \\
- & \textbf{Summe Stoffliche Verluste} & & \textbf{504.828,98 W} \\
+\endfoot
+
+\textbf{Gesamtaufwand} & Eintrittsexergie Luft ($S1$) & $\dot{E}_{S1}$ & 179.971,69 \\
+\textbf{(Total Fuel)} & Elektrische Brutto-Leistung ($P_{C,1} + P_{C,2}$) & $\dot{P}_{in,tot}$ & 10.577.187,25 \\
+\cline{2-4}
+& \textbf{Summe Gesamtaufwand} & $\dot{E}_{F,tot}$ & \textbf{10.757.158,94} \\
 \hline
- & \textbf{C) Exergievernichtung (Komponenten)} & $\sum \dot{E}_{D,k}$ & \textbf{6210121,734230223 W} \\
+
+\textbf{Gesamtnutzen} & Exergie Stickstoff-Produkt ($S24$) & $\dot{E}_{S24}$ & 2.827.500,60 \\
+\textbf{(Total Product)} & Netto-Turbinenleistung (Welle) & $\dot{P}_{T}$ & 482.231,08 \\
+\cline{2-4}
+& \textbf{Summe Gesamtnutzen} & $\dot{E}_{P,tot}$ & \textbf{3.309.731,68} \\
 \hline
- & extbf{Summe der Verluste} & $\sum \dot{E}_{verluste}$ & \textbf{22947067,58412022 W} \\
-\textbf{Bilanzabgleich} & \textbf{Globale Differenz} & $\Delta \dot{E}$ & \textbf{12189908,645120222 W} \\
- & \textbf{Relativer Bilanzfehler (bezogen auf Input)} & $\frac{\Delta \dot{E}}{\sum \dot{E}_{in}}$ & \textbf{113,31903446109548 \%} \\
+
+\textbf{Systemverluste} & Exergie Restgasstrom ($S21$) & $\dot{E}_{S21}$ & 473.395,93 \\
+\textbf{(Total Loss)} & Stoffliche Purge-Verluste ($S7, S9, S10$) & $\dot{E}_{L,pur}$ & 31.361,47 \\
+\cline{2-4}
+& \textbf{Summe Systemverluste} & $\dot{E}_{L,tot}$ & \textbf{504.757,40} \\
+\hline
+
+\textbf{Exergievernichtung} & Bilanzierte interne Vernichtung (Fluide) & $\sum \dot{E}_{D,k}$ & 6.836.899,19 \\
+\textbf{(Total Destruction)} & Mechanische Dissipation ($\eta_{mech}=0,99$) & $\dot{E}_{D,mech}$ & 110.642,90 \\
+\cline{2-4}
+& \textbf{Summe Exergievernichtung} & $\dot{E}_{D,tot}$ & \textbf{6.947.542,09} \\
+\hline
+
+\textbf{Bilanzkontrolle} & \textbf{Erhaltung: } $\dot{E}_{F,tot} = \dot{E}_{P,tot} + \dot{E}_{L,tot} + \dot{E}_{D,tot}$ & & \textbf{99,97 \%} \\
 \hline
 \end{longtable}
+
 

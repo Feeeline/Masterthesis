@@ -1,0 +1,5 @@
+Bilanzgröße,Singlemodell [W],Doppelmodell [W]
+"Summe Gesamtaufwand (E˙F,tot​)","10.757.158,94","7.767.674,40"
+"Summe Gesamtnutzen (E˙P,tot​)","3.309.731,68","2.975.047,25"
+"Summe Systemverluste (E˙L,tot​)","504.757,40","486.888,36"
+"Summe Exergievernichtung (E˙D,tot​)","6.947.542,09","4.232.485,23"
