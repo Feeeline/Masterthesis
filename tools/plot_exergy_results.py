@@ -7,6 +7,7 @@ from matplotlib.ticker import FuncFormatter
 
 import matplotlib.pyplot as plt
 import pandas as pd
+import numpy as np
 
 
 BASE_DIR = Path(r"C:/Users/Felin/Documents/Masterthesis/Simulation_Code/GIT")
@@ -1593,6 +1594,87 @@ def plot_absolute_ed_large_vs_small(df_large: pd.DataFrame, df_small: pd.DataFra
     plt.close(fig)
 
 
+def parse_vergleich_druckreihen(tex_path: Path):
+    """Parse Overleaf_LaTeX/tabellen/VergleichDruckreihen.tex and return
+    arrays: pressures (bar), single (kWh/Nm3), double (kWh/Nm3).
+    """
+    if not tex_path.exists():
+        raise FileNotFoundError(tex_path)
+    pressures = []
+    single = []
+    double = []
+    num_re = re.compile(r"[-+]?[0-9]+(?:[\.,][0-9]+)?(?:[eE][-+]?[0-9]+)?")
+    with tex_path.open('r', encoding='utf-8') as f:
+        for raw in f:
+            line = raw.strip()
+            # skip headers and LaTeX lines
+            if not line or line.startswith("%") or line.startswith("\\"):
+                continue
+            # match lines that contain numeric entries (pressure + two values)
+            nums = num_re.findall(line)
+            if len(nums) >= 3:
+                # take first three numbers: pressure, single, double
+                p = float(nums[0].replace(',', '.'))
+                s = float(nums[1].replace(',', '.'))
+                d = float(nums[2].replace(',', '.'))
+                pressures.append(p)
+                single.append(s)
+                double.append(d)
+    if not pressures:
+        raise ValueError(f"No data parsed from {tex_path}")
+    return np.array(pressures), np.array(single), np.array(double)
+
+
+def plot_vergleich_druckreihen(tex_path: Path, out_path: Path):
+    """Create the requested pressure-series plot using values from the LaTeX table.
+
+    - X: Produktdruck p [bar] (ticks: 4.5, 6, 8, 10)
+    - Y: Spez. Energiebedarf [kWh/Nm^3]
+    - Two lines: blue=double, green=single; markers and smooth cubic fit curves.
+    """
+    p, s, d = parse_vergleich_druckreihen(tex_path)
+
+    # ensure sorted by pressure
+    order = np.argsort(p)
+    p = p[order]
+    s = s[order]
+    d = d[order]
+
+    # dense x for smooth curves
+    x_dense = np.linspace(p.min(), p.max(), 200)
+    # cubic polynomial fit (simple smooth approximation)
+    try:
+        coeff_s = np.polyfit(p, s, 3)
+        fit_s = np.poly1d(coeff_s)(x_dense)
+    except Exception:
+        fit_s = np.interp(x_dense, p, s)
+    try:
+        coeff_d = np.polyfit(p, d, 3)
+        fit_d = np.poly1d(coeff_d)(x_dense)
+    except Exception:
+        fit_d = np.interp(x_dense, p, d)
+
+    _apply_plot_theme()
+    fig, ax = plt.subplots(figsize=(8.0, 5.0))
+
+    # plot smooth curves
+    ax.plot(x_dense, fit_d, color=COLOR_DOUBLE, linewidth=2.2, label='Doppelkolonne')
+    ax.plot(x_dense, fit_s, color=COLOR_SINGLE, linewidth=2.2, label='Singlemodell')
+
+    # plot original points with markers
+    ax.scatter(p, d, color=COLOR_DOUBLE, marker='o', edgecolors='black', zorder=5)
+    ax.scatter(p, s, color=COLOR_SINGLE, marker='s', edgecolors='black', zorder=5)
+
+    ax.set_xlabel(r'Produktdruck $p$ [bar]')
+    ax.set_ylabel('Spez. Energiebedarf in [kWh/Nm³]')
+    ax.set_xticks([4.5, 6.0, 8.0, 10.0])
+    ax.grid(axis='y', linestyle='--', alpha=0.35)
+    ax.legend(loc='best')
+    fig.tight_layout()
+    fig.savefig(out_path, dpi=300)
+    plt.close(fig)
+
+
 def main():
     os.makedirs(OUT_DIR, exist_ok=True)
     os.makedirs(TAB_DIR, exist_ok=True)
@@ -1817,6 +1899,13 @@ def main():
         ed_map_double,
         out_path=OUT_DIR / "vergleich_yD_funktionsbloecke.png",
     )
+
+    # Additional: Vergleich Druckreihen plot (kWh/Nm3 vs Produktdruck)
+    try:
+        plot_vergleich_druckreihen(TAB_DIR / "VergleichDruckreihen.tex", OUT_DIR / "vergleich_druckreihen_kwh_per_nm3.png")
+        print("Druckreihen-Plot gespeichert:", OUT_DIR / "vergleich_druckreihen_kwh_per_nm3.png")
+    except Exception as e:
+        print("Fehler beim Erstellen des Druckreihen-Plots:", e)
 
     # Gross/Klein y_D comparison removed per user request.
 
