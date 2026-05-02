@@ -1,13 +1,14 @@
 \begin{table}[htbp]
 \centering
-\caption{Vergleich des spezifischen Energiebedarfs ($ESPECN$) in kWh/Nm³}
-\label{tab:vergleich_power_penalty}
+\caption{Spezifischer Energiebedarf des Doppelkolonnenmodells bei variierendem Produktdruck}
+\label{tab:spez_energie_doppel}
 \begin{tabular}{cccc}
 \hline
-\textbf{Druck [bar]} & \textbf{Singlemodell} & \textbf{Doppelkolonne} & \textbf{Ersparnis [\%]} \\ \hline
-4,5  & 0,2049 & 0,1453 & 29,1 \% \\
-6,0  & 0,2413 & 0,1667 & 30,9 \% \\
-8,0  & 0,2793 & 0,1905 & 31,8 \% \\
-10,0 & 0,3103 & 0,2108 & 32,1 \% \\ \hline
+\textbf{Produktdruck} & \textbf{$ESPECN$} & \textbf{$ESPECST$} & \textbf{Bemerkung} \\
+{[bar (abs.)]} & {[kWh/Nm³]} & {[kWh/m³$_{ST}$]} & \\ \hline
+4,5 & 0,1453 & 0,1377 & Minimum\\
+6,0 & 0,1667 & 0,1580 & Modeldruck \\
+8,0 & 0,1905 & 0,1806 & Moderater Druck \\
+10,0 & 0,2108 & 0,1998 & Geringer "Power Penalty" \\ \hline
 \end{tabular}
 \end{table}
