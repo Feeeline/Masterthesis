@@ -190,6 +190,8 @@ def parse_component_table(tex_path: Path) -> pd.DataFrame:
                 continue
 
             component = parts[0]
+            # normalize component names: strip trailing comma+decimals (e.g., 'LK1,00' -> 'LK1')
+            component = re.sub(r",\d{1,3}(?:[.,]\d+)?$", "", component).strip()
             if component in name_map:
                 component = name_map[component]
 
@@ -247,6 +249,8 @@ def parse_component_ed_map(tex_path: Path) -> dict:
             parts[-1] = re.sub(r"\\\\$", "", parts[-1]).strip()
 
             comp = parts[0]
+            # normalize component names: strip trailing comma+decimals
+            comp = re.sub(r",\d{1,3}(?:[.,]\d+)?$", "", comp).strip()
             if comp in name_map:
                 comp = name_map[comp]
             try:
@@ -347,6 +351,8 @@ def parse_component_work_table(tex_path: Path) -> dict:
             # remove trailing \\ from last part
             parts[-1] = re.sub(r"\\\\$", "", parts[-1]).strip()
             comp = parts[0]
+            # normalize component names: strip trailing comma+decimals
+            comp = re.sub(r",\d{1,3}(?:[.,]\d+)?$", "", comp).strip()
             try:
                 val = _to_float(parts[2])
             except Exception:
@@ -703,19 +709,26 @@ def _compute_block_yd_payload(ed_map: dict, model: str):
     # Cooled-compression is not shown as a separate point,
     # but its components remain included inside the V+G block.
     ignored = set()
-
     if model == "single":
+        # Single-model grouping per user specification
         comp_only = ["LK1", "ZK1", "LK2"]
         gas_only = ["ZK2", "GW1", "GW2"]
-        # move RC from heat transfer into the column block per user request
-        heat_transfer = ["MW"]
-        column_block = ["KOL", "D1", "RC"]
+        # include both MH/MW name variants defensively
+        heat_transfer = ["MH", "MW"]
+        # Accept both RECO and RC variants: include both to match parsed names
+        column_block = ["KOL", "RECO", "RC", "D1"]
     else:
-        comp_only = ["LK1", "ZK1", "LK2", "PK1"]
+        # Doppelkolonne grouping per user specification (exclude PK1 from compression block)
+        # Gekühlte Luftverdichtung: ZK1, LK2 (handled by comp_only subset usage)
+        comp_only = ["LK1", "ZK1", "LK2"]
         gas_only = ["ZK2", "GW1", "GW2"]
-        # move RC and RC2 from heat transfer into the column block per user request
-        heat_transfer = ["MW"]
-        column_block = ["KOLHP", "KOLLP", "D1", "D2", "D3", "RC", "RC2"]
+        # Hauptwärmeübertrager
+        heat_transfer = ["MW", "MH"]
+        # Rektifikation: accept RC/RC2 and KOL variants
+        column_block = ["KOLHP", "KOLLP", "RC", "RC2", "KOL", "D1", "D2", "D3"]
+
+    # Explicitly ensure PK1 lands in Rest (not in compression/combined)
+    # Rest will be computed as all_components - used; so do not include PK1 above.
 
     named_sets = {
         "comp_only": set(comp_only),
@@ -800,7 +813,7 @@ def plot_block_yd_comparison(ed_single: dict, ed_double: dict, out_path: Path):
 
     ax.set_xticks(x)
     ax.set_xticklabels(cats)
-    ax.set_ylabel(r"$y_{D,b}$ [%]")
+    ax.set_ylabel(r"$y^*_{D,b}$ [%]")
     ax.set_ylim(0, max(y_s + y_d + s_sub + d_sub) * 1.2)
     _style_axis(ax, grid_axis="y")
 
@@ -820,6 +833,78 @@ def plot_block_yd_comparison(ed_single: dict, ed_double: dict, out_path: Path):
         fancybox=False,
         edgecolor="black",
     )
+    fig.subplots_adjust(left=0.14, right=0.97, bottom=0.22, top=0.96)
+    fig.savefig(out_path, dpi=300)
+    plt.close(fig)
+
+
+def plot_block_ed_comparison(ed_single: dict, ed_double: dict, out_path: Path):
+    """Plot absolute exergy (W) per functional block for single vs double models.
+
+    Uses the same block grouping as `_compute_block_yd_payload` and plots
+    absolute exergy in MW on the y-axis. Also shows subpoints for
+    compression and cleaning (Reinigung) extracted from component sums.
+    """
+    payload_single = _compute_block_yd_payload(ed_single, "single")
+    payload_double = _compute_block_yd_payload(ed_double, "double")
+
+    cats = ["V+G Block", "Wärmeübertrager", "Kolonnenblock", "Rest"]
+    x = [0, 1, 2, 3]
+
+    # use sums (absolute W) and convert to MW for plotting
+    y_s = [payload_single["sums"]["combined"] / 1e6, payload_single["sums"]["heat"] / 1e6, payload_single["sums"]["column"] / 1e6, payload_single["sums"]["rest"] / 1e6]
+    y_d = [payload_double["sums"]["combined"] / 1e6, payload_double["sums"]["heat"] / 1e6, payload_double["sums"]["column"] / 1e6, payload_double["sums"]["rest"] / 1e6]
+
+    # subpoints: compression and cleaning (comp_only, gas_only) in MW
+    s_sub = [payload_single["sums"]["comp_only"] / 1e6, payload_single["sums"]["gas_only"] / 1e6]
+    d_sub = [payload_double["sums"]["comp_only"] / 1e6, payload_double["sums"]["gas_only"] / 1e6]
+
+    _apply_plot_theme()
+    fig, ax = plt.subplots(figsize=(8.0, 5.8))
+
+    c_single = COLOR_SINGLE
+    c_double = COLOR_DOUBLE
+
+    dx = 0.12
+    x_single = [xi - dx for xi in x]
+    x_double = [xi + dx for xi in x]
+
+    # plot as scatter markers (like yD plot) instead of bars
+    marker_single = 's'
+    marker_double = '^'
+    ms_main = 120
+    ms_sub = 60
+    ax.scatter(x_single, y_s, marker=marker_single, s=ms_main, color=c_single, edgecolors='black', linewidths=0.6, label='Singlekolonne', zorder=4)
+    ax.scatter(x_double, y_d, marker=marker_double, s=ms_main, color=c_double, edgecolors='black', linewidths=0.6, label='Doppelkolonne', zorder=4)
+
+    # subpoints as smaller markers on the combined block location (index 0)
+    ax.scatter([x_single[0]], [s_sub[0]], marker='o', s=ms_sub, color=c_single, edgecolors='black', linewidths=0.5, zorder=5)
+    ax.scatter([x_single[0]], [s_sub[1]], marker='D', s=ms_sub, color=c_single, edgecolors='black', linewidths=0.5, zorder=5)
+    ax.scatter([x_double[0]], [d_sub[0]], marker='o', s=ms_sub, color=c_double, edgecolors='black', linewidths=0.5, zorder=5)
+    ax.scatter([x_double[0]], [d_sub[1]], marker='D', s=ms_sub, color=c_double, edgecolors='black', linewidths=0.5, zorder=5)
+
+    ax.set_xticks(x)
+    ax.set_xticklabels(cats)
+    ax.set_ylabel(r"$\dot{E}$ [MW]")
+    # autoscale y with some headroom
+    ymax = max(max(y_s or [0]), max(y_d or [0]))
+    ax.set_ylim(0, ymax * 1.25 if ymax > 0 else 1.0)
+    _style_axis(ax, grid_axis="y")
+
+    # annotate markers with values
+    for xs, vals in ((x_single, y_s), (x_double, y_d)):
+        for xi, val in zip(xs, vals):
+            ax.text(xi, val + ymax * 0.02, _format_decimal_comma(val, decimals=3, trim=False), ha="center", va="bottom", fontsize=9)
+
+    # legend with extra handles for subpoints
+    model_handles, model_labels = ax.get_legend_handles_labels()
+    extra_handles = [
+        Line2D([0], [0], marker="o", color="black", markerfacecolor="black", markersize=6, linestyle="None"),
+        Line2D([0], [0], marker="D", color="black", markerfacecolor="black", markersize=6, linestyle="None"),
+    ]
+    extra_labels = ["Kompression", "Reinigung"]
+    ax.legend(model_handles + extra_handles, model_labels + extra_labels, loc="upper center", bbox_to_anchor=(0.5, -0.12), ncol=2, frameon=True, fancybox=False, edgecolor="black")
+
     fig.subplots_adjust(left=0.14, right=0.97, bottom=0.22, top=0.96)
     fig.savefig(out_path, dpi=300)
     plt.close(fig)
@@ -899,40 +984,47 @@ def parse_global_master_table(tex_path: Path):
     with tex_path.open("r", encoding="utf-8") as f:
         for raw_line in f:
             line = raw_line.strip()
-            if "&" not in line or line.startswith("\\"):
+            if not line or line.startswith("%"):
                 continue
-            if line.startswith("Posten"):
+            # skip LaTeX control lines
+            if line.startswith("\\"):
+                # But allow lines that contain '&' even if they start with backslash (e.g., \textbf rows)
+                if "&" not in line:
+                    continue
+
+            if "&" not in line:
                 continue
 
             parts = [p.strip() for p in line.replace("\\\\", "").split("&")]
-            if len(parts) != 6:
+            # allow different column counts; last column expected to be numeric value
+            if len(parts) < 2:
                 continue
 
-            left_label = parts[0]
-            left_value = _to_float_latex_number(parts[2])
-            right_label = parts[3]
-            right_value = _to_float_latex_number(parts[5])
+            # attempt to extract a numeric value from the last column
+            val = _to_float_latex_number(parts[-1])
+            labels = " ".join(parts[:-1]).lower()
+
+            if val is None:
+                continue
 
             # tolerate multiple possible wording variants (German/modified)
-            if "Strom 1" in left_label or "Feed" in left_label or "Feed-Strom" in left_label:
-                E_s1 = left_value
-            elif "Verdichtung" in left_label or "Verdichter" in left_label or "Verdichterleistung" in left_label:
-                E_comp = left_value
-            elif "Summe Ein" in left_label or "Summe Aufwand" in left_label or "Gesamtaufwand" in left_label:
-                E_in_sum = left_value
-
-            # right-hand labels: accept multiple variants
-            if "Produkt" in right_label:
-                E_prod = right_value
-                m = re.search(r"\{(S[A-Z]*\d+)\}", parts[4])
+            if any(tok in labels for tok in ["strom 1", "feed", "feed-strom", "eintrittsexergie", "eintrittsexergie luft"]):
+                E_s1 = val
+            if any(tok in labels for tok in ["verdichtung", "verdichter", "verdichterleistung", "elektrische bruto", "kompressor"]):
+                E_comp = val if E_comp is None else E_comp
+            if any(tok in labels for tok in ["summe gesamtaufwand", "gesamtaufwand", "summe ein", "summe gesamtaufwand"]):
+                E_in_sum = val
+            if any(tok in labels for tok in ["produkt", "produktstrom", "exergie stickstoff", "exergie produkt"]):
+                E_prod = val
+                m = re.search(r"\{(S[A-Z]*\d+)\}", labels.upper())
                 if m:
                     product_stream = m.group(1)
-            elif "Turbine" in right_label or "Turbinen" in right_label or "Turbinenleistung" in right_label:
-                W_turb = right_value
-            elif "Vernichtung" in right_label or "Exergievernichtung" in right_label or "Exergievernichtung" in right_label:
-                E_dest = right_value
-            elif "Austritt" in right_label or "Austrittsverluste" in right_label or "Exergieverlust" in right_label:
-                E_loss = right_value
+            if any(tok in labels for tok in ["turbine", "turbinen", "turbinenleistung"]):
+                W_turb = val
+            if any(tok in labels for tok in ["vernichtung", "exergievernichtung", "vernichtung (komponenten)", "bilanzierte interne vernichtung"]):
+                E_dest = val
+            if any(tok in labels for tok in ["austritt", "austrittsverluste", "austrittsexergie", "systemverluste", "stoffliche verluste"]):
+                E_loss = val
 
     total_input = E_in_sum
     if total_input is None and isinstance(E_s1, (int, float)) and isinstance(E_comp, (int, float)):
@@ -1824,7 +1916,7 @@ def main():
     make_plot(
         df_double,
         x_col="y_D_k",
-        xlabel=r"$y_{D,k}$ [-]",
+        xlabel=r"$y^*_{D,k}$ [-]",
         xlim=_yd_axis_limit(df_double, "y_D_k"),
         out_path=OUT_DIR / "doppelkolonne_yDk_barh.png",
     )
@@ -1838,7 +1930,7 @@ def main():
     make_plot(
         df_single,
         x_col="y_D_k",
-        xlabel=r"$y_{D,k}$ [-]",
+        xlabel=r"$y^*_{D,k}$ [-]",
         xlim=_yd_axis_limit(df_single, "y_D_k"),
         out_path=OUT_DIR / "singlekolonne_yDk_barh.png",
     )
@@ -1894,6 +1986,15 @@ def main():
         out_path=OUT_DIR / "vergleich_reinheit_produktstroeme_dualaxis.png",
     )
 
+    # First, produce an absolute exergy per-block comparison (ED in MW)
+    plot_block_ed_comparison(
+        ed_map_single,
+        ed_map_double,
+        out_path=OUT_DIR / "vergleich_ED_funktionsbloecke.png",
+    )
+
+    # Then regenerate the yD functional-block comparison based on the
+    # authoritative component exergy values parsed from the LaTeX tables.
     plot_block_yd_comparison(
         ed_map_single,
         ed_map_double,

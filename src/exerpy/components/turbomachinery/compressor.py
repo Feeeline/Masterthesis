@@ -87,6 +87,8 @@ class Compressor(Component):
         r"""Initialize compressor component with given parameters."""
         super().__init__(**kwargs)
         self.P = None
+        # Default mechanical efficiency: if not provided per-component, use 0.99
+        self.eta_mech = kwargs.get("eta_mech", 0.99)
         self.Z_costs = kwargs.get("Z_costs", 0.0)  # Investment cost rate in currency/h
 
     def calc_exergy_balance(self, T0: float, p0: float, split_physical_exergy) -> None:
@@ -106,25 +108,43 @@ class Compressor(Component):
             Flag indicating whether physical exergy is split into thermal and mechanical components.
 
         """
-        # Get power flow
-        if (
-            1 in self.inl
-            and self.inl[1] is not None
-            and self.inl[1].get("kind") == "power"
-            and "energy_flow" in self.inl[1]
-        ):
-            self.P = self.inl[1]["energy_flow"]
+        # Get power flow: prefer an explicit Aspen power connection (inlets or outlets).
+        found_power = None
+        for conn_dict in (getattr(self, "inl", {}), getattr(self, "outl", {})):
+            for idx, conn in conn_dict.items():
+                try:
+                    if conn is not None and conn.get("kind") == "power" and "energy_flow" in conn:
+                        found_power = conn.get("energy_flow")
+                        break
+                except Exception:
+                    continue
+            if found_power is not None:
+                break
+
+        if found_power is not None:
+            # Use Aspen-reported compressor power if available
+            self.P = found_power
         else:
+            # Fallback: compute mechanical input from fluid power and mechanical efficiency
             m_out = self.outl[0].get("m")
             h_out = self.outl[0].get("h")
             h_in = self.inl[0].get("h")
+            # Use component's mechanical efficiency (default 0.99) and validate
+            try:
+                eta_mech = float(getattr(self, "eta_mech", 0.99))
+                if eta_mech == 0 or np.isnan(eta_mech):
+                    eta_mech = 0.99
+            except Exception:
+                eta_mech = 0.99
+
             if m_out is None or h_out is None or h_in is None:
                 logging.warning(
                     f"Missing mass flow or enthalpy for compressor '{self.name}'; setting power P to NaN."
                 )
                 self.P = np.nan
             else:
-                self.P = m_out * (h_out - h_in)
+                # Compute required compressor power including mechanical losses
+                self.P = m_out * (h_out - h_in) / eta_mech
 
         def _effective_e_ph(stream: dict):
             e_ph = stream.get("e_PH")

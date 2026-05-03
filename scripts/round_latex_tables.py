@@ -111,6 +111,9 @@ def process_table_block(block_lines, filename):
         nums = []
         # first pass: detect numeric columns
         for i, p in enumerate(parts):
+            # skip textual identifier columns (Component, Type)
+            if i in (0, 1):
+                continue
             # remove trailing LaTeX backslashes and end-of-line comments for numeric detection
             p_clean = re.sub(r"\\\\\s*$", "", p).strip()
             p_clean = re.sub(r"%.*$", "", p_clean).strip()
@@ -128,6 +131,10 @@ def process_table_block(block_lines, filename):
             # assign back
             num_iter = iter(norm)
             for i, p in enumerate(parts):
+                # do not modify textual identifier columns (Component, Type)
+                if i in (0, 1):
+                    new_parts.append(p)
+                    continue
                 p_clean = re.sub(r"\\\\\s*$", "", p).strip()
                 p_clean = re.sub(r"%.*$", "", p_clean).strip()
                 n = parse_num(p_clean)
@@ -144,7 +151,7 @@ def process_table_block(block_lines, filename):
                         s = format_sigfig(v)
                     # keep original trailing backslashes if present
                     trailing = ''
-                    m = re.search(r"(\\\\\s*)$", p)
+                    m = re.search(r"(\\\\\\s*)$", p)
                     if m:
                         trailing = m.group(1)
                     new_parts.append(' ' + s + ' ' + trailing)
@@ -152,6 +159,10 @@ def process_table_block(block_lines, filename):
             # non-molfrac numeric rounding: two decimals except special columns
             num_iter = iter(nums)
             for i, p in enumerate(parts):
+                # do not modify textual identifier columns (Component, Type)
+                if i in (0, 1):
+                    new_parts.append(p)
+                    continue
                 p_clean = re.sub(r"\\\\\s*$", "", p).strip()
                 p_clean = re.sub(r"%.*$", "", p_clean).strip()
                 n = parse_num(p_clean)
@@ -166,7 +177,7 @@ def process_table_block(block_lines, filename):
                         s = format_non_mol(n, decimals=2)
                     # preserve trailing backslashes if present
                     trailing = ''
-                    m = re.search(r"(\\\\\s*)$", p)
+                    m = re.search(r"(\\\\\\s*)$", p)
                     if m:
                         trailing = m.group(1)
                     new_parts.append(' ' + s + ' ' + trailing)
@@ -195,7 +206,31 @@ def process_file(path):
         new_block = '\n'.join(processed)
         new_text = new_text.replace(block, new_block)
 
-    return new_text
+    # Post-process: fix stray '"' artifacts and ensure every longtable data row ends with \\\\.
+    def fix_longtable_block(block_text):
+        lines = block_text.splitlines()
+        out = []
+        for line in lines:
+            # replace stray " (quote artifact) with proper LaTeX line ending
+            if '\\"' in line:
+                line = line.replace('\\"', ' \\\\')
+            # if line contains table columns and is not a LaTeX control line, ensure it ends with \\\\
+            stripped = line.strip()
+            if '&' in line and not stripped.startswith('\\hline') and not stripped.startswith('\\end') and not stripped.startswith('\\begin') and not stripped.startswith('\\caption') and not stripped.startswith('%'):
+                if not re.search(r"\\\\\s*$", line):
+                    line = line.rstrip() + ' \\\\'
+            out.append(line)
+        return '\n'.join(out)
+
+    # apply fix to each longtable block
+    pattern_block = re.compile(r"(\\\\begin\{longtable\}.*?\\\\end\{longtable\})", re.S)
+    final_text = new_text
+    for m in pattern_block.finditer(new_text):
+        block = m.group(1)
+        fixed = fix_longtable_block(block)
+        final_text = final_text.replace(block, fixed)
+
+    return final_text
 
 
 def main():
