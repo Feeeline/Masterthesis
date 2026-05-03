@@ -37,7 +37,7 @@ Ozon (O$_3$)           & 0{,}003–0{,}03\,ppm \\
 \input{Overleaf_LaTeX/tabellen/aspen_luftzerlegung_streams_single_round}
 \end{landscape}
 
-\centering
+
 \input{Overleaf_LaTeX/tabellen/aspen_luftzerlegung_streams_molfrac_single_round}
 
 \begin{landscape}
@@ -45,13 +45,13 @@ Ozon (O$_3$)           & 0{,}003–0{,}03\,ppm \\
 \input{Overleaf_LaTeX/tabellen/aspen_luftzerlegung_streams_round}
 \end{landscape}
 
-\centering
+
 \input{Overleaf_LaTeX/tabellen/aspen_luftzerlegung_streams_molfrac_round}
 
-\centering
+
 \input{Overleaf_LaTeX/tabellen/Druckreihe_single}
 
-\centering
+
 \input{Overleaf_LaTeX/tabellen/Druckreihe_doppel}
 
 \chapter{Exergieberechnung}
@@ -219,14 +219,17 @@ $\begin{aligned}
 &+\dot{m}_{22}(e^{T}_{22}-e^{T}_{mix})
 +\dot{m}_{29}(e^{M}_{29}-e^{M}_{mix})
 \end{aligned}$ \\
+
 \addlinespace
 RC1  &
-$(\dot{E}^{PH}_{35}-\dot{E}^{PH}_{36})+(\dot{E}^{M}_{33}-\dot{E}^{M}_{34})$ &
-$(\dot{E}^{T}_{33}-\dot{E}^{T}_{34})$ \\
+$(\dot{E}^{PH}_{SZ35}-\dot{E}^{PH}_{SZ36})
++(\dot{E}^{M}_{SZ33}-\dot{E}^{M}_{SZ34})$ &
+$(\dot{E}^{T}_{SZ34}-\dot{E}^{T}_{SZ33})$ \\
 
 RC2  &
-$(\dot{E}^{PH}_{39}-\dot{E}^{PH}_{40})+(\dot{E}^{M}_{37}-\dot{E}^{M}_{38})$ &
-$(\dot{E}^{T}_{37}-\dot{E}^{T}_{38})$ \\
+$(\dot{E}^{PH}_{SZ39}-\dot{E}^{PH}_{SZ40})
++(\dot{E}^{M}_{SZ37}-\dot{E}^{M}_{SZ38})$ &
+$(\dot{E}^{T}_{SZ38}-\dot{E}^{T}_{SZ37})$ \\
 \addlinespace
 
 D1 &
@@ -273,7 +276,21 @@ $\dot{E}^{PH}_{31}-\dot{E}^{PH}_{30}$ \\
 \end{table}
 \end{landscape}
 
-\begin{longtable}{lllr}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Overleaf_LaTeX/bilder/doppelkolonne_yDk_barh.png}
+    \caption{Anteile der Exergieverluste $y_{D,k}$ der einzelnen Komponenten des Doppelkolonnensystems.}
+    \label{fig:exergieverluste_doppelkolonne}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Overleaf_LaTeX/bilder/singlekolonne_yDk_barh.png}
+    \caption{Anteile der Exergieverluste $y_{D,k}$ der einzelnen Komponenten des Einzelkolonnensystems.}
+    \label{fig:exergieverluste_einzelkolonne}
+\end{figure}
+
+\begin{longtable}{lllr}[H]
 \caption{Globale exergetische Bilanzierung nach dem Fuel-Product-Prinzip} \label{tab:speco_bilanz_final_clean} \\
 \hline
 \textbf{Kategorie} & \textbf{Bezeichnung} & \textbf{Symbol} & \textbf{Wert [W]} \\
@@ -316,7 +333,7 @@ $\dot{E}^{PH}_{31}-\dot{E}^{PH}_{30}$ \\
 \end{longtable}
 
 
-\begin{longtable}{lllr}
+\begin{longtable}{lllr}[H]
 \caption{Globale exergetische Bilanzierung - Doppelkolonnenmodell} \label{tab:globale_bilanz_doppel_final} \\
 \hline
 \textbf{Kategorie} & \textbf{Bezeichnung} & \textbf{Symbol} & \textbf{Wert [W]} \\
@@ -358,14 +375,716 @@ $\dot{E}^{PH}_{31}-\dot{E}^{PH}_{30}$ \\
 \hline
 \end{longtable}
 
-\begin{table}[p]
+\begin{table}[H]
 \centering
 \label{tab:exergy-blöcke}
 \input{Overleaf_LaTeX/tabellen/aspen_luftzerlegung_blocks_ed_comparison_round}
 \end{table}
 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Overleaf_LaTeX/bilder/vergleich_global_kennzahlen_grouped_spezifisch.png}
+    \caption{Vergleich der Exergiebilanz beider Prozesskonfigurationen. Dargestellt sindspezifischer exergetischer Aufwand $\dot{e}_F$, spezifische Produkt Exergie $\dot{e}_P$, spezifische Exergievernichtung $\dot{e}_D$ sowie Verluste $\dot{e}_L$ für den Doppelkolonnen- und Einzelkolonnenprozess.}
+    \label{fig:exergieverluste_einzelkolonne}
+\end{figure}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \chapter{Wirtschaftlichkeitsanalyse}
 \label{ch:a_kosten}
 
+\subsection*{Kostenanpassung mittels CEPCI und Wechselkurs}
+
+Zur Vergleichbarkeit der Literaturkosten werden alle apparatespezifischen Kosten auf ein gemeinsames Bezugsjahr umgerechnet. Hierfür wird der Chemical Engineering Plant Cost Index (CEPCI) verwendet. Die Anpassung erfolgt nach
+\begin{equation}
+C_{2026} = C_\mathrm{ref} \cdot \frac{CEPCI_{2026}}{CEPCI_\mathrm{ref}} .
+\end{equation}
+Dabei beschreibt $C_\mathrm{ref}$ die Kosten im ursprünglichen Referenzjahr, $CEPCI_\mathrm{ref}$ den zugehörigen Kostenindex und $CEPCI_{2026}$ den für diese Arbeit verwendeten Kostenindex des Bezugsjahres 2026. Für die vorliegende Arbeit wird $CEPCI_{2026}=840{,}6$ angesetzt \cite{noauthor_plant_2014}. Die verwendeten CEPCI-Werte sind in Tabelle~\ref{tab:cepci_werte} zusammengefasst.
+
+\begin{table}[H]
+\centering
+\caption{Verwendete CEPCI-Werte zur Kostenanpassung}
+\label{tab:cepci_werte}
+\begin{tabular}{lll}
+\hline
+Jahr & CEPCI & Verwendung \\
+\hline
+2000 & 391{,}1 & Referenzjahr der Verdichterkosten nach Smith \cite{smith_chemical_2005} \\
+2002 & 395{,}6 & Referenzjahr einzelner Kostenkorrelationen \\
+2004 & 444{,}2 & Referenzjahr einzelner Kostenkorrelationen \\
+2015 & 556{,}8 & Referenzjahr der Kostenangaben nach Tesch \cite{stefanie_janine_tesch_exergy-based_nodate} \\
+2026 & 840{,}6 & Bezugsjahr dieser Arbeit \cite{noauthor_plant_2014} \\
+\hline
+\end{tabular}
+\end{table}
+
+Die Literaturkosten werden zunächst in USD auf das Bezugsjahr 2026 angepasst. Die Umrechnung in EUR erfolgt anschließend über einen einheitlichen Wechselkurs. Für diese Arbeit wird ein Wechselkurs von
+\begin{equation}
+1~\mathrm{EUR} = 1{,}1702~\mathrm{USD}
+\end{equation}
+angesetzt. Daraus ergibt sich für die Umrechnung von USD in EUR
+\begin{equation}
+\frac{1}{1{,}1702} = 0{,}8546~\mathrm{EUR/USD}.
+\end{equation}
+
+\subsection*{Kostenabschätzung der Verdichter}
+
+Die Kostenabschätzung der Verdichter erfolgt in Anlehnung an Tesch \cite{stefanie_janine_tesch_exergy-based_nodate} und Smith \cite{smith_chemical_nodate} leistungsbasiert. Als Skalierungsgröße wird die in Aspen Plus berechnete elektrische Leistungsaufnahme verwendet. Die Referenzwerte der Kostenkorrelation werden Smith entnommen. Für Verdichter einschließlich Motor gibt Smith eine Referenzleistung von $\dot W_{BS}=250~\mathrm{kW}$, Referenzkosten von $PEC_{BS,2000}=9{,}84 \cdot 10^4~\mathrm{USD}_{2000}$ und einen Kostenexponenten von $m=0{,}46$ an \cite{smith_chemical_nodate}. Die verwendeten Referenzdaten sind in Tabelle~\ref{tab:referenzdaten_verdichter} zusammengefasst.
+
+\begin{equation}
+PEC_{0,2000} =
+PEC_{BS,2000}
+\left( \frac{\dot W}{\dot W_{BS}} \right)^m
+\cdot f_d \cdot f_M \cdot f_P \cdot f_T
+\end{equation}
+
+Dabei beschreibt $f_d$ einen Faktor für die konstruktive Ausführung, $f_M$ den Materialfaktor, $f_P$ den Druckfaktor und $f_T$ den Temperaturfaktor. Für die Luftverdichter $LK1$ und $LK2$ wird Kohlenstoffstahl als Basiswerkstoff angenommen, sodass $f_M=1$ gilt. Da diese Verdichter auf der warmen Prozessseite betrieben werden und keine kryogenen Temperaturbedingungen vorliegen, werden auch der Temperatur- und Druckfaktor zu eins gesetzt. Für den Produktverdichter $PK1$ des Doppelkolonnenmodells wird ebenfalls kein erhöhter Materialfaktor angesetzt, da Stickstoff inert und nicht korrosiv ist. Die erhöhten Anforderungen an die Produktreinheit werden stattdessen über einen Designfaktor berücksichtigt, der eine ölfreie bzw. produktgasgeeignete Ausführung abbildet. Für $PK1$ wird daher $f_d=1{,}10$ angenommen, während für die übrigen Verdichter $f_d=1$ gilt.
+
+\begin{table}[H]
+\centering
+\caption{Verwendete Referenzdaten für die Kostenabschätzung der Verdichter nach Smith \cite{smith_chemical_nodate}}
+\label{tab:referenzdaten_verdichter}
+\begin{tabular}{llll}
+\hline
+Größe & Symbol & Wert & Einheit \\
+\hline
+Referenzleistung & $\dot W_{BS}$ & 250 & kW \\
+Referenzkosten & $PEC_{BS,2000}$ & $9{,}84 \cdot 10^4$ & USD$_{2000}$ \\
+Kostenexponent & $m$ & 0{,}46 & -- \\
+Gültigkeitsbereich & -- & 250--10000 & kW \\
+\hline
+\end{tabular}
+\end{table}
+
+Anschließend erfolgt die Anpassung vom Bezugsjahr 2000 auf das Bezugsjahr 2026 mithilfe des CEPCI. Die Umrechnung in EUR erfolgt mit dem zuvor definierten Wechselkurs. Die berechneten Verdichterkosten sind in Tabelle~\ref{tab:kosten_verdichter} dargestellt.
+
+\begin{table}[H]
+\centering
+\caption{Leistungsbasierte Kostenabschätzung der Verdichter für die untersuchten Anlagenvarianten}
+\label{tab:kosten_verdichter}
+\begin{tabular}{llrrrrr}
+\hline
+Modell & Komponente & $\dot W$ & $f_d$ & $PEC_{0,2000}$ & $PEC_{0,2026}^{USD}$ & $PEC_{0,2026}^{EUR}$ \\
+ & & (kW) & (-) & (USD$_{2000}$) & (USD$_{2026}$) & (EUR$_{2026}$) \\
+\hline
+Einzelkolonne groß & LK1 & 5111{,}54 & 1{,}00 & 394345 & 847575 & 724299 \\
+Einzelkolonne groß & LK2 & 5465{,}65 & 1{,}00 & 406685 & 874096 & 746963 \\
+Einzelkolonne klein & LK1 & 1493{,}95 & 1{,}00 & 223943 & 481326 & 411319 \\
+Einzelkolonne klein & LK2 & 1597{,}45 & 1{,}00 & 230950 & 496387 & 424190 \\
+Doppelkolonne groß & LK1 & 3444{,}15 & 1{,}00 & 328852 & 706809 & 604007 \\
+Doppelkolonne groß & LK2 & 3682{,}75 & 1{,}00 & 339142 & 728926 & 622907 \\
+Doppelkolonne groß & PK1 & 718{,}26 & 1{,}10 & 175884 & 378030 & 323048 \\
+Doppelkolonne klein & LK1 & 1006{,}66 & 1{,}00 & 186754 & 401394 & 343013 \\
+Doppelkolonne klein & LK2 & 1076{,}40 & 1{,}00 & 192597 & 413954 & 353746 \\
+Doppelkolonne klein & PK1 & 209{,}93 & 1{,}10 & 99884 & 214682 & 183458 \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection*{Kostenabschätzung der Turbinen}
+
+Die Kostenabschätzung der Turbinen erfolgt in Anlehnung an Tesch \cite{tesch_exergy-based_nodate} und Peters et al \cite{peters_plant_2004} leistungsbasiert über die abgegebene mechanische Leistung \cite{stefanie_janine_tesch_exergy-based_nodate}. Die zugrunde liegenden Kostendaten stammen aus Peters et al. \cite{peters_plant_2003}. Die Kosten im Referenzjahr 2002 ergeben sich nach Tesch zu
+\begin{equation}
+PEC_{2002} = 3220{,}9 \cdot |\dot W|^{0{,}5963} \cdot f_M .
+\end{equation}
+Dabei ist $|\dot W|$ in kW einzusetzen und $PEC_{2002}$ ergibt sich in USD$_{2002}$. Für die Materialanpassung werden die in Peters et al. angegebenen Faktoren für Turbinen und Expander verwendet. Aufgrund der kryogenen Anwendung wird für die Expander eine Ausführung in Edelstahl angenommen, sodass $f_M=2{,}0$ angesetzt wird.
+Anschließend erfolgt die Anpassung auf das Bezugsjahr 2026 mithilfe des CEPCI und die Umrechnung in EUR erfolgt anschließend mit dem zuvor definierten Wechselkurs.
+
+\begin{table}[H]
+\centering
+\caption{Leistungsbasierte Kostenabschätzung der Expander für die untersuchten Anlagenvarianten}
+\label{tab:kosten_expander}
+\begin{tabular}{llrrrrr}
+\hline
+Modell & Komponente & $|\dot W|$ & $f_M$ & $PEC_{2002}$ & $PEC_{2026}^{USD}$ & $PEC_{2026}^{EUR}$ \\
+ & & (kW) & (-) & (USD$_{2002}$) & (USD$_{2026}$) & (EUR$_{2026}$) \\
+\hline
+Einzelkolonne groß & TURB & 300{,}50 & 2{,}00 & 193440 & 411035 & 351270 \\
+Einzelkolonne klein & TURB & 87{,}83 & 2{,}00 & 92895 & 197390 & 168690 \\
+Doppelkolonne groß & T & 69{,}15 & 2{,}00 & 80550 & 171158 & 146272 \\
+Doppelkolonne klein & T & 20{,}21 & 2{,}00 & 38683 & 82197 & 70245 \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection*{Kostenabschätzung der Wärmeübertrager}
+
+Die Kostenabschätzung der Wärmeübertrager erfolgt in Anlehnung an Tesch
+\cite{stefanie_janine_tesch_exergy-based_nodate} und Ulrich et al.
+\cite{ulrich2004chemical} flächenbasiert. Grundlage ist der Zusammenhang zwischen Wärmestrom, Wärmeübertragerfläche, logarithmischer mittlerer Temperaturdifferenz und Gesamtwärmeübergangskoeffizient:
+\begin{equation}
+\dot Q = U \cdot A \cdot \Delta T_{\ln}.
+\end{equation}
+Da Aspen Plus für die mehrstromigen Wärmeübertrager (MHeatX) bereits den Wert $UA$ ausgibt, wird die Wärmeübertragerfläche in dieser Arbeit vereinfacht über
+\begin{equation}
+A = \frac{UA}{U}
+\end{equation}
+bestimmt. Dadurch wird die Vorgehensweise von Tesch und Ulrich beibehalten, während die direkte Berechnung der logarithmischen mittleren Temperaturdifferenz für mehrstromige Wärmeübertrager entfällt.\\
+\\
+Der Gesamtwärmeübergangskoeffizient $U$ hängt vom Wärmeübertragertyp, den
+beteiligten Phasen, den Stoffeigenschaften, der Strömungsführung sowie von
+Verschmutzungs- und Wandwiderständen ab. Smith beschreibt den Gesamtwärmeübergang
+entsprechend als Summe einzelner Wärmeübergangs- und Widerstandsanteile und gibt
+typische Größenordnungen für unterschiedliche Stoffsysteme und
+Wärmeübertragungssituationen an \cite{smith_chemical_nodate}. Für die kryogenen
+Hauptwärmeübertrager sowie die Reboiler/Kondensatoren wird eine kompakte bzw.
+plate-fin-artige Bauweise angenommen. Smith beschreibt Plate-Fin-Wärmeübertrager
+als besonders geeignet für kryogene Anwendungen, da sie hohe Flächendichten,
+kleine Temperaturdifferenzen und mehrstromige Verschaltungen ermöglichen
+\cite{smith_chemical_nodate}. Auch Peters et al. führen kompakte
+Plate-Fin-Wärmeübertrager als geeignete Bauform für tiefe Temperaturen und hohe
+thermische Effektivität auf \cite{peters_plant_2003}. Für diese Apparate wird ein
+einheitlicher Gesamtwärmeübergangskoeffizient von
+$U_\mathrm{kryo}=300~\mathrm{W/(m^2K)}$ angesetzt.\\
+Die Zwischenkühler $ZK1$ und $ZK2$ befinden sich auf der warmen Prozessseite und
+werden als konventionelle Wärmeübertrager zur Abfuhr der Verdichtungswärme
+betrachtet. Da bei Gas-Kühlwasser-Wärmeübertragern häufig der gasseitige
+Wärmeübergang begrenzend wirkt, wird für diese Apparate ein niedrigerer
+Gesamtwärmeübergangskoeffizient von
+$U_\mathrm{ZK}=200~\mathrm{W/(m^2K)}$ angenommen. Die gewählten Werte dienen einer
+überschlägigen und für beide Prozessvarianten konsistenten Flächen- und
+Kostenabschätzung.
+
+\begin{table}[H]
+\centering
+\caption{Angenommene Gesamtwärmeübergangskoeffizienten für die Flächenabschätzung}
+\label{tab:u_werte_waermeuebertrager}
+\begin{tabular}{llll}
+\hline
+Wärmeübertragertyp & Komponenten & $U$ & Einheit \\
+\hline
+Kryogener Platten-/Kompaktwärmeübertrager & MH/MW, RECO/RC/RC2 & 300 & W/(m$^2$K) \\
+Warmer Zwischenkühler & ZK1, ZK2 & 200 & W/(m$^2$K) \\
+\hline
+\end{tabular}
+\end{table}
+
+Die aus den Aspen-Plus-Werten berechneten Wärmeübertragerflächen der kryogenen Wärmeübertrager sind in Tabelle~\ref{tab:waermeuebertrager_flaechen} dargestellt.
+
+\begin{table}[H]
+\centering
+\caption{Berechnung der Wärmeübertragerflächen aus Aspen-Plus-$UA$-Werten}
+\label{tab:waermeuebertrager_flaechen}
+\begin{tabular}{llrrr}
+\hline
+Modell & Komponente & $UA$ & $U$ & $A$ \\
+ & & (kW/K) & (kW/(m$^2$K)) & (m$^2$) \\
+\hline
+Einzelkolonne groß & MH   & 1204{,}03 & 0{,}30 & 4013{,}43 \\
+Einzelkolonne groß & RECO & 2052{,}90 & 0{,}30 & 6842{,}99 \\
+Einzelkolonne klein & MH   & 351{,}90 & 0{,}30 & 1173{,}01 \\
+Einzelkolonne klein & RECO & 600{,}00 & 0{,}30 & 2000{,}00 \\
+Doppelkolonne groß & MW  & 2969{,}93 & 0{,}30 & 9899{,}75 \\
+Doppelkolonne groß & RC  & 1868{,}56 & 0{,}30 & 6228{,}53 \\
+Doppelkolonne groß & RC2 & 1606{,}20 & 0{,}30 & 5353{,}99 \\
+Doppelkolonne klein & MW  & 868{,}06 & 0{,}30 & 2893{,}52 \\
+Doppelkolonne klein & RC  & 546{,}17 & 0{,}30 & 1820{,}55 \\
+Doppelkolonne klein & RC2 & 469{,}46 & 0{,}30 & 1564{,}87 \\
+\hline
+\end{tabular}
+\end{table}
+
+Für die Zwischenkühler ZK1 und ZK2 wird die Wärmeübertragerfläche nicht aus
+einem Aspen-Plus-$UA$-Wert bestimmt, da dieser für die verwendeten Apparate nicht
+direkt ausgegeben wird. Die Fläche wird daher auf Basis des berechneten
+Wärmestroms, der Prozess-Ein- und Austrittstemperaturen sowie einer angenommenen
+Kühlwasserführung abgeschätzt. Als Kühlmedium wird Wasser mit
+$T_{\mathrm{KW,in}} = 15\,^\circ\mathrm{C}$ und
+$T_{\mathrm{KW,out}} = 25\,^\circ\mathrm{C}$ angenommen. Die logarithmische
+mittlere Temperaturdifferenz wird für Gegenstromführung bestimmt. Mit dem
+angenommenen Gesamtwärmeübergangskoeffizienten von
+$U_{\mathrm{ZK}} = 200\,\mathrm{W/(m^2K)}$ wird daraus die Fläche der
+Zwischenkühler berechnet.
+
+\begin{table}[H]
+\centering
+\caption{Berechnung der Wärmeübertragerflächen der Zwischenkühler}
+\label{tab:waermeuebertrager_flaechen_zk}
+\begin{tabular}{llrrrrr}
+\hline
+Modell & Komponente & $\dot Q$ & $T_\mathrm{Gas,in}$ & $T_\mathrm{Gas,out}$ & $\Delta T_{\ln}$ & $A$ \\
+ & & (kW) & ($^\circ$C) & ($^\circ$C) & (K) & (m$^2$) \\
+\hline
+Einzelkolonne groß & ZK1 & 4131{,}48 & 121{,}68 & 35{,}00 & 48{,}66 & 424{,}48 \\
+Einzelkolonne groß & ZK2 & 5638{,}92 & 148{,}88 & 35{,}00 & 56{,}96 & 494{,}95 \\
+Einzelkolonne klein & ZK1 & 1207{,}51 & 121{,}68 & 35{,}00 & 48{,}66 & 124{,}06 \\
+Einzelkolonne klein & ZK2 & 1648{,}09 & 148{,}88 & 35{,}00 & 56{,}96 & 144{,}66 \\
+Doppelkolonne groß & ZK1 & 2784{,}06 & 121{,}73 & 35{,}00 & 48{,}68 & 285{,}96 \\
+Doppelkolonne groß & ZK2 & 3799{,}73 & 148{,}92 & 35{,}00 & 56{,}98 & 333{,}44 \\
+Doppelkolonne klein & ZK1 & 813{,}73 & 121{,}73 & 35{,}00 & 48{,}68 & 83{,}58 \\
+Doppelkolonne klein & ZK2 & 1110{,}59 & 148{,}92 & 35{,}00 & 56{,}98 & 97{,}46 \\
+\hline
+\end{tabular}
+\end{table}
+
+Die berechneten Flächen der kryogenen Wärmeübertrager liegen in einer
+Größenordnung von etwa \(2{,}7 \cdot 10^3\) bis
+\(1{,}36 \cdot 10^4\,\mathrm{m^2}\). Diese Größenordnung ist für kryogene
+Luftzerlegungsanlagen plausibel und steht im Einklang mit den von Tesch für
+vergleichbare Anlagenkonzepte angegebenen flächenbasierten Kostenparametern, bei
+denen Wärmeübertragerflächen ebenfalls im Bereich mehrerer tausend bis über
+\(10^4\,\mathrm{m^2}\) auftreten. Die Flächen der Zwischenkühler fallen aufgrund
+der größeren Temperaturdifferenzen und der warmen Prozessbedingungen deutlich
+kleiner aus. Die berechneten Werte sind als äquivalente Wärmeübertragerflächen zu
+verstehen und dienen primär der flächenbasierten Kostenabschätzung; sie ersetzen
+keine detaillierte Apparateauslegung.
+
+Für die apparatespezifischen Kosten werden die von Tesch verwendeten
+Kostenfunktionen für Shell-and-Tube- und Plattenwärmeübertrager übernommen
+\cite{stefanie_janine_tesch_exergy-based_nodate}. Die Zwischenkühler werden als
+Shell-and-Tube-Wärmeübertrager betrachtet, da sie auf der warmen Prozessseite
+angeordnet sind. Der Hauptwärmeübertrager sowie die Reboiler/Kondensatoren werden
+aufgrund der kryogenen Anwendung und der angenommenen kompakten Bauweise als
+Platten- bzw. Kompaktwärmeübertrager abgeschätzt.
+
+Für Shell-and-Tube-Wärmeübertrager gilt:
+\begin{equation}
+PEC_{0,2004} =
+-0{,}0025 \cdot A^2 + 59{,}484 \cdot A + 3104{,}8 .
+\end{equation}
+
+Für Plattenwärmeübertrager gilt:
+\begin{equation}
+PEC_{0,2004} =
+6 \cdot 10^{-6} \cdot A^3
+-0{,}0285 \cdot A^2
++100{,}48 \cdot A
++2323{,}6 .
+\end{equation}
+
+Dabei ist $A$ in m$^2$ einzusetzen und $PEC_{0,2004}$ ergibt sich in USD$_{2004}$. Anschließend erfolgt die Anpassung vom Bezugsjahr auf das Bezugsjahr 2026 mithilfe des
+CEPCI. Die Umrechnung in EUR erfolgt mit dem zuvor definierten Wechselkurs. Die berechneten
+Kosten sind in Tabelle \ref{tab:kosten_waermeuebertrager_gesamt} dargestellt.
+
+\begin{table}[H]
+\centering
+\caption{Kostenabschätzung der Wärmeübertrager}
+\label{tab:kosten_waermeuebertrager_gesamt}
+\small
+\begin{tabular}{lllrrrr}
+\hline
+Modell & Komponente & Bauart & $A$ & $PEC_{0,2004}$ & $PEC_{2026}^{USD}$ & $PEC_{2026}^{EUR}$ \\
+ & & & (m$^2$) & (USD$_{2004}$) & (USD$_{2026}$) & (EUR$_{2026}$) \\
+\hline
+Einzelkolonne groß & MH   & Platte & 4013{,}43 & 334407 & 632828 & 540815 \\
+Einzelkolonne groß & RECO & Platte & 6842{,}99 & 1277952 & 2418384 & 2066751 \\
+Einzelkolonne groß & ZK1  & Shell-and-Tube & 424{,}48 & 27904 & 52805 & 45128 \\
+Einzelkolonne groß & ZK2  & Shell-and-Tube & 494{,}95 & 31934 & 60432 & 51645 \\
+Einzelkolonne klein & MH   & Platte & 1173{,}01 & 90657 & 171559 & 146614 \\
+Einzelkolonne klein & RECO & Platte & 2000{,}00 & 137284 & 259794 & 222020 \\
+Einzelkolonne klein & ZK1  & Shell-and-Tube & 124{,}06 & 10446 & 19768 & 16894 \\
+Einzelkolonne klein & ZK2  & Shell-and-Tube & 144{,}66 & 11657 & 22060 & 18853 \\
+Doppelkolonne groß & MW  & Platte & 9899{,}75 & 4025260 & 7617364 & 6509799 \\
+Doppelkolonne groß & RC  & Platte & 6228{,}53 & 972320 & 1840010 & 1572472 \\
+Doppelkolonne groß & RC2 & Platte & 5353{,}99 & 644174 & 1219028 & 1041781 \\
+Doppelkolonne groß & ZK1 & Shell-and-Tube & 285{,}96 & 19910 & 37678 & 32200 \\
+Doppelkolonne groß & ZK2 & Shell-and-Tube & 333{,}44 & 22661 & 42884 & 36649 \\
+Doppelkolonne klein & MW  & Platte & 2893{,}52 & 199805 & 378109 & 323132 \\
+Doppelkolonne klein & RC  & Platte & 1820{,}55 & 126996 & 240326 & 205383 \\
+Doppelkolonne klein & RC2 & Platte & 1564{,}87 & 112763 & 213392 & 182364 \\
+Doppelkolonne klein & ZK1 & Shell-and-Tube & 83{,}58 & 8059 & 15251 & 13033 \\
+Doppelkolonne klein & ZK2 & Shell-and-Tube & 97{,}46 & 8878 & 16801 & 14358 \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection*{Kostenabschätzung der Kolonnen}
+
+Die Kostenabschätzung der Kolonnen erfolgt in Anlehnung an Tesch
+\cite{stefanie_janine_tesch_exergy-based_nodate}. Berücksichtigt werden ausschließlich
+der Kolonnenmantel sowie die kolonneninternen Einbauten. Die zugehörigen Reboiler
+und Kondensatoren werden separat im Rahmen der Wärmeübertragerkosten erfasst.
+
+Während Tesch für kryogene Luftzerlegungskolonnen Siebbodenkolonnen betrachtet,
+wird in dieser Arbeit eine Ausführung als Packungskolonne angenommen. Diese
+Annahme ist für kryogene Luftzerlegungsanlagen plausibel, da Packungen aufgrund
+geringer Druckverluste und hoher Trennleistung vorteilhaft sind. Die in Aspen Plus
+modellierten RadFrac-Kolonnen werden als Gleichgewichtsstufenmodelle verstanden.
+Die Anzahl der theoretischen Stufen wird daher über den $HETP$-Ansatz in eine
+Packungshöhe überführt:
+\begin{equation}
+H_\mathrm{Packung} = N_\mathrm{theo} \cdot HETP .
+\end{equation}
+Smith beschreibt die Auslegung von Packungskolonnen über den $HETP$-Ansatz
+\cite{smith_chemical_nodate}. Peters et al. nennen ebenfalls typische $HETP$-Werte
+für strukturierte Packungen, die je nach Packungstyp und Betriebsbedingungen
+variieren \cite{peters_plant_2003}. Für die überschlägige Kostenabschätzung wird
+$HETP=0{,}30~\mathrm{m}$ angenommen.
+
+Zusätzlich zur Packungshöhe werden Zuschläge für Kolonnenkopf, Kolonnensumpf und
+Flüssigkeitsverteilung berücksichtigt. In Anlehnung an Tesch werden
+$h_\mathrm{TC}=1{,}2~\mathrm{m}$ und $h_\mathrm{SC}=1{,}8~\mathrm{m}$ angesetzt
+\cite{stefanie_janine_tesch_exergy-based_nodate}. Für Flüssigkeitsverteiler und
+Zwischenverteilung wird vereinfachend $h_\mathrm{vert}=1{,}5~\mathrm{m}$ angenommen.
+Damit ergibt sich die gesamte Kolonnenhöhe zu
+\begin{equation}
+H_\mathrm{Kolonne}
+=
+N_\mathrm{theo}\cdot HETP
++
+h_\mathrm{TC}
++
+h_\mathrm{SC}
++
+h_\mathrm{vert}.
+\end{equation}
+
+Da keine vollständige hydraulische Dimensionierung durchgeführt wird, werden die
+Kolonnendurchmesser in Anlehnung an die von Tesch angegebenen Größenordnungen
+angenommen. Tesch verwendet für Hochdruckkolonnen Durchmesser von
+$1{,}7{-}1{,}9~\mathrm{m}$ und für Niederdruckkolonnen Durchmesser von
+$1{,}5{-}2{,}7~\mathrm{m}$ \cite{stefanie_janine_tesch_exergy-based_nodate}.
+Für das Doppelkolonnenmodell werden $D_\mathrm{KOLHP}=1{,}8~\mathrm{m}$ und
+$D_\mathrm{KOLLP}=2{,}2~\mathrm{m}$ angesetzt. Für das Einzelkolonnenmodell wird
+aufgrund der Zusammenfassung der Trennaufgabe in einer einzigen Kolonne
+$D_\mathrm{KOL}=2{,}0~\mathrm{m}$ angenommen.
+
+\begin{table}[H]
+\centering
+\caption{Geometrische Annahmen und berechnete Kolonnenhöhen}
+\label{tab:kolonnen_geometrie}
+\begin{tabular}{llrrrrr}
+\hline
+Modell & Komponente & $N_\mathrm{theo}$ & $D$ & $H_\mathrm{Packung}$ & Zuschläge & $H_\mathrm{Kolonne}$ \\
+ & & (-) & (m) & (m) & (m) & (m) \\
+\hline
+Einzelkolonne & KOL & 50 & 2{,}0 & 15{,}00 & 4{,}50 & 19{,}50 \\
+Doppelkolonne & KOLHP & 50 & 1{,}8 & 15{,}00 & 4{,}50 & 19{,}50 \\
+Doppelkolonne & KOLLP & 50 & 2{,}2 & 15{,}00 & 4{,}50 & 19{,}50 \\
+\hline
+\end{tabular}
+\end{table}
+
+Die Kolonnenkosten werden über die von Tesch angegebenen Bare-Module-Kosten
+kryogener Luftzerlegungskolonnen abgeschätzt
+\cite{stefanie_janine_tesch_exergy-based_nodate}. Für Zwischenwerte des
+Durchmessers werden die Kosten linear interpoliert. Die Anpassung an die hier
+berechnete Kolonnenhöhe erfolgt über das Skalierungsgesetz
+\begin{equation}
+C_Y = C_W \left(\frac{H_Y}{H_W}\right)^a .
+\end{equation}
+Dabei beschreibt $C_W$ die aus Tesch übernommene bzw. interpolierte
+Referenzkostenbasis bei der Referenzhöhe $H_W$, $H_Y$ die in dieser Arbeit
+berechnete Kolonnenhöhe und $a$ den Skalierungsexponenten. Für die
+überschlägige Kostenabschätzung wird $a=0{,}6$ angenommen. Die Einzelkolonne wird
+aufgrund ihres Druckniveaus und der zusammengefassten Trennaufgabe vereinfachend
+auf Basis der Hochdruckkolonnenwerte abgeschätzt.
+
+\begin{table}[H]
+\centering
+\caption{Kostenabschätzung der Kolonnen in Anlehnung an Tesch}
+\label{tab:kosten_kolonnen}
+\begin{tabular}{llrrrrr}
+\hline
+Modell & Komponente & $D$ & $H_Y$ & $C_W$ & $C_{Y,2015}$ & $C_{Y,2026}^{EUR}$ \\
+ & & (m) & (m) & (USD$_{2015}$) & (USD$_{2015}$) & (EUR$_{2026}$) \\
+\hline
+Einzelkolonne & KOL & 2{,}0 & 19{,}50 & $8{,}250{,}000$ & $7{,}280{,}000$ & $9{,}400{,}000$ \\
+Doppelkolonne & KOLHP & 1{,}8 & 19{,}50 & $7{,}350{,}000$ & $6{,}490{,}000$ & $8{,}370{,}000$ \\
+Doppelkolonne & KOLLP & 2{,}2 & 19{,}50 & $8{,}130{,}000$ & $5{,}130{,}000$ & $6{,}610{,}000$ \\
+\hline
+\end{tabular}
+\end{table}
+
+Die Anpassung vom Referenzjahr 2015 auf das Bezugsjahr 2026 erfolgt mit dem
+CEPCI. Die Umrechnung in EUR erfolgt anschließend mit dem zuvor definierten
+Wechselkurs. Die berechneten Kolonnenkosten sind als überschlägige Bare-Module-Kosten zu
+verstehen. Aufgrund der fehlenden hydraulischen Detailauslegung und der
+vereinfachten Übertragung der Tesch-Referenzwerte sind die Ergebnisse mit
+entsprechender Unsicherheit behaftet. Für den Vergleich der beiden
+Prozessvarianten wird der Ansatz jedoch einheitlich angewendet.
+
+\subsection*{Kostenabschätzung der Luftvorreinigung}
+
+Die Luftvorreinigung wird in den Aspen-Plus-Modellen vereinfacht durch die Blöcke
+GW1 und GW2 abgebildet. Dabei beschreibt GW1 die Wasserabtrennung nach
+Verdichtung und Zwischenkühlung, während GW2 die Entfernung von Kohlenstoffdioxid
+und Restwasser repräsentiert. In realen kryogenen Luftzerlegungsanlagen entspricht
+dies einer Prepurification Unit mit Adsorbern, Umschaltarmaturen, Regeneration
+und zugehöriger Steuerung. Daher werden GW1 und GW2 nicht separat als
+Flash- bzw. Separatorapparate bepreist, sondern zu einem gemeinsamen Kostenblock
+Luftvorreinigung zusammengefasst.
+
+In Anlehnung an Tesch wird die Luftvorreinigung pauschal als Zuschlag auf die
+Kosten der übrigen Hauptapparate berücksichtigt
+\cite{stefanie_janine_tesch_exergy-based_nodate}. Für diese Arbeit wird ein
+Zuschlagsfaktor von $f_\mathrm{PPU}=0{,}08$ angesetzt, sodass sich ergibt:
+\begin{equation}
+C_\mathrm{PPU}
+=
+f_\mathrm{PPU}
+\cdot
+C_\mathrm{ohne\,PPU}.
+\end{equation}
+Dabei beschreibt $C_\mathrm{ohne\,PPU}$ die Summe der Investitionskosten der
+kostenrelevanten Hauptapparate ohne Luftvorreinigung.
+
+
+\subsection*{Berechnung der Investitionskosten}
+
+Die zuvor berechneten apparatespezifischen Kosten werden im Folgenden zu den
+Investitionskosten der beiden Prozessvarianten zusammengeführt. Für die
+PEC-basierten Kostenblöcke werden die in Kapitel~\ref{sec:modell_economics}
+definierten Zuschläge berücksichtigt. Die Kolonnenkosten werden nicht erneut
+beaufschlagt, da sie bereits als Bare-Module-Kosten angesetzt werden. Die
+Luftvorreinigung wird anschließend als pauschaler Zuschlag auf die übrigen
+Hauptapparatkosten berücksichtigt.
+
+\begin{table}[H]
+\centering
+\caption{Zusammenführung der PEC-basierten Apparatekosten}
+\label{tab:pec_summe_kostenbloecke}
+\begin{tabular}{llrr}
+\hline
+Kostenblock & Komponente & Einzelkolonne & Doppelkolonne \\
+ & & (EUR$_{2026}$) & (EUR$_{2026}$) \\
+\hline
+Luftverdichtung & LK1 & 724299 & 596607 \\
+Luftverdichtung & LK2 & 746964 & 615276 \\
+Produkt-/Prozessverdichtung & PK1 & -- & 305185 \\
+\hline
+Expansion/Kältebereitstellung & TURB/T & 465700 & 143946 \\
+\hline
+Zwischenkühlung & ZK1 & 45125 & 31488 \\
+Zwischenkühlung & ZK2 & 51642 & 35822 \\
+Hauptwärmeübertrager & MH/MW & 301249 & 5660063 \\
+Reboiler/Kondensator & RECO/RC & 17951596 & 2106924 \\
+Reboiler/Kondensator & RC2 & -- & 291907 \\
+\hline
+\textbf{Summe $PEC_\mathrm{sum}$} & & \textbf{20286575} & \textbf{9787218} \\
+\hline
+\end{tabular}
+\end{table}
+
+Die direkten Kosten $DC$ ergeben sich aus der Summe der PEC-basierten
+Apparatekosten und den direkten Zuschlägen für Installation, Rohrleitungen,
+Mess- und Regeltechnik, elektrische Ausrüstung, bauliche Maßnahmen und
+Hilfseinrichtungen. Die indirekten Kosten $IC$ umfassen Engineering und
+Überwachung sowie Baukosten einschließlich Gewinn der Baufirma. Zusätzlich wird
+ein Zuschlag für Unvorhergesehenes auf die Summe aus direkten und indirekten
+Kosten berücksichtigt.
+
+\begin{table}[H]
+\centering
+\caption{Anwendung der Zuschläge auf PEC-basierte Kostenblöcke}
+\label{tab:zuschlaege_pec_kosten}
+\begin{tabular}{lrr}
+\hline
+Kostenposition & Einzelkolonne & Doppelkolonne \\
+ & (EUR$_{2026}$) & (EUR$_{2026}$) \\
+\hline
+Summe $PEC_\mathrm{sum}$ & 20286575 & 9787218 \\
+\hline
+Installation der Apparate, 40~\% $PEC$ & 8114630 & 3914887 \\
+Rohrleitungen, 30~\% $PEC$ & 6085973 & 2936165 \\
+Mess- und Regeltechnik, 20~\% $PEC$ & 4057315 & 1957444 \\
+Elektrische Ausrüstung und Material, 10~\% $PEC$ & 2028658 & 978722 \\
+Bau, Struktur und Architektur, 21~\% $PEC$ & 4260181 & 2055316 \\
+Hilfseinrichtungen / Service Facilities, 35~\% $PEC$ & 7100301 & 3425526 \\
+\hline
+Direkte Kosten $DC$ & 51933632 & 25055278 \\
+Engineering und Überwachung, 8~\% $DC$ & 4154691 & 2004422 \\
+Baukosten einschließlich Gewinn der Baufirma, 15~\% $DC$ & 7790045 & 3758292 \\
+\hline
+Indirekte Kosten $IC$ & 11944735 & 5762714 \\
+Unvorhergesehenes, 15~\% $(DC+IC)$ & 9581755 & 4622699 \\
+\hline
+\textbf{$FCI_\mathrm{PEC}$} & \textbf{73460122} & \textbf{35440691} \\
+\hline
+\end{tabular}
+\end{table}
+
+Die aufgeschlagenen PEC-basierten Kostenblöcke werden anschließend mit den
+Bare-Module-Kosten der Kolonnen zusammengeführt. Die Luftvorreinigung wird als
+pauschaler Zuschlag von $f_\mathrm{PPU}=0{,}08$ auf die Summe ohne
+Luftvorreinigung berücksichtigt:
+\begin{equation}
+C_\mathrm{PPU}
+=
+f_\mathrm{PPU}
+\cdot
+C_\mathrm{ohne\,PPU}.
+\end{equation}
+
+\begin{table}[H]
+\centering
+\caption{Zusammenführung der Investitionskosten}
+\label{tab:zusammenfuehrung_investitionskosten}
+\begin{tabular}{lrr}
+\hline
+Kostenposition & Einzelkolonne & Doppelkolonne \\
+ & (EUR$_{2026}$) & (EUR$_{2026}$) \\
+\hline
+$FCI_\mathrm{PEC}$ & 73460122 & 35440691 \\
+Kolonnenblock $C_{BM}$ & 9400000 & 14980000 \\
+\hline
+Summe ohne Luftvorreinigung $C_\mathrm{ohne\,PPU}$ & 82860122 & 50420691 \\
+Luftvorreinigung $C_\mathrm{PPU}$, 8~\% & 6628810 & 4033655 \\
+\hline
+\textbf{$FCI$} & \textbf{89488932} & \textbf{54454346} \\
+\hline
+\end{tabular}
+\end{table}
+
+Da in dieser Arbeit keine detaillierte Projektplanung mit Bauzeit,
+Mittelabfluss während der Bauphase, Finanzierungskosten und Anlaufkosten
+durchgeführt wird, werden Zinsen während der Bauzeit sowie Start-up-Kosten nicht
+separat berücksichtigt. Das Total Capital Investment wird daher näherungsweise
+dem abgeschätzten Fixed Capital Investment gleichgesetzt:
+\begin{equation}
+TCI \approx FCI .
+\end{equation}
+
+\subsection*{Berechnung der nivellierten Jahreskosten}
+
+Aus dem abgeschätzten Total Capital Investment werden die jährlichen
+kapitalgebundenen Kosten, die Betriebs- und Wartungskosten sowie die
+Energiekosten berechnet. Für die verwendeten ökonomischen Randbedingungen mit
+$i_\mathrm{eff}=10~\%$, $n=20~\mathrm{a}$,
+$r_{n,OM}=2{,}5~\%/\mathrm{a}$ und
+$r_{n,el}=3{,}5~\%/\mathrm{a}$ ergeben sich die folgenden Faktoren:
+\begin{equation}
+CRF = 0{,}1175,
+\end{equation}
+\begin{equation}
+CELF_{OM}=1{,}2143,
+\end{equation}
+\begin{equation}
+CELF_{el}=1{,}3171.
+\end{equation}
+
+Die elektrische Nettoleistungsaufnahme wird aus den Verdichterleistungen
+abzüglich der durch die Expander zurückgewonnenen Leistung bestimmt. Für das
+Einzelkolonnenmodell ergibt sich
+\begin{equation}
+\dot W_{\mathrm{el,Einzel}}
+=
+5111{,}54
++
+5465{,}65
+-
+482{,}23
+=
+10094{,}96~\mathrm{kW}.
+\end{equation}
+Für das Doppelkolonnenmodell ergibt sich
+\begin{equation}
+\dot W_{\mathrm{el,Doppel}}
+=
+3353{,}08
++
+3585{,}37
++
+634{,}72
+-
+67{,}32
+=
+7505{,}85~\mathrm{kW}.
+\end{equation}
+
+Die jährlichen Kostenanteile ergeben sich aus den in
+Kapitel~\ref{sec:wirtschaftlichkeitsanalyse} definierten Zusammenhängen. Für die
+kapitalgebundenen Kosten gilt
+\begin{equation}
+CC_L = TCI \cdot CRF .
+\end{equation}
+Die Betriebs- und Wartungskosten werden mit
+\begin{equation}
+OM_L = f_{OM} \cdot TCI \cdot CELF_{OM}
+\end{equation}
+berechnet. Die nivellierten Energiekosten ergeben sich aus
+\begin{equation}
+EC_L = \dot W_\mathrm{el} \cdot t_\mathrm{op} \cdot c_\mathrm{el} \cdot CELF_{el}.
+\end{equation}
+
+\begin{table}[H]
+\centering
+\caption{Berechnung der nivellierten Jahreskosten im Basisfall}
+\label{tab:nivellierte_jahreskosten}
+\begin{tabular}{lrr}
+\hline
+Größe & Einzelkolonne & Doppelkolonne \\
+ & (EUR/a) & (EUR/a) \\
+\hline
+$TCI$ & 89488932 & 54454346 \\
+Kapitalgebundene Kosten $CC_L$ & 10511336 & 6396187 \\
+Betriebs- und Wartungskosten $OM_L$ & 5433246 & 3306150 \\
+Energiekosten $EC_L$ & 17019431 & 12654364 \\
+\hline
+$TRR_L$ & 32964013 & 22356701 \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Sensitivität des jährlichen Total Revenue Requirement gegenüber dem Strompreis}
+\label{tab:sensitivitaet_trr_strompreis}
+\begin{tabular}{lrrr}
+\hline
+Modell & $c_\mathrm{el}=0{,}13$ & $c_\mathrm{el}=0{,}16$ & $c_\mathrm{el}=0{,}19$ \\
+ & (EUR/a) & (EUR/a) & (EUR/a) \\
+\hline
+Einzelkolonne & 29772870 & 32964013 & 36155157 \\
+Doppelkolonne & 19984008 & 22356701 & 24729394 \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection*{Berechnung der spezifischen Stickstoffbereitstellungskosten}
+
+Die spezifischen Stickstoffbereitstellungskosten werden aus dem jährlichen
+Total Revenue Requirement und der jährlich erzeugten Stickstoffmenge bestimmt.
+Für beide Prozessvarianten beträgt der Produktmassenstrom
+$\dot m_{N_2}=15{,}91~\mathrm{kg/s}$. Bei
+$t_\mathrm{op}=8000~\mathrm{h/a}$ ergibt sich die jährliche Stickstoffproduktion zu
+\begin{equation}
+m_{N_2,a}
+=
+\dot m_{N_2}
+\cdot
+t_\mathrm{op}
+\cdot
+3600
+=
+458208~\mathrm{t/a}.
+\end{equation}
+
+Die spezifischen Stickstoffbereitstellungskosten ergeben sich zu
+\begin{equation}
+c_{N_2}
+=
+\frac{TRR_L}{m_{N_2,a}} .
+\end{equation}
+
+\begin{table}[H]
+\centering
+\caption{Spezifische Stickstoffbereitstellungskosten im Basisfall}
+\label{tab:spezifische_stickstoffkosten}
+\begin{tabular}{lrr}
+\hline
+Größe & Einzelkolonne & Doppelkolonne \\
+\hline
+Produktmassenstrom $\dot m_{N_2}$ (kg/s) & 15{,}91 & 15{,}91 \\
+Jährliche Stickstoffproduktion $m_{N_2,a}$ (t/a) & 458208 & 458208 \\
+$TRR_L$ (EUR/a) & 32964013 & 22356701 \\
+\hline
+Spezifische Kosten $c_{N_2}$ (EUR/t$_{N_2}$) & 71{,}94 & 48{,}79 \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Sensitivität der spezifischen Stickstoffbereitstellungskosten gegenüber dem Strompreis}
+\label{tab:sensitivitaet_stickstoffkosten}
+\begin{tabular}{lrrr}
+\hline
+Modell & $c_\mathrm{el}=0{,}13$ & $c_\mathrm{el}=0{,}16$ & $c_\mathrm{el}=0{,}19$ \\
+ & (EUR/t$_{N_2}$) & (EUR/t$_{N_2}$) & (EUR/t$_{N_2}$) \\
+\hline
+Einzelkolonne & 64{,}98 & 71{,}94 & 78{,}91 \\
+Doppelkolonne & 43{,}61 & 48{,}79 & 53{,}97 \\
+\hline
+\end{tabular}
+\end{table}
