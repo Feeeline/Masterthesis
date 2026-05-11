@@ -290,90 +290,17 @@ $\dot{E}^{PH}_{31}-\dot{E}^{PH}_{30}$ \\
     \label{fig:exergieverluste_einzelkolonne}
 \end{figure}
 
-\begin{longtable}{lllr}[H]
-\caption{Globale exergetische Bilanzierung nach dem Fuel-Product-Prinzip} \label{tab:speco_bilanz_final_clean} \\
-\hline
-\textbf{Kategorie} & \textbf{Bezeichnung} & \textbf{Symbol} & \textbf{Wert [W]} \\
-\hline
-\endfirsthead
-\caption[]{Globale exergetische Bilanzierung (Fortsetzung)} \\
-\hline
-\textbf{Kategorie} & \textbf{Bezeichnung} & \textbf{Symbol} & \textbf{Wert [W]} \\
-\hline
-\endhead
-\hline
-\endfoot
+\begin{table}[H]
+\centering
+\label{tab:exergy-global-single}
+\input{Overleaf_LaTeX/tabellen/aspen_luftzerlegung_global_single}
+\end{table}
 
-\textbf{Gesamtaufwand} & Eintrittsexergie Luft ($S1$) & $\dot{E}_{S1}$ & 179.971,69 \\
-\textbf{(Total Fuel)} & Elektrische Brutto-Leistung ($P_{C,1} + P_{C,2}$) & $\dot{P}_{in,tot}$ & 10.577.187,25 \\
-\cline{2-4}
-& \textbf{Summe Gesamtaufwand} & $\dot{E}_{F,tot}$ & \textbf{10.757.158,94} \\
-\hline
-
-\textbf{Gesamtnutzen} & Exergie Stickstoff-Produkt ($S24$) & $\dot{E}_{S24}$ & 2.827.500,60 \\
-\textbf{(Total Product)} & Netto-Turbinenleistung (Welle) & $\dot{P}_{T}$ & 482.231,08 \\
-\cline{2-4}
-& \textbf{Summe Gesamtnutzen} & $\dot{E}_{P,tot}$ & \textbf{3.309.731,68} \\
-\hline
-
-\textbf{Systemverluste} & Exergie Restgasstrom ($S21$) & $\dot{E}_{S21}$ & 473.395,93 \\
-\textbf{(Total Loss)} & Stoffliche Purge-Verluste ($S7, S9, S10$) & $\dot{E}_{L,pur}$ & 31.361,47 \\
-\cline{2-4}
-& \textbf{Summe Systemverluste} & $\dot{E}_{L,tot}$ & \textbf{504.757,40} \\
-\hline
-
-\textbf{Exergievernichtung} & Bilanzierte interne Vernichtung (Fluide) & $\sum \dot{E}_{D,k}$ & 6.836.899,19 \\
-\textbf{(Total Destruction)} & Mechanische Dissipation ($\eta_{mech}=0,99$) & $\dot{E}_{D,mech}$ & 110.642,90 \\
-\cline{2-4}
-& \textbf{Summe Exergievernichtung} & $\dot{E}_{D,tot}$ & \textbf{6.947.542,09} \\
-\hline
-
-\textbf{Bilanzkontrolle} & \textbf{Erhaltung: } $\dot{E}_{F,tot} = \dot{E}_{P,tot} + \dot{E}_{L,tot} + \dot{E}_{D,tot}$ & & \textbf{99,97 \%} \\
-\hline
-\end{longtable}
-
-
-\begin{longtable}{lllr}[H]
-\caption{Globale exergetische Bilanzierung - Doppelkolonnenmodell} \label{tab:globale_bilanz_doppel_final} \\
-\hline
-\textbf{Kategorie} & \textbf{Bezeichnung} & \textbf{Symbol} & \textbf{Wert [W]} \\
-\hline
-\endfirsthead
-\caption[]{Globale exergetische Bilanzierung - Doppelkolonne (Fortsetzung)} \\
-\hline
-\textbf{Kategorie} & \textbf{Bezeichnung} & \textbf{Symbol} & \textbf{Wert [W]} \\
-\hline
-\endhead
-\hline
-\endfoot
-
-\textbf{Gesamtaufwand} & Eintrittsexergie Luft ($S1$) & $\dot{E}_{S1}$ & 118.007,34 \\
-\textbf{(Total Fuel)} & Elektrische Brutto-Leistung & $\dot{P}_{in,tot}$ & 7.649.667,06 \\
-\cline{2-4}
-& \textbf{Summe Gesamtaufwand} & $\dot{E}_{F,tot}$ & \textbf{7.767.674,40} \\
-\hline
-
-\textbf{Gesamtnutzen} & Exergie Stickstoff-Produkt ($S32$) & $\dot{E}_{S32}$ & 2.907.728,43 \\
-\textbf{(Total Product)} & Netto-Turbinenleistung (Welle) & $\dot{W}_{T}$ & 67.318,82 \\
-\cline{2-4}
-& \textbf{Summe Gesamtnutzen} & $\dot{E}_{P,tot}$ & \textbf{2.975.047,25} \\
-\hline
-
-\textbf{Systemverluste} & Exergie Restgasstrom ($S28$) & $\dot{E}_{S28}$ & 372.700,13 \\
-\textbf{(Total Loss)} & Stoffliche Verluste ($S7, S9, S10, S25$) & $\dot{E}_{L,pur}$ & 114.188,23 \\
-\cline{2-4}
-& \textbf{Summe Systemverluste} & $\dot{E}_{L,tot}$ & \textbf{486.888,36} \\
-\hline
-
-\textbf{Exergievernichtung} & Bilanzierte interne Vernichtung (Fluide) & $\sum \dot{E}_{D,k}$ & 4.155.988,56 \\
-\textbf{(Total Destruction)} & Mechanische Dissipation ($\eta_{mech}=0,99$) & $\dot{E}_{D,mech}$ & 76.496,67 \\
-\cline{2-4}
-& \textbf{Summe Exergievernichtung} & $\dot{E}_{D,tot}$ & \textbf{4.232.485,23} \\
-\hline
-
-\textbf{Bilanzkontrolle} & \textbf{Erhaltung: } $\dot{E}_{F,tot} = \dot{E}_{P,tot} + \dot{E}_{L,tot} + \dot{E}_{D,tot}$ & & \textbf{99,96 \%} \\
-\hline
-\end{longtable}
+\begin{table}[H]
+\centering
+\label{tab:exergy-global-doppel}
+\input{Overleaf_LaTeX/tabellen/aspen_luftzerlegung_global_double}
+\end{table}
 
 \begin{table}[H]
 \centering
@@ -690,109 +617,289 @@ Doppelkolonne klein & ZK2 & Shell-and-Tube & 97{,}46 & 8878 & 16801 & 14358 \\
 
 \subsection*{Kostenabschätzung der Kolonnen}
 
-Die Kostenabschätzung der Kolonnen erfolgt in Anlehnung an Tesch
-\cite{stefanie_janine_tesch_exergy-based_nodate}. Berücksichtigt werden ausschließlich
-der Kolonnenmantel sowie die kolonneninternen Einbauten. Die zugehörigen Reboiler
-und Kondensatoren werden separat im Rahmen der Wärmeübertragerkosten erfasst.
+Während die Literatur für kryogene Luftzerlegungskolonnen häufig
+Siebbodenkolonnen betrachtet, wird in dieser Arbeit eine Ausführung als
+Packungskolonne angenommen. Die Wahl der Trennstufenzahl stellt einen
+Kompromiss zwischen Produktspezifikation, energetischer Prozessführung und
+Investitionskosten dar. Eine höhere Stufenzahl verbessert grundsätzlich die
+erreichbare Trennleistung, führt bei Packungskolonnen jedoch zu einer größeren
+Packungshöhe und damit zu höheren Kosten für Kolonnenmantel und Einbauten. Der
+Einfluss auf die Betriebskosten ist bei der betrachteten kryogenen
+Luftzerlegung nur indirekt zu bewerten, da Verdampfung und Kondensation über
+einen gekoppelten Reboiler-Kondensator wärmeintegriert sind. Die Stufenzahl
+beeinflusst daher vor allem Umlaufströme, Druckniveaus, Temperaturdifferenzen
+sowie die damit verbundene Verdichter- und Kälteleistung.
 
-Während Tesch für kryogene Luftzerlegungskolonnen Siebbodenkolonnen betrachtet,
-wird in dieser Arbeit eine Ausführung als Packungskolonne angenommen. Diese
-Annahme ist für kryogene Luftzerlegungsanlagen plausibel, da Packungen aufgrund
-geringer Druckverluste und hoher Trennleistung vorteilhaft sind. Die in Aspen Plus
-modellierten RadFrac-Kolonnen werden als Gleichgewichtsstufenmodelle verstanden.
-Die Anzahl der theoretischen Stufen wird daher über den $HETP$-Ansatz in eine
-Packungshöhe überführt:
+In der Simulation wurden für die Kolonnen zunächst jeweils
+\(N_{\text{theo}}=50\) theoretische Stufen gewählt. Diese Wahl orientiert sich an
+etablierten Literaturwerten für industrielle Luftzerlegungsanlagen und wird in
+dieser Arbeit als Standard-Design für die großskaligen Varianten verwendet.
+Ergänzende Sensitivitätsanalysen zeigen für das Einkolonnenmodell, dass eine
+Reduktion auf \(N_{\text{theo}}=35\) theoretische Stufen technisch möglich ist,
+ohne dass signifikante Einbußen bei Produktreinheit, Ausbeute oder thermischen
+Lasten der Wärmeübertrager auftreten. Diese Stufenzahl wird daher als kompaktes
+Design für die kleinskalige Variante des Einkolonnenmodells angesetzt.
+
+Für die Hochdruckkolonne (HPC) des Doppelkolonnenmodells wird analog
+vorgegangen. In der großskaligen Variante wird \(N_{\text{theo}}=50\) angesetzt,
+um eine konsistente Vergleichsbasis zwischen Einkolonnen- und
+Doppelkolonnenmodell zu schaffen. Für die kleinskalige HPC-Variante wird
+ebenfalls das kompakte Design mit \(N_{\text{theo}}=35\) verwendet, da die HPC
+unter vergleichbaren Modellierungsbedingungen wie das Einkolonnenmodell
+betrieben wird und ähnliche Zielvorgaben hinsichtlich Produktreinheit, Ausbeute
+und thermischer Kopplung erfüllt.
+
+Für die Niederdruckkolonne (LPC) wird dagegen sowohl in der großskaligen als
+auch in der kleinskaligen Variante konservativ eine Stufenzahl von
+\(N_{\text{theo}}=50\) beibehalten. Die LPC übernimmt im Doppelkolonnenprozess
+die weiterführende Trennung bei niedrigerem Druck. Eine Reduktion der
+Stufenzahl würde daher stärker in die Restgaszusammensetzung und die
+Trennleistung eingreifen als bei der HPC. Vor diesem Hintergrund stellt die
+gewählte Stufenzahl von 50 theoretischen Stufen für die LPC einen geeigneten
+Kompromiss zwischen Trennleistung, Modellkonsistenz und Investitionsaufwand
+dar.
+
+Zur Überführung der theoretischen Stufen in eine reale Bauhöhe wird der
+\(HETP\)-Ansatz (Height Equivalent to a Theoretical Plate) nach Kraume
+verwendet \cite{kraume2020transportvorgaenge}. Die erforderliche
+Packungshöhe ergibt sich aus
 \begin{equation}
-H_\mathrm{Packung} = N_\mathrm{theo} \cdot HETP .
+H_{\text{Packung}} = N_{\text{theo}} \cdot HETP .
 \end{equation}
-Smith beschreibt die Auslegung von Packungskolonnen über den $HETP$-Ansatz
-\cite{smith_chemical_nodate}. Peters et al. nennen ebenfalls typische $HETP$-Werte
-für strukturierte Packungen, die je nach Packungstyp und Betriebsbedingungen
-variieren \cite{peters_plant_2003}. Für die überschlägige Kostenabschätzung wird
-$HETP=0{,}30~\mathrm{m}$ angenommen.
 
-Zusätzlich zur Packungshöhe werden Zuschläge für Kolonnenkopf, Kolonnensumpf und
-Flüssigkeitsverteilung berücksichtigt. In Anlehnung an Tesch werden
-$h_\mathrm{TC}=1{,}2~\mathrm{m}$ und $h_\mathrm{SC}=1{,}8~\mathrm{m}$ angesetzt
-\cite{stefanie_janine_tesch_exergy-based_nodate}. Für Flüssigkeitsverteiler und
-Zwischenverteilung wird vereinfachend $h_\mathrm{vert}=1{,}5~\mathrm{m}$ angenommen.
-Damit ergibt sich die gesamte Kolonnenhöhe zu
+Nach Kraume weisen moderne strukturierte Packungen Trennleistungen zwischen
+1{,}5 und 6 Stufen pro Meter auf, was einem \(HETP\)-Bereich von
+\(0{,}17\,\mathrm{m}\) bis \(0{,}67\,\mathrm{m}\) entspricht
+\cite{kraume2020transportvorgaenge}. Für die wirtschaftliche Abschätzung wird
+ein mittlerer Wert von
 \begin{equation}
-H_\mathrm{Kolonne}
+HETP = 0{,}30\,\mathrm{m}
+\end{equation}
+gewählt.
+
+Zusätzlich zur Packung werden konstruktive Zuschläge für Kolonnenkopf
+\((h_{\text{TC}}=1{,}2\,\mathrm{m})\), Sumpf
+\((h_{\text{SC}}=1{,}8\,\mathrm{m})\) und Flüssigkeitsverteilung
+\((h_{\text{vert}}=1{,}5\,\mathrm{m})\) nach Tesch berücksichtigt
+\cite{stefanie_janine_tesch_exergy-based_nodate}. Die gesamte Kolonnenhöhe
+berechnet sich somit zu
+\begin{equation}
+H_{\text{Kolonne}}
 =
-N_\mathrm{theo}\cdot HETP
-+
-h_\mathrm{TC}
-+
-h_\mathrm{SC}
-+
-h_\mathrm{vert}.
+N_{\text{theo}} \cdot HETP + 4{,}5\,\mathrm{m}.
 \end{equation}
 
-Da keine vollständige hydraulische Dimensionierung durchgeführt wird, werden die
-Kolonnendurchmesser in Anlehnung an die von Tesch angegebenen Größenordnungen
-angenommen. Tesch verwendet für Hochdruckkolonnen Durchmesser von
-$1{,}7{-}1{,}9~\mathrm{m}$ und für Niederdruckkolonnen Durchmesser von
-$1{,}5{-}2{,}7~\mathrm{m}$ \cite{stefanie_janine_tesch_exergy-based_nodate}.
-Für das Doppelkolonnenmodell werden $D_\mathrm{KOLHP}=1{,}8~\mathrm{m}$ und
-$D_\mathrm{KOLLP}=2{,}2~\mathrm{m}$ angesetzt. Für das Einzelkolonnenmodell wird
-aufgrund der Zusammenfassung der Trennaufgabe in einer einzigen Kolonne
-$D_\mathrm{KOL}=2{,}0~\mathrm{m}$ angenommen.
+Für \(N_{\text{theo}}=50\) ergibt sich damit eine Packungshöhe von
+\(15{,}0\,\mathrm{m}\) und eine Gesamthöhe von \(19{,}5\,\mathrm{m}\). Für das
+kompakte Design mit \(N_{\text{theo}}=35\) ergibt sich eine Packungshöhe von
+\(10{,}5\,\mathrm{m}\) und eine Gesamthöhe von \(15{,}0\,\mathrm{m}\). Die für
+die Kostenabschätzung verwendeten Bauhöhen sind in
+Tabelle~\ref{tab:dimensionierung_vergleich} zusammengefasst.
 
 \begin{table}[H]
 \centering
-\caption{Geometrische Annahmen und berechnete Kolonnenhöhen}
-\label{tab:kolonnen_geometrie}
-\begin{tabular}{llrrrrr}
+\caption{Für die Kostenabschätzung angesetzte Kolonnenhöhen
+(\(HETP=0{,}30\,\mathrm{m}\))}
+\label{tab:dimensionierung_vergleich}
+\small
+\begin{tabular}{llccc}
 \hline
-Modell & Komponente & $N_\mathrm{theo}$ & $D$ & $H_\mathrm{Packung}$ & Zuschläge & $H_\mathrm{Kolonne}$ \\
- & & (-) & (m) & (m) & (m) & (m) \\
+\textbf{Modell} & \textbf{Kolonne} &
+\(\boldsymbol{N_{\text{theo}}}\) &
+\(\boldsymbol{H_{\text{Packung}}}\) &
+\(\boldsymbol{H_{\text{Kolonne}}}\) \\
+& & -- & m & m \\
 \hline
-Einzelkolonne & KOL & 50 & 2{,}0 & 15{,}00 & 4{,}50 & 19{,}50 \\
-Doppelkolonne & KOLHP & 50 & 1{,}8 & 15{,}00 & 4{,}50 & 19{,}50 \\
-Doppelkolonne & KOLLP & 50 & 2{,}2 & 15{,}00 & 4{,}50 & 19{,}50 \\
+Einkolonnenmodell groß & Single & 50 & 15{,}0 & 19{,}5 \\
+Einkolonnenmodell klein & Single & 35 & 10{,}5 & 15{,}0 \\
+Doppelkolonnenmodell groß & HPC & 50 & 15{,}0 & 19{,}5 \\
+Doppelkolonnenmodell klein & HPC & 35 & 10{,}5 & 15{,}0 \\
+Doppelkolonnenmodell groß & LPC & 50 & 15{,}0 & 19{,}5 \\
+Doppelkolonnenmodell klein & LPC & 50 & 15{,}0 & 19{,}5 \\
 \hline
 \end{tabular}
 \end{table}
 
-Die Kolonnenkosten werden über die von Tesch angegebenen Bare-Module-Kosten
-kryogener Luftzerlegungskolonnen abgeschätzt
-\cite{stefanie_janine_tesch_exergy-based_nodate}. Für Zwischenwerte des
-Durchmessers werden die Kosten linear interpoliert. Die Anpassung an die hier
-berechnete Kolonnenhöhe erfolgt über das Skalierungsgesetz
+
+Die Durchmesser der betrachteten Packungskolonnen werden näherungsweise über
+die maximale Gasbelastung bestimmt. Nach Kraume stellt bei Füllkörper- und
+Packungskolonnen die Flutgrenze die technisch relevante obere Belastungsgrenze
+dar. Die Gasgeschwindigkeit am Flutpunkt bestimmt damit die maximal zulässige
+Belastbarkeit und folglich den erforderlichen Kolonnenquerschnitt
+\cite{kraume2020}.
+
+Da im Rahmen dieser Arbeit keine detaillierte hydraulische Auslegung der
+Packungen durchgeführt wird, erfolgt die Berechnung als Vorabschätzung. Hierzu
+wird aus der Aspen-Simulation je Kolonne der maximale Dampfstrom
+\(\dot n_{g,\max}\) entnommen. Der zugehörige Gasvolumenstrom wird vereinfacht
+über das ideale Gasgesetz berechnet:
 \begin{equation}
-C_Y = C_W \left(\frac{H_Y}{H_W}\right)^a .
+    \dot V_g = \frac{\dot n_g R T}{p}.
 \end{equation}
-Dabei beschreibt $C_W$ die aus Tesch übernommene bzw. interpolierte
-Referenzkostenbasis bei der Referenzhöhe $H_W$, $H_Y$ die in dieser Arbeit
-berechnete Kolonnenhöhe und $a$ den Skalierungsexponenten. Für die
-überschlägige Kostenabschätzung wird $a=0{,}6$ angenommen. Die Einzelkolonne wird
-aufgrund ihres Druckniveaus und der zusammengefassten Trennaufgabe vereinfachend
-auf Basis der Hochdruckkolonnenwerte abgeschätzt.
+
+Für die kryogenen Packungskolonnen wird eine zulässige Gasleerrohrgeschwindigkeit
+von
+\begin{equation}
+    w_{g,\mathrm{zul}} = 0{,}6 \ \mathrm{m\,s^{-1}}
+\end{equation}
+angenommen. Dieser Wert berücksichtigt einen Sicherheitsabstand zur Flutgrenze
+und dient der groben Dimensionierung. Der erforderliche Kolonnenquerschnitt
+ergibt sich damit zu
+\begin{equation}
+    A = \frac{\dot V_g}{w_{g,\mathrm{zul}}}.
+\end{equation}
+Der Kolonnendurchmesser folgt aus der Kreisfläche:
+\begin{equation}
+    D = \sqrt{\frac{4A}{\pi}}.
+\end{equation}
+
+Die Berechnung dient somit nicht als detaillierte Hersteller- oder
+Packungsauslegung, sondern als konsistente Abschätzung der Größenordnung der
+Kolonnendurchmesser für die anschließende Kostenbewertung.
 
 \begin{table}[H]
 \centering
-\caption{Kostenabschätzung der Kolonnen in Anlehnung an Tesch}
-\label{tab:kosten_kolonnen}
-\begin{tabular}{llrrrrr}
+\caption{Abschätzung der Kolonnendurchmesser über die maximale Gasbelastung}
+\label{tab:kolonnendurchmesser_packung}
+\small
+\begin{tabular}{llcccccc}
 \hline
-Modell & Komponente & $D$ & $H_Y$ & $C_W$ & $C_{Y,2015}$ & $C_{Y,2026}^{EUR}$ \\
- & & (m) & (m) & (USD$_{2015}$) & (USD$_{2015}$) & (EUR$_{2026}$) \\
+\textbf{Modell} &
+\textbf{Kolonne} &
+\(\boldsymbol{\dot n_{g,\max}}\) &
+\(\boldsymbol{T}\) &
+\(\boldsymbol{p}\) &
+\(\boldsymbol{\dot V_g}\) &
+\(\boldsymbol{A}\) &
+\(\boldsymbol{D}\) \\
+&
+&
+\(\mathrm{kmol\,s^{-1}}\) &
+\(\mathrm{K}\) &
+\(\mathrm{bar}\) &
+\(\mathrm{m^3\,s^{-1}}\) &
+\(\mathrm{m^2}\) &
+\(\mathrm{m}\) \\
 \hline
-Einzelkolonne & KOL & 2{,}0 & 19{,}50 & $8{,}250{,}000$ & $7{,}280{,}000$ & $9{,}400{,}000$ \\
-Doppelkolonne & KOLHP & 1{,}8 & 19{,}50 & $7{,}350{,}000$ & $6{,}490{,}000$ & $8{,}370{,}000$ \\
-Doppelkolonne & KOLLP & 2{,}2 & 19{,}50 & $8{,}130{,}000$ & $5{,}130{,}000$ & $6{,}610{,}000$ \\
+Einkolonnenmodell groß & Single & 1{,}704 & 97{,}0 & 6{,}12 & 2{,}24 & 3{,}73 & 2{,}18 \\
+Einkolonnenmodell klein & Single & 0{,}498 & 96{,}8 & 6{,}12 & 0{,}655 & 1{,}09 & 1{,}18 \\
+Doppelkolonnenmodell groß & HPC & 0{,}923 & 96{,}8 & 6{,}12 & 1{,}21 & 2{,}02 & 1{,}60 \\
+Doppelkolonnenmodell klein & HPC & 0{,}270 & 96{,}8 & 6{,}12 & 0{,}355 & 0{,}592 & 0{,}87 \\
+Doppelkolonnenmodell groß & LPC & 0{,}834 & 88{,}4 & 3{,}11 & 1{,}97 & 3{,}29 & 2{,}05 \\
+Doppelkolonnenmodell klein & LPC & 0{,}244 & 88{,}4 & 3{,}11 & 0{,}577 & 0{,}962 & 1{,}11 \\
 \hline
 \end{tabular}
 \end{table}
 
-Die Anpassung vom Referenzjahr 2015 auf das Bezugsjahr 2026 erfolgt mit dem
-CEPCI. Die Umrechnung in EUR erfolgt anschließend mit dem zuvor definierten
-Wechselkurs. Die berechneten Kolonnenkosten sind als überschlägige Bare-Module-Kosten zu
-verstehen. Aufgrund der fehlenden hydraulischen Detailauslegung und der
-vereinfachten Übertragung der Tesch-Referenzwerte sind die Ergebnisse mit
-entsprechender Unsicherheit behaftet. Für den Vergleich der beiden
-Prozessvarianten wird der Ansatz jedoch einheitlich angewendet.
+Die Kostenabschätzung der Kolonnen erfolgt in Anlehnung an Tesch
+\cite{stefanie_janine_tesch_exergy-based_nodate} sowie Peters et al.
+\cite{peters_plant_2004}. Während Tesch für kryogene Luftzerlegungskolonnen
+Siebböden berücksichtigt, wird in dieser Arbeit eine Ausführung als
+Packungskolonne angenommen. Die Kolonnenkosten werden daher aus den Kosten für
+den Kolonnenmantel und den Kosten für die Packung zusammengesetzt:
+\begin{equation}
+    C_{\mathrm{purchased}}
+    =
+    C_{\mathrm{shell}}
+    +
+    C_{\mathrm{packing}} .
+\end{equation}
+
+Die Basiswerte für den Kolonnenmantel werden aus dem Kostendiagramm für
+vertikale Kolonnen nach Peters et al. abgelesen. Dieses Diagramm gibt die
+Anschaffungskosten des Kolonnenmantels in Abhängigkeit von Kolonnendurchmesser
+und Kolonnenhöhe an. Die angegebenen Kosten beziehen sich auf den Mantel mit
+Böden und Skirt, jedoch ohne Böden, Packungen oder Anschlüsse
+\cite{peters_plant_2004}. Für den Mantel werden anschließend ein Materialfaktor
+und, falls erforderlich, ein Druckfaktor berücksichtigt:
+\begin{equation}
+    C_{\mathrm{shell}}
+    =
+    C_{\mathrm{shell},0}
+    \cdot F_{M,\mathrm{shell}}
+    \cdot F_p .
+\end{equation}
+
+Die Kosten der Packung werden ebenfalls aus Peters et al. abgelesen. Das
+entsprechende Kostendiagramm gibt die Anschaffungskosten für Packungen in
+Abhängigkeit von Packungshöhe und Kolonnendurchmesser an. Die Kosten enthalten
+nach Peters et al. bereits interne Träger und Verteiler
+\cite{peters_plant_2004}. Für die Packung wird ein separater Materialfaktor
+angesetzt:
+\begin{equation}
+    C_{\mathrm{packing}}
+    =
+    C_{\mathrm{packing},0}
+    \cdot F_{M,\mathrm{packing}} .
+\end{equation}
+
+Für alle betrachteten Kolonnen wird aufgrund der kryogenen Anwendung eine
+Ausführung in Edelstahl angenommen. Für den Kolonnenmantel wird daher der
+Materialfaktor für 316 Stainless Steel von
+\begin{equation}
+    F_{M,\mathrm{shell}} = 3{,}0
+\end{equation}
+verwendet. Für die Packung wird entsprechend der Materialfaktor für
+316 Stainless Steel von
+\begin{equation}
+    F_{M,\mathrm{packing}} = 4{,}2
+\end{equation}
+angesetzt. Da die betrachteten Kolonnendrücke unterhalb des kleinsten in Peters
+et al. angegebenen Druckkorrekturbereichs liegen, wird für die überschlägige
+Berechnung
+\begin{equation}
+    F_p = 1{,}0
+\end{equation}
+gewählt.
+
+Analog zu Tesch werden die Anschaffungskosten anschließend mit einem
+Bare-Module-Faktor multipliziert:
+\begin{equation}
+    C_{\mathrm{BM,ref}}
+    =
+    F_{\mathrm{BM}}
+    \cdot
+    C_{\mathrm{purchased}} .
+\end{equation}
+Dabei wird
+\begin{equation}
+    F_{\mathrm{BM}} = 4{,}3
+\end{equation}
+angesetzt. Der Bare-Module-Faktor berücksichtigt die installierte Ausführung
+pauschal.
+
+Die aus Peters et al. abgelesenen Kosten beziehen sich auf den Preisstand
+Januar 2002. Die Anpassung auf das Bezugsjahr 2026 erfolgt mithilfe des CEPCI. Die Umrechnung in EUR erfolgt anschließend mit dem zuvor definierten Wechselkurs. 
+
+\begin{table}[H]
+\centering
+\caption{Kostenabschätzung der Packungskolonnen nach Peters et al.}
+\label{tab:kosten_kolonnen_gesamt}
+\small
+\begin{tabular}{lrrrrrrr}
+\hline
+\textbf{Kolonne} &
+\(\boldsymbol{C_{\mathrm{shell},0}}\) &
+\(\boldsymbol{C_{\mathrm{packing},0}}\) &
+\(\boldsymbol{C_{\mathrm{shell}}}\) &
+\(\boldsymbol{C_{\mathrm{packing}}}\) &
+\(\boldsymbol{C_{\mathrm{purchased}}}\) &
+\(\boldsymbol{C_{\mathrm{BM,2002}}}\) &
+\(\boldsymbol{C_{\mathrm{BM,2026}}^{EUR}}\) \\
+&
+\multicolumn{6}{c}{\(\mathrm{USD}_{2002}\)} &
+\(\mathrm{EUR}_{2026}\) \\
+\hline
+Einkolonnenmodell groß & 17\,000 & 12\,000 & 51\,000 & 50\,400 & 101\,400 & 436\,020 & 802\,300 \\
+Einkolonnenmodell klein & 13\,000 & 10\,500 & 39\,000 & 44\,100 & 83\,100 & 357\,330 & 657\,500 \\
+Hochdruckkolonne (HPC) groß & 16\,000 & 11\,000 & 48\,000 & 46\,200 & 94\,200 & 405\,060 & 745\,400 \\
+Hochdruckkolonne (HPC) klein & 12\,000 & 10\,300 & 36\,000 & 43\,260 & 79\,260 & 340\,818 & 627\,100 \\
+Niederdruckkolonne (LPC) groß & 18\,000 & 12\,500 & 54\,000 & 52\,500 & 106\,500 & 457\,950 & 842\,800 \\
+Niederdruckkolonne (LPC) klein & 13\,500 & 11\,500 & 40\,500 & 48\,300 & 88\,800 & 381\,840 & 702\,600 \\
+\hline
+\end{tabular}
+\end{table}
+
 
 \subsection*{Kostenabschätzung der Luftvorreinigung}
 
@@ -822,196 +929,263 @@ kostenrelevanten Hauptapparate ohne Luftvorreinigung.
 
 \subsection*{Berechnung der Investitionskosten}
 
-Die zuvor berechneten apparatespezifischen Kosten werden im Folgenden zu den
-Investitionskosten der beiden Prozessvarianten zusammengeführt. Für die
-PEC-basierten Kostenblöcke werden die in Kapitel~\ref{sec:modell_economics}
-definierten Zuschläge berücksichtigt. Die Kolonnenkosten werden nicht erneut
-beaufschlagt, da sie bereits als Bare-Module-Kosten angesetzt werden. Die
-Luftvorreinigung wird anschließend als pauschaler Zuschlag auf die übrigen
-Hauptapparatkosten berücksichtigt.
-
-\begin{table}[H]
-\centering
-\caption{Zusammenführung der PEC-basierten Apparatekosten}
-\label{tab:pec_summe_kostenbloecke}
-\begin{tabular}{llrr}
-\hline
-Kostenblock & Komponente & Einzelkolonne & Doppelkolonne \\
- & & (EUR$_{2026}$) & (EUR$_{2026}$) \\
-\hline
-Luftverdichtung & LK1 & 724299 & 596607 \\
-Luftverdichtung & LK2 & 746964 & 615276 \\
-Produkt-/Prozessverdichtung & PK1 & -- & 305185 \\
-\hline
-Expansion/Kältebereitstellung & TURB/T & 465700 & 143946 \\
-\hline
-Zwischenkühlung & ZK1 & 45125 & 31488 \\
-Zwischenkühlung & ZK2 & 51642 & 35822 \\
-Hauptwärmeübertrager & MH/MW & 301249 & 5660063 \\
-Reboiler/Kondensator & RECO/RC & 17951596 & 2106924 \\
-Reboiler/Kondensator & RC2 & -- & 291907 \\
-\hline
-\textbf{Summe $PEC_\mathrm{sum}$} & & \textbf{20286575} & \textbf{9787218} \\
-\hline
-\end{tabular}
-\end{table}
-
-Die direkten Kosten $DC$ ergeben sich aus der Summe der PEC-basierten
-Apparatekosten und den direkten Zuschlägen für Installation, Rohrleitungen,
-Mess- und Regeltechnik, elektrische Ausrüstung, bauliche Maßnahmen und
-Hilfseinrichtungen. Die indirekten Kosten $IC$ umfassen Engineering und
-Überwachung sowie Baukosten einschließlich Gewinn der Baufirma. Zusätzlich wird
-ein Zuschlag für Unvorhergesehenes auf die Summe aus direkten und indirekten
-Kosten berücksichtigt.
-
-\begin{table}[H]
-\centering
-\caption{Anwendung der Zuschläge auf PEC-basierte Kostenblöcke}
-\label{tab:zuschlaege_pec_kosten}
-\begin{tabular}{lrr}
-\hline
-Kostenposition & Einzelkolonne & Doppelkolonne \\
- & (EUR$_{2026}$) & (EUR$_{2026}$) \\
-\hline
-Summe $PEC_\mathrm{sum}$ & 20286575 & 9787218 \\
-\hline
-Installation der Apparate, 40~\% $PEC$ & 8114630 & 3914887 \\
-Rohrleitungen, 30~\% $PEC$ & 6085973 & 2936165 \\
-Mess- und Regeltechnik, 20~\% $PEC$ & 4057315 & 1957444 \\
-Elektrische Ausrüstung und Material, 10~\% $PEC$ & 2028658 & 978722 \\
-Bau, Struktur und Architektur, 21~\% $PEC$ & 4260181 & 2055316 \\
-Hilfseinrichtungen / Service Facilities, 35~\% $PEC$ & 7100301 & 3425526 \\
-\hline
-Direkte Kosten $DC$ & 51933632 & 25055278 \\
-Engineering und Überwachung, 8~\% $DC$ & 4154691 & 2004422 \\
-Baukosten einschließlich Gewinn der Baufirma, 15~\% $DC$ & 7790045 & 3758292 \\
-\hline
-Indirekte Kosten $IC$ & 11944735 & 5762714 \\
-Unvorhergesehenes, 15~\% $(DC+IC)$ & 9581755 & 4622699 \\
-\hline
-\textbf{$FCI_\mathrm{PEC}$} & \textbf{73460122} & \textbf{35440691} \\
-\hline
-\end{tabular}
-\end{table}
-
-Die aufgeschlagenen PEC-basierten Kostenblöcke werden anschließend mit den
-Bare-Module-Kosten der Kolonnen zusammengeführt. Die Luftvorreinigung wird als
-pauschaler Zuschlag von $f_\mathrm{PPU}=0{,}08$ auf die Summe ohne
-Luftvorreinigung berücksichtigt:
+Die zuvor bestimmten PEC-Basiswerte der Hauptapparate werden zur Ermittlung der
+Investitionskosten zunächst in Bare-Module-Kosten überführt:
 \begin{equation}
-C_\mathrm{PPU}
-=
-f_\mathrm{PPU}
-\cdot
-C_\mathrm{ohne\,PPU}.
+    C_{\mathrm{BM},i}
+    =
+    f_{\mathrm{BM}}
+    \cdot
+    PEC_i .
 \end{equation}
+Für Verdichter, Expander und Wärmeübertrager wird ein einheitlicher
+Bare-Module-Faktor von \(f_{\mathrm{BM}}=2{,}56\) angesetzt. Die Kolonnen wurden
+separat bereits als Bare-Module-Kosten bestimmt.
 
 \begin{table}[H]
 \centering
-\caption{Zusammenführung der Investitionskosten}
-\label{tab:zusammenfuehrung_investitionskosten}
-\begin{tabular}{lrr}
+\caption{Überführung der apparatespezifischen PEC-Basiswerte in Bare-Module-Kosten}
+\label{tab:bare_module_kostenbloecke}
+\small
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{llrrrrrrrrr}
 \hline
-Kostenposition & Einzelkolonne & Doppelkolonne \\
- & (EUR$_{2026}$) & (EUR$_{2026}$) \\
+Kostenblock & Komponente &
+\multicolumn{2}{c}{Einzelkolonne klein} &
+\multicolumn{2}{c}{Einzelkolonne groß} &
+\multicolumn{2}{c}{Doppelkolonne klein} &
+\multicolumn{2}{c}{Doppelkolonne groß} &
+\(f_{\mathrm{BM}}\) \\
+ & &
+\(PEC\) & \(C_{\mathrm{BM}}\) &
+\(PEC\) & \(C_{\mathrm{BM}}\) &
+\(PEC\) & \(C_{\mathrm{BM}}\) &
+\(PEC\) & \(C_{\mathrm{BM}}\) &
+\\
+ & &
+(EUR$_{2026}$) & (EUR$_{2026}$) &
+(EUR$_{2026}$) & (EUR$_{2026}$) &
+(EUR$_{2026}$) & (EUR$_{2026}$) &
+(EUR$_{2026}$) & (EUR$_{2026}$) &
+-- \\
 \hline
-$FCI_\mathrm{PEC}$ & 73460122 & 35440691 \\
-Kolonnenblock $C_{BM}$ & 9400000 & 14980000 \\
+Luftverdichtung & LK1 
+& 411\,319 & 1\,053\,777 
+& 724\,299 & 1\,854\,205 
+& 343\,013 & 878\,113 
+& 604\,007 & 1\,546\,258 
+& 2{,}56 \\
+
+Luftverdichtung & LK2 
+& 424\,190 & 1\,085\,926 
+& 746\,963 & 1\,912\,225 
+& 353\,746 & 905\,590 
+& 622\,907 & 1\,594\,642 
+& 2{,}56 \\
+
+Produkt-/Prozessverdichtung & PK1 
+& -- & -- 
+& -- & -- 
+& 183\,458 & 469\,652 
+& 323\,048 & 827\,003 
+& 2{,}56 \\
+
+Expansion/Kältebereitstellung & TURB/T 
+& 168\,690 & 431\,846 
+& 351\,270 & 899\,251 
+& 70\,245 & 179\,827 
+& 146\,272 & 374\,456 
+& 2{,}56 \\
+
+Zwischenkühlung & ZK1 
+& 16\,894 & 43\,249 
+& 45\,128 & 115\,528 
+& 13\,033 & 33\,364 
+& 32\,200 & 82\,432 
+& 2{,}56 \\
+
+Zwischenkühlung & ZK2 
+& 18\,853 & 48\,264 
+& 51\,645 & 132\,211 
+& 14\,358 & 36\,756 
+& 36\,649 & 93\,821 
+& 2{,}56 \\
+
+Hauptwärmeübertrager & MH/MW 
+& 146\,614 & 375\,332 
+& 540\,815 & 1\,384\,486 
+& 323\,132 & 827\,218 
+& 6\,509\,799 & 16\,665\,085 
+& 2{,}56 \\
+
+Reboiler/Kondensator & RECO/RC 
+& 222\,020 & 568\,371 
+& 2\,066\,751 & 5\,290\,883 
+& 205\,383 & 525\,780 
+& 1\,572\,472 & 4\,025\,528 
+& 2{,}56 \\
+
+Reboiler/Kondensator & RC2 
+& -- & -- 
+& -- & -- 
+& 182\,364 & 466\,852 
+& 1\,041\,781 & 2\,666\,959 
+& 2{,}56 \\
 \hline
-Summe ohne Luftvorreinigung $C_\mathrm{ohne\,PPU}$ & 82860122 & 50420691 \\
-Luftvorreinigung $C_\mathrm{PPU}$, 8~\% & 6628810 & 4033655 \\
+\textbf{Summe} &
+& \textbf{1\,408\,580} & \textbf{3\,605\,965}
+& \textbf{4\,526\,871} & \textbf{11\,588\,790}
+& \textbf{1\,688\,732} & \textbf{4\,323\,152}
+& \textbf{10\,889\,135} & \textbf{27\,876\,186}
+& \\
 \hline
-\textbf{$FCI$} & \textbf{89488932} & \textbf{54454346} \\
+\end{tabular}%
+}
+\end{table}
+Die Luftvorreinigung wird analog zu Tesch mit \(f_\mathrm{PPU}=0{,}08\) auf die
+Summe ohne Luftvorreinigung berücksichtigt. Anschließend werden nach Tesch
+Zuschläge von \(25\,\%\) für Service Facilities bzw. bauliche und
+architektonische Arbeiten sowie \(10\,\%\) für Unvorhergesehenes angesetzt.
+
+\begin{table}[H]
+\centering
+\caption{Berechnung des Fixed Capital Investment auf Basis der Bare-Module-Kosten}
+\label{tab:fci_bare_module}
+\small
+\begin{tabular}{lrrrr}
+\hline
+Kostenposition 
+& Einzel klein 
+& Einzel groß 
+& Doppel klein 
+& Doppel groß \\
+ & \multicolumn{4}{c}{(EUR$_{2026}$)} \\
+\hline
+Bare-Module-Kosten der Hauptapparate 
+& 3\,605\,965 
+& 11\,588\,790 
+& 4\,323\,152 
+& 27\,876\,186 \\
+
+Kolonnenblock \(C_{\mathrm{BM,Kolonnen}}\) 
+& 657\,500 
+& 802\,300 
+& 1\,329\,700 
+& 1\,588\,200 \\
+\hline
+
+Summe ohne Luftvorreinigung 
+& 4\,263\,465 
+& 12\,391\,090 
+& 5\,652\,852 
+& 29\,464\,386 \\
+
+Luftvorreinigung, 8~\% 
+& 341\,077 
+& 991\,287 
+& 452\,228 
+& 2\,357\,151 \\
+\hline
+
+Summe Bare-Module-Kosten \(C_{\mathrm{BM,tot}}\) 
+& 4\,604\,542 
+& 13\,382\,377 
+& 6\,105\,080 
+& 31\,821\,537 \\
+
+Service Facilities / Architectural Work, 25~\% 
+& 1\,151\,136 
+& 3\,345\,594 
+& 1\,526\,270 
+& 7\,955\,384 \\
+
+Unvorhergesehenes, 10~\% 
+& 460\,454 
+& 1\,338\,238 
+& 610\,508 
+& 3\,182\,154 \\
+\hline
+
+\textbf{Fixed Capital Investment \(FCI\)} 
+& \textbf{6\,216\,132} 
+& \textbf{18\,066\,209} 
+& \textbf{8\,241\,858} 
+& \textbf{42\,959\,075} \\
 \hline
 \end{tabular}
 \end{table}
 
-Da in dieser Arbeit keine detaillierte Projektplanung mit Bauzeit,
-Mittelabfluss während der Bauphase, Finanzierungskosten und Anlaufkosten
-durchgeführt wird, werden Zinsen während der Bauzeit sowie Start-up-Kosten nicht
-separat berücksichtigt. Das Total Capital Investment wird daher näherungsweise
-dem abgeschätzten Fixed Capital Investment gleichgesetzt:
+Da keine detaillierte Projektplanung durchgeführt wird, wird das Total Capital
+Investment näherungsweise dem Fixed Capital Investment gleichgesetzt:
 \begin{equation}
 TCI \approx FCI .
 \end{equation}
 
 \subsection*{Berechnung der nivellierten Jahreskosten}
 
-Aus dem abgeschätzten Total Capital Investment werden die jährlichen
-kapitalgebundenen Kosten, die Betriebs- und Wartungskosten sowie die
-Energiekosten berechnet. Für die verwendeten ökonomischen Randbedingungen mit
-$i_\mathrm{eff}=10~\%$, $n=20~\mathrm{a}$,
-$r_{n,OM}=2{,}5~\%/\mathrm{a}$ und
-$r_{n,el}=3{,}5~\%/\mathrm{a}$ ergeben sich die folgenden Faktoren:
-\begin{equation}
-CRF = 0{,}1175,
-\end{equation}
-\begin{equation}
-CELF_{OM}=1{,}2143,
-\end{equation}
-\begin{equation}
-CELF_{el}=1{,}3171.
-\end{equation}
+Aus dem abgeschätzten Total Capital Investment werden die nivellierten
+Jahreskosten berechnet. Die verwendeten Faktoren betragen
+\(CRF=0{,}1175\), \(CELF_{OM}=1{,}2143\) und \(CELF_{el}=1{,}3171\).
+Die jährlichen Kosten ergeben sich aus
+\begin{align}
+CC_L &= TCI \cdot CRF,\\
+OM_L &= f_{OM}\cdot TCI \cdot CELF_{OM},\\
+EC_L &= \dot W_\mathrm{el} \cdot t_\mathrm{op} \cdot c_\mathrm{el} \cdot CELF_{el}.
+\end{align}
 
-Die elektrische Nettoleistungsaufnahme wird aus den Verdichterleistungen
-abzüglich der durch die Expander zurückgewonnenen Leistung bestimmt. Für das
-Einzelkolonnenmodell ergibt sich
+Die elektrische Nettoleistungsaufnahme beträgt
 \begin{equation}
-\dot W_{\mathrm{el,Einzel}}
-=
-5111{,}54
-+
-5465{,}65
--
-482{,}23
-=
-10094{,}96~\mathrm{kW}.
+\dot W_{\mathrm{el,Einzel}}=10\,094{,}96~\mathrm{kW}
 \end{equation}
-Für das Doppelkolonnenmodell ergibt sich
+und
 \begin{equation}
-\dot W_{\mathrm{el,Doppel}}
-=
-3353{,}08
-+
-3585{,}37
-+
-634{,}72
--
-67{,}32
-=
-7505{,}85~\mathrm{kW}.
-\end{equation}
-
-Die jährlichen Kostenanteile ergeben sich aus den in
-Kapitel~\ref{sec:wirtschaftlichkeitsanalyse} definierten Zusammenhängen. Für die
-kapitalgebundenen Kosten gilt
-\begin{equation}
-CC_L = TCI \cdot CRF .
-\end{equation}
-Die Betriebs- und Wartungskosten werden mit
-\begin{equation}
-OM_L = f_{OM} \cdot TCI \cdot CELF_{OM}
-\end{equation}
-berechnet. Die nivellierten Energiekosten ergeben sich aus
-\begin{equation}
-EC_L = \dot W_\mathrm{el} \cdot t_\mathrm{op} \cdot c_\mathrm{el} \cdot CELF_{el}.
+\dot W_{\mathrm{el,Doppel}}=7\,505{,}85~\mathrm{kW}.
 \end{equation}
 
 \begin{table}[H]
 \centering
 \caption{Berechnung der nivellierten Jahreskosten im Basisfall}
 \label{tab:nivellierte_jahreskosten}
-\begin{tabular}{lrr}
+\small
+\begin{tabular}{lrrrr}
 \hline
-Größe & Einzelkolonne & Doppelkolonne \\
- & (EUR/a) & (EUR/a) \\
+Größe 
+& Einzel klein 
+& Einzel groß 
+& Doppel klein 
+& Doppel groß \\
+ & \multicolumn{4}{c}{(EUR/a)} \\
 \hline
-$TCI$ & 89488932 & 54454346 \\
-Kapitalgebundene Kosten $CC_L$ & 10511336 & 6396187 \\
-Betriebs- und Wartungskosten $OM_L$ & 5433246 & 3306150 \\
-Energiekosten $EC_L$ & 17019431 & 12654364 \\
+$TCI$ 
+& 6\,216\,132 
+& 18\,066\,209 
+& 8\,241\,858 
+& 42\,959\,075 \\
+
+Kapitalgebundene Kosten $CC_L$ 
+& 730\,396 
+& 2\,122\,780 
+& 968\,418 
+& 5\,047\,691 \\
+
+Betriebs- und Wartungskosten $OM_L$ 
+& 377\,412 
+& 1\,096\,890 
+& 500\,404 
+& 2\,608\,260 \\
+
+Energiekosten $EC_L$ 
+& 5\,063\,683 
+& 17\,018\,972 
+& 3\,831\,653 
+& 12\,654\,022 \\
 \hline
-$TRR_L$ & 32964013 & 22356701 \\
+
+$TRR_L$ 
+& 6\,171\,491 
+& 20\,238\,641 
+& 5\,300\,475 
+& 20\,309\,974 \\
 \hline
 \end{tabular}
 \end{table}
@@ -1020,56 +1194,76 @@ $TRR_L$ & 32964013 & 22356701 \\
 \centering
 \caption{Sensitivität des jährlichen Total Revenue Requirement gegenüber dem Strompreis}
 \label{tab:sensitivitaet_trr_strompreis}
+\small
 \begin{tabular}{lrrr}
 \hline
-Modell & $c_\mathrm{el}=0{,}13$ & $c_\mathrm{el}=0{,}16$ & $c_\mathrm{el}=0{,}19$ \\
+Modell 
+& $c_\mathrm{el}=0{,}13$ 
+& $c_\mathrm{el}=0{,}16$ 
+& $c_\mathrm{el}=0{,}19$ \\
  & (EUR/a) & (EUR/a) & (EUR/a) \\
 \hline
-Einzelkolonne & 29772870 & 32964013 & 36155157 \\
-Doppelkolonne & 19984008 & 22356701 & 24729394 \\
+Einzelkolonne klein & 5\,222\,050 & 6\,171\,491 & 7\,120\,931 \\
+Einzelkolonne groß  & 17\,047\,584 & 20\,238\,641 & 23\,429\,699 \\
+Doppelkolonne klein & 4\,582\,040 & 5\,300\,475 & 6\,018\,909 \\
+Doppelkolonne groß  & 17\,937\,345 & 20\,309\,974 & 22\,682\,603 \\
 \hline
 \end{tabular}
 \end{table}
 
+
 \subsection*{Berechnung der spezifischen Stickstoffbereitstellungskosten}
 
-Die spezifischen Stickstoffbereitstellungskosten werden aus dem jährlichen
-Total Revenue Requirement und der jährlich erzeugten Stickstoffmenge bestimmt.
-Für beide Prozessvarianten beträgt der Produktmassenstrom
-$\dot m_{N_2}=15{,}91~\mathrm{kg/s}$. Bei
-$t_\mathrm{op}=8000~\mathrm{h/a}$ ergibt sich die jährliche Stickstoffproduktion zu
-\begin{equation}
-m_{N_2,a}
-=
-\dot m_{N_2}
-\cdot
-t_\mathrm{op}
-\cdot
-3600
-=
-458208~\mathrm{t/a}.
-\end{equation}
-
-Die spezifischen Stickstoffbereitstellungskosten ergeben sich zu
+Die spezifischen Stickstoffbereitstellungskosten ergeben sich aus dem
+jährlichen Total Revenue Requirement und der jährlich erzeugten
+Stickstoffmenge:
 \begin{equation}
 c_{N_2}
 =
 \frac{TRR_L}{m_{N_2,a}} .
 \end{equation}
+Für beide Prozessvarianten wird ein Produktmassenstrom von
+\(\dot m_{N_2}=15{,}91\,\mathrm{kg/s}\) angesetzt. Bei
+\(t_\mathrm{op}=8000\,\mathrm{h/a}\) ergibt sich
+\(m_{N_2,a}=458\,208\,\mathrm{t/a}\).
 
 \begin{table}[H]
 \centering
 \caption{Spezifische Stickstoffbereitstellungskosten im Basisfall}
 \label{tab:spezifische_stickstoffkosten}
-\begin{tabular}{lrr}
+\small
+\begin{tabular}{lrrrr}
 \hline
-Größe & Einzelkolonne & Doppelkolonne \\
+Größe 
+& Einzel klein 
+& Einzel groß 
+& Doppel klein 
+& Doppel groß \\
 \hline
-Produktmassenstrom $\dot m_{N_2}$ (kg/s) & 15{,}91 & 15{,}91 \\
-Jährliche Stickstoffproduktion $m_{N_2,a}$ (t/a) & 458208 & 458208 \\
-$TRR_L$ (EUR/a) & 32964013 & 22356701 \\
+Produktmassenstrom $\dot m_{N_2}$ (kg/s) 
+& 4{,}65 
+& 15{,}91 
+& 4{,}65 
+& 15{,}91 \\
+
+Jährliche Stickstoffproduktion $m_{N_2,a}$ (t/a) 
+& 133\,920 
+& 458\,208 
+& 133\,920 
+& 458\,208 \\
+
+$TRR_L$ (EUR/a) 
+& 6\,171\,491 
+& 20\,238\,641 
+& 5\,300\,475 
+& 20\,309\,974 \\
 \hline
-Spezifische Kosten $c_{N_2}$ (EUR/t$_{N_2}$) & 71{,}94 & 48{,}79 \\
+
+Spezifische Kosten $c_{N_2}$ (EUR/t$_{N_2}$) 
+& 46{,}08 
+& 44{,}17 
+& 39{,}58 
+& 44{,}32 \\
 \hline
 \end{tabular}
 \end{table}
@@ -1078,13 +1272,19 @@ Spezifische Kosten $c_{N_2}$ (EUR/t$_{N_2}$) & 71{,}94 & 48{,}79 \\
 \centering
 \caption{Sensitivität der spezifischen Stickstoffbereitstellungskosten gegenüber dem Strompreis}
 \label{tab:sensitivitaet_stickstoffkosten}
+\small
 \begin{tabular}{lrrr}
 \hline
-Modell & $c_\mathrm{el}=0{,}13$ & $c_\mathrm{el}=0{,}16$ & $c_\mathrm{el}=0{,}19$ \\
+Modell 
+& $c_\mathrm{el}=0{,}13$ 
+& $c_\mathrm{el}=0{,}16$ 
+& $c_\mathrm{el}=0{,}19$ \\
  & (EUR/t$_{N_2}$) & (EUR/t$_{N_2}$) & (EUR/t$_{N_2}$) \\
 \hline
-Einzelkolonne & 64{,}98 & 71{,}94 & 78{,}91 \\
-Doppelkolonne & 43{,}61 & 48{,}79 & 53{,}97 \\
+Einzelkolonne klein & 38{,}99 & 46{,}08 & 53{,}17 \\
+Einzelkolonne groß  & 37{,}20 & 44{,}17 & 51{,}13 \\
+Doppelkolonne klein & 34{,}21 & 39{,}58 & 44{,}94 \\
+Doppelkolonne groß  & 39{,}15 & 44{,}32 & 49{,}50 \\
 \hline
 \end{tabular}
 \end{table}
