@@ -34,6 +34,9 @@ H\textsubscript{2}O & --     & 0.0101 \\
 Die Bestimmung der Phasengleichgewichte erfolgt unter Berücksichtigung realen Stoffverhaltens auf Grundlage des gewählten thermodynamischen Stoffdatenmodells. Flüssig- und Gasphase werden innerhalb der betrachteten Apparate als im thermodynamischen Gleichgewicht befindlich angenommen. Eine ideale Durchmischung der jeweiligen Phasen innerhalb einzelner Apparate wird vorausgesetzt. Feststoffphasen treten im betrachteten System nicht auf und werden entsprechend nicht berücksichtigt.\\
 Die Betriebsdrücke der einzelnen Anlagenteile werden im Modell vorgegeben. Druckverluste über Apparate werden abhängig von der jeweiligen Komponente entweder vernachlässigt oder pauschal berücksichtigt. Die Temperaturen der Prozessströme ergeben sich aus den jeweiligen Gleichgewichtszuständen sowie aus Wärmeübertragungs- und Kühlprozessen. Lokale Temperaturgradienten innerhalb einzelner Apparate werden nicht aufgelöst. Wärmeverluste an die Umgebung werden vernachlässigt, und Wärmeaustausch findet ausschließlich zwischen explizit modellierten Prozessströmen statt.\\
 
+
+Zur detaillierten Analyse der Prozessführung und zur Validierung der energetischen Ergebnisse sind in Tabelle [X] die Stoffstromdaten für beide Modellvarianten bei einem Referenzdruck von 8 bar (abs.) gegenübergestellt. Diese detaillierte Strombetrachtung verdeutlicht die thermodynamischen Ursachen für den in Abbildung 6.1 sichtbaren Effizienzvorteil der Doppelkolonne.
+
 \section{Modellannahmen von Komponentengruppen}
 \label{sec:modell_komponentengruppen}
 
@@ -162,7 +165,7 @@ Gasaufbereitung & ZK2, GW1, GW2 & ZK2, GW1, GW2\\
 Verdichtungs- und Reinigungsblock & LK1, ZK1, LK2, ZK2, GW1, GW2 & LK1, ZK1, LK2, ZK2, GW1, GW2\\
 Hauptwärmeübertrager & MW & MW\\
 Rektifikation & KOL, RC, D1 & KOLHP, KOLLP, RC1, RC2, D1, D2, D3,\\
-Rest & T, D2 & T, D4 \\
+Rest & T, D2, MIX & T, D4, MIX \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -246,3 +249,118 @@ Die gesamte abgeführte Produkt-Exergie ergibt sich folglich zu
 \dot{E}_{P,\mathrm{ges}}^{(2)} = \dot{E}_P^{(2)} + \dot{E}_{co}^{(2)}.
 \]
 Die erste Variante bewertet somit ausschließlich den funktionalen Zielnutzen der Stickstoffbereitstellung, während die zweite Variante die gesamte thermodynamische Trennleistung der Kolonne unabhängig von der späteren Nutzung einzelner Ströme beschreibt. Beide Definitionen sind thermodynamisch konsistent; ihre Anwendung hängt von der jeweiligen Systemgrenze und dem Bewertungsziel ab. Während Variante~(1) die prozessspezifische Zielerfüllung charakterisiert, erlaubt Variante~(2) eine faire Beurteilung der intrinsischen Effizienz des Trennapparates ohne wirtschaftliche oder funktionale Vorannahmen.
+
+\section{Wirtschaftliche Modellierung}
+\label{sec:modell_economics}
+
+Die wirtschaftliche Modellierung der beiden Prozessvarianten erfolgt auf Basis der in Kapitel~\ref{sec:wirtschaftlichkeitsanalyse} beschriebenen Methodik. Ziel ist es, die Einzel- und Doppelkolonnenkonfiguration unter einheitlichen ökonomischen Randbedingungen vergleichbar zu bewerten. Die detaillierten apparatespezifischen Kostenrechnungen sind in Anhang~\ref{ch:a_kosten} dokumentiert; im vorliegenden Kapitel werden die verwendeten Randbedingungen, Kostenblöcke und Modellannahmen zusammengefasst.
+
+Die ökonomischen Annahmen der Wirtschaftlichkeitsanalyse sind in Tabelle~\ref{tab:oekonomische_rahmenparameter} dargestellt. Die Anlage wird als kontinuierlich betriebene Industrieanlage mit 8000 Jahresvolllaststunden betrachtet. Für die ökonomische Lebensdauer werden 20 Jahre angesetzt. Die Umrechnung der Investitionskosten in jährliche kapitalgebundene Kosten erfolgt mit einem effektiven Zinssatz von 10~\%/a. Die Betriebs- und Wartungskosten werden vereinfachend mit 5~\% des Total Capital Investment angesetzt und mit einer allgemeinen Kostensteigerungsrate nivelliert. Für die Stromkosten wird im Basisfall ein Strompreis von 0{,}16~EUR/kWh angenommen \cite{noauthor_smard_nodate}. Zusätzlich wird eine Sensitivität im Bereich von 0{,}13 bis 0{,}19~EUR/kWh betrachtet. Da ein Teil der verwendeten Kostenkorrelationen in USD angegeben ist, erfolgt die Kostenanpassung zunächst auf das Bezugsjahr 2026 und anschließend die Umrechnung in EUR mit einem einheitlichen Wechselkurs \cite{bank_euro_2026}.
+
+\begin{table}[H]
+\centering
+\caption{Ökonomische Annahmen der Wirtschaftlichkeitsanalyse}
+\label{tab:oekonomische_rahmenparameter}
+\begin{tabular}{llll}
+\hline
+Parameter & Symbol & Wert & Einheit \\
+\hline
+Bezugsjahr & -- & 2026 & -- \\
+Währung & -- & EUR$_{2026}$ & -- \\
+Jahresvolllaststunden & $t_\mathrm{op}$ & 8000 & h/a \\
+Ökonomische Lebensdauer & $n$ & 20 & a \\
+Effektiver Zinssatz & $i_\mathrm{eff}$ & 10 & \%/a \\
+Betriebs- und Wartungsfaktor & $f_\mathrm{OM}$ & 0{,}05 & -- \\
+Strompreis im Basisfall & $c_\mathrm{el}$ & 0{,}16 & EUR/kWh \\
+Strompreisbereich der Sensitivität & $c_\mathrm{el}$ & 0{,}13--0{,}19 & EUR/kWh \\
+Allgemeine Kostensteigerungsrate & $r_{n,\mathrm{OM}}$ & 2{,}5 & \%/a \\
+Nominelle Strompreissteigerungsrate & $r_{n,\mathrm{el}}$ & 3{,}5 & \%/a \\
+Wechselkurs & $e_{\$ \rightarrow EUR}$ & 0{,}8546 & EUR/USD \\
+CEPCI Bezugsjahr & $CEPCI_{2026}$ & 840{,}6 & -- \\
+\hline
+\end{tabular}
+\end{table}
+
+Die apparatespezifischen Kosten werden in Anlehnung an Tesch komponentenbasiert
+bestimmt. Je nach Apparategruppe liefern die verwendeten Kostenkorrelationen
+entweder Purchased-Equipment-Kosten ($PEC$) oder bereits modulbezogene Kosten
+($C_{BM}$). Für Kostenblöcke, die als $PEC$ vorliegen, werden zur Abschätzung der
+Investitionskosten zusätzlich die Zuschläge aus
+Tabelle~\ref{tab:zuschlagsfaktoren_investition} berücksichtigt. Diese umfassen
+direkte Kostenanteile wie Installation, Rohrleitungen, Mess- und Regeltechnik,
+elektrische Ausrüstung sowie Nebenanlagen und bauliche Maßnahmen. Unter den
+direkten Kosten ($DC$) wird hierbei die Summe aus den Anschaffungskosten ($PEC$)
+und den unmittelbaren onsite- und offsite-Kosten verstanden.
+
+Da die Kostenkorrelationen für die Rektifikationskolonnen nach Tesch bereits als
+Bare-Module-Kosten ($C_{BM}$) definiert sind, enthalten diese bereits
+modulbezogene Aufwendungen für Montage, Material und apparatenahe
+Zusatzkosten. Eine erneute Anwendung der Zuschläge aus
+Tabelle~\ref{tab:zuschlagsfaktoren_investition} entfällt daher für den
+Kolonnenblock, um eine Überbewertung der Investitionskosten zu vermeiden. Die
+Luftvorreinigung wird ebenfalls nicht mit den Zuschlägen aus
+Tabelle~\ref{tab:zuschlagsfaktoren_investition} beaufschlagt, da sie im
+Anhang~\ref{ch:a_kosten} als pauschaler Kostenblock berücksichtigt wird.
+
+\begin{table}[H]
+\centering
+\caption{Kostenbasis der Hauptapparate in der Wirtschaftlichkeitsanalyse}
+\label{tab:kostenbasis_hauptapparate}
+\begin{tabular}{lll}
+\hline
+Kostenblock & Komponenten & Kostenbasis \\
+\hline
+Luftverdichtung & LK1, LK2 & $PEC$ \\
+Produkt-/Prozessverdichtung & PK1 & $PEC$ \\
+Expansion/Kältebereitstellung & TURB/T & $PEC$ \\
+Zwischenkühlung & ZK1, ZK2 & $PEC$ \\
+Hauptwärmeübertrager & MH/MW & $PEC$ \\
+Reboiler/Kondensator & RECO/RC/RC2 & $PEC$ \\
+Kolonnenblock & KOL, KOLHP, KOLLP & $C_{BM}$ \\
+Luftvorreinigung & GW1, GW2 & pauschaler Zuschlag \\
+\hline
+\end{tabular}
+\end{table}
+
+Für die Kostenblöcke, die als $PEC$ vorliegen, werden die in
+Tabelle~\ref{tab:zuschlagsfaktoren_investition} dargestellten Zuschläge
+verwendet. Die Werte orientieren sich an den von Tesch angegebenen
+Kostenstrukturen für das Fixed Capital Investment und werden als mittlere
+Annahmen innerhalb der dort angegebenen Spannbreiten gewählt.
+
+\begin{table}[H]
+\centering
+\caption{Verwendete Zuschläge für PEC-basierte Kostenblöcke in Anlehnung an Tesch und Bejan et al.}
+\label{tab:zuschlagsfaktoren_investition}
+\begin{tabular}{lll}
+\hline
+Kostenposition & Ansatz & Bezug \\
+\hline
+Installation der Apparate & 40~\% & $PEC$ \\
+Rohrleitungen & 30~\% & $PEC$ \\
+Mess- und Regeltechnik & 20~\% & $PEC$ \\
+Elektrische Ausrüstung und Material & 10~\% & $PEC$ \\
+Bau, Struktur und Architektur & 21~\% & $PEC$ \\
+Hilfseinrichtungen / Service Facilities & 35~\% & $PEC$ \\
+Engineering und Überwachung & 8~\% & $DC$ \\
+Baukosten einschließlich Gewinn der Baufirma & 15~\% & $DC$ \\
+Unvorhergesehenes & 15~\% & $DC+IC$ \\
+\hline
+\end{tabular}
+\end{table}
+
+Die wirtschaftliche Bewertung erfolgt anschließend über den jährlichen nivellierten
+Gesamtumsatzbedarf $TRR_L$ sowie über die spezifischen
+Stickstoffbereitstellungskosten. Diese werden auf die jährlich erzeugte
+Stickstoffmenge bezogen:
+\begin{equation}
+c_{N_2}
+=
+\frac{TRR_L}{\dot m_{N_2}\cdot t_\mathrm{op}} .
+\end{equation}
+Dabei beschreibt $\dot m_{N_2}$ den Produktmassenstrom des erzeugten Stickstoffs.\\
+Die wirtschaftliche Modellierung ist als vergleichende Vorabschätzung zu
+verstehen. Standortabhängige Kosten, detaillierte Rohrleitungsdimensionierung,
+Gebäudeauslegung, Genehmigungskosten sowie Herstellerangebote werden nicht
+explizit berücksichtigt, sondern nur über die gewählten und beschriebenen Zuschläge angenähert.
+
