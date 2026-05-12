@@ -99,16 +99,24 @@ def plot_pies(df, out_pdf="kostenverteilung_bare_module_pie.pdf", out_png="koste
     import colorsys
 
     def make_shades_hls(hex_color, n=5, delta_l=0.22):
+        """Make n shades that are equal or darker than the base color (avoid brighter tones).
+
+        This preserves the hue and saturation but reduces luminance from the base
+        downwards so resulting shades are never brighter (greller) than the original.
+        """
         r, g, b = to_rgb(hex_color)
         h, l, s = colorsys.rgb_to_hls(r, g, b)
-        # create luminance values centered on original luminance
+        # produce luminance values from base (l) down to l - delta_l (clamped)
         low = max(0.05, l - delta_l)
-        high = min(0.95, l + delta_l)
+        high = l
         ls = np.linspace(high, low, n)
         shades = []
         for lv in ls:
             rr, gg, bb = colorsys.hls_to_rgb(h, float(lv), s)
             shades.append(to_hex((rr, gg, bb)))
+        # ensure one shade exactly matches the original hex color (closest to base)
+        idx = 0  # high is at index 0 in our linspace
+        shades[idx] = hex_color
         return shades
 
     greens = make_shades_hls(COLOR_SINGLE, n=5)
@@ -193,15 +201,324 @@ def plot_pies(df, out_pdf="kostenverteilung_bare_module_pie.pdf", out_png="koste
     print(f"Saved PNG: {os.path.abspath(png_path)}")
 
 
+def create_trr_dataframe():
+    data = [
+        ("Einkolonnenmodell klein", 1076067, 556029, 5063682, 6695778),
+        ("Einkolonnenmodell groß", 3127420, 1616011, 17325345, 22068776),
+        ("Doppelkolonnenmodell klein", 1426738, 737229, 3831662, 5995630),
+        ("Doppelkolonnenmodell groß", 7436595, 3842663, 13109480, 24388739),
+    ]
+    df = pd.DataFrame(data, columns=["variant", "CC_L", "OM_L", "EC_L", "TRR_L"])
+
+    # convert to Mio EUR/a
+    df["CC_L_Mio"] = df["CC_L"] / 1e6
+    df["OM_L_Mio"] = df["OM_L"] / 1e6
+    df["EC_L_Mio"] = df["EC_L"] / 1e6
+    df["TRR_L_Mio"] = df["TRR_L"] / 1e6
+
+    return df
+
+
+def plot_trr_zusammensetzung(df, out_pdf="trr_zusammensetzung.pdf", out_png="trr_zusammensetzung.png"):
+    # plotting parameters
+    plt.rcParams.update({
+        "font.family": "serif",
+        "mathtext.fontset": "stix",
+        "font.size": 11,
+    })
+
+    variants = ["Einkolonnenmodell klein", "Einkolonnenmodell groß", "Doppelkolonnenmodell klein", "Doppelkolonnenmodell groß"]
+    df = df.set_index("variant").loc[variants]
+
+    cc = df["CC_L_Mio"].values
+    om = df["OM_L_Mio"].values
+    ec = df["EC_L_Mio"].values
+    trr = df["TRR_L_Mio"].values
+
+    x = np.arange(len(variants))
+
+    cc_color = "#4C6A92"
+    om_color = "#E69F00"
+    ec_color = "#2CA02C"
+    # model colors: Einkolonnenmodell green, Doppelkolonnenmodell blue
+    eink_color = COLOR_SINGLE  # green
+    doppel_color = COLOR_DOUBLE  # blue
+
+    # hatches for blocks CC, OM, EC (OM dotted, denser)
+    block_hatches = ["", "....", "xx"]
+
+    fig, ax = plt.subplots(figsize=(7.5, 4.8))
+
+    # draw stacked bars per variant with model color; overlay hatch-only bars on top for visibility
+    for i, variant in enumerate(variants):
+        model_color = eink_color if "Einkolonnenmodell" in variant or "Einzel" in variant else doppel_color
+        # draw filled bars (no edge) at lower z-order
+        bottom = 0.0
+        ax.bar(i, cc[i], bottom=bottom, color=model_color, edgecolor="none", zorder=2)
+        bottom += cc[i]
+        ax.bar(i, om[i], bottom=bottom, color=model_color, edgecolor="none", zorder=2)
+        bottom += om[i]
+        ax.bar(i, ec[i], bottom=bottom, color=model_color, edgecolor="none", zorder=2)
+
+        # overlay hatch-only bars (transparent fill) with black edges on higher z-order
+        bottom2 = 0.0
+        ax.bar(i, cc[i], bottom=bottom2, facecolor="none", hatch=block_hatches[0], edgecolor="k", linewidth=0.6, zorder=3)
+        bottom2 += cc[i]
+        ax.bar(i, om[i], bottom=bottom2, facecolor="none", hatch=block_hatches[1], edgecolor="k", linewidth=0.6, zorder=3)
+        bottom2 += om[i]
+        ax.bar(i, ec[i], bottom=bottom2, facecolor="none", hatch=block_hatches[2], edgecolor="k", linewidth=0.6, zorder=3)
+
+    # y-axis label and title
+    ax.set_ylabel("Jahreskosten in Mio. EUR/a")
+        # No title; user will add in LaTeX
+
+    # x ticks: variant names rotated
+    ax.set_xticks(x)
+    ax.set_xticklabels(variants, rotation=25, ha="right")
+
+    # horizontal grid only
+    ax.yaxis.grid(True, linestyle="--", linewidth=0.6, color="#cccccc", zorder=0)
+    ax.xaxis.grid(False)
+
+    # remove top and right spines
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+
+    # legend: show model colors and block hatches separately
+    model_patches = [
+        Patch(facecolor=eink_color, edgecolor="k", label="Einkolonnenmodell"),
+        Patch(facecolor=doppel_color, edgecolor="k", label="Doppelkolonnenmodell"),
+    ]
+    block_patches = [
+        Patch(facecolor="white", hatch=block_hatches[0], edgecolor="k", label="Kapitalgebundene Kosten $CC_L$"),
+        Patch(facecolor="white", hatch=block_hatches[1], edgecolor="k", label="Betriebs- und Wartungskosten $OM_L$"),
+        Patch(facecolor="white", hatch=block_hatches[2], edgecolor="k", label="Energiekosten $EC_L$"),
+    ]
+
+    # place model legend to the right and block legend below it
+    leg1 = ax.legend(handles=model_patches, loc="upper left", bbox_to_anchor=(1.02, 1), frameon=False)
+    ax.add_artist(leg1)
+    ax.legend(handles=block_patches, loc="upper left", bbox_to_anchor=(1.02, 0.6), frameon=False)
+
+    # set y limit to leave room for labels
+    ymax = trr.max() * 1.12
+    ax.set_ylim(0, ymax)
+
+    # annotate TRR above bars
+    for xi, yi in zip(x, trr):
+        ax.text(xi, yi + ymax * 0.01, f"{yi:.1f}", ha="center", va="bottom", fontsize=10)
+
+    fig.tight_layout()
+
+    # adjust to make room for legend on the right
+    fig.subplots_adjust(right=0.78)
+
+    out_dir = r"C:\Users\Felin\Documents\Masterthesis\Simulation_Code\GIT\Overleaf_LaTeX\bilder"
+    os.makedirs(out_dir, exist_ok=True)
+    pdf_path = os.path.join(out_dir, out_pdf)
+    png_path = os.path.join(out_dir, out_png)
+    fig.savefig(pdf_path, bbox_inches="tight")
+    fig.savefig(png_path, dpi=300, bbox_inches="tight")
+
+    print(f"Saved TRR PDF: {os.path.abspath(pdf_path)}")
+    print(f"Saved TRR PNG: {os.path.abspath(png_path)}")
+
+
+def create_n2_dataframe():
+    """Create DataFrame with raw specific nitrogen costs (EUR/t_N2) and convert to EUR/kg_N2."""
+    data = [
+        ("Einzel klein", "Einzelkolonnenmodell", 50.00),
+        ("Einzel groß", "Einzelkolonnenmodell", 48.17),
+        ("Doppel klein", "Doppelkolonnenmodell", 44.77),
+        ("Doppel groß", "Doppelkolonnenmodell", 53.23),
+    ]
+
+    df = pd.DataFrame(data, columns=["variant", "model_type", "c_N2_EUR_per_t"])
+    df["c_N2_EUR_per_kg"] = df["c_N2_EUR_per_t"] / 1000.0
+    return df
+
+
+def plot_spezifische_stickstoffkosten(df, out_pdf="spezifische_stickstoffkosten_basisfall.pdf", out_png="spezifische_stickstoffkosten_basisfall.png"):
+    plt.rcParams.update({
+        "font.family": "serif",
+        "mathtext.fontset": "stix",
+        "font.size": 11,
+        "axes.titlesize": 12,
+        "axes.labelsize": 11,
+        "xtick.labelsize": 10,
+        "ytick.labelsize": 10,
+        "legend.fontsize": 10,
+    })
+
+    # ensure consistent ordering
+    variants_order = ["Einzel klein", "Einzel groß", "Doppel klein", "Doppel groß"]
+    df = df.set_index("variant").loc[variants_order]
+
+    # draw four equally spaced bars (Einzel klein, Einzel groß, Doppel klein, Doppel groß)
+    variant_order = ["Einzel klein", "Einzel groß", "Doppel klein", "Doppel groß"]
+    vals = [df.loc[v, "c_N2_EUR_per_kg"] for v in variant_order]
+    x = np.arange(len(variant_order))
+    width = 0.22
+
+    fig, ax = plt.subplots(figsize=(6.2, 4.2))
+
+    eink_color = COLOR_SINGLE
+    doppel_color = COLOR_DOUBLE
+
+    bars = []
+    for i, v in enumerate(variant_order):
+        color = eink_color if df.loc[v, "model_type"] == "Einzelkolonnenmodell" else doppel_color
+        bars.append(ax.bar(x[i], vals[i], width, color=color, edgecolor="none"))
+
+    # no title as requested
+    ax.set_ylabel("Spezifische Kosten in EUR/kg$_{N_2}$", fontsize=11)
+
+    # xticks under each bar with full variant labels like TRR plot
+    variant_labels = ["Einkolonnenmodell klein", "Einkolonnenmodell groß", "Doppelkolonnenmodell klein", "Doppelkolonnenmodell groß"]
+    ax.set_xticks(x)
+    ax.set_xticklabels(variant_labels, rotation=25, ha="right")
+
+    # start y at 0 and set limit to show room above bars
+    ax.set_ylim(0, 0.060)
+
+    # subtle horizontal grid
+    ax.yaxis.grid(True, linestyle="--", linewidth=0.6, color="#dddddd", zorder=0)
+    ax.xaxis.grid(False)
+
+    # remove top and right spines
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+
+    # annotate values above bars with four decimals
+    for rects in bars:
+        for rect in rects:
+            h = rect.get_height()
+            ax.text(rect.get_x() + rect.get_width() / 2, h + 0.0015, f"{h:.4f}", ha="center", va="bottom", fontsize=9)
+
+    # no legend
+
+    fig.tight_layout()
+
+    out_dir = r"C:\Users\Felin\Documents\Masterthesis\Simulation_Code\GIT\Overleaf_LaTeX\bilder"
+    os.makedirs(out_dir, exist_ok=True)
+    pdf_path = os.path.join(out_dir, out_pdf)
+    png_path = os.path.join(out_dir, out_png)
+    fig.savefig(pdf_path, bbox_inches="tight")
+    fig.savefig(png_path, dpi=300, bbox_inches="tight")
+
+    print(f"Saved specific N2 PDF: {os.path.abspath(pdf_path)}")
+    print(f"Saved specific N2 PNG: {os.path.abspath(png_path)}")
+    print(f"Saved specific N2 PNG: {os.path.abspath(png_path)}")
+
 def main():
     df = create_dataframe()
     # show the created table briefly
     print("DataFrame preview:")
     print(df)
     verify_sums(df)
-
     plot_pies(df)
+
+    # --- TRR stacked bar plot ---
+    df_trr = create_trr_dataframe()
+    print("TRR DataFrame preview:")
+    print(df_trr)
+    plot_trr_zusammensetzung(df_trr)
+
+    # --- Spezifische Stickstoffkosten Balkenplot ---
+    df_n2 = create_n2_dataframe()
+    print("N2 DataFrame preview:")
+    print(df_n2)
+    plot_spezifische_stickstoffkosten(df_n2)
 
 
 if __name__ == "__main__":
     main()
+
+
+def create_trr_dataframe():
+    data = [
+        ("Einzel klein", 1076067, 556029, 5063682, 6695778),
+        ("Einzel groß", 3127420, 1616011, 17325345, 22068776),
+        ("Doppel klein", 1426738, 737229, 3831662, 5995630),
+        ("Doppel groß", 7436595, 3842663, 13109480, 24388739),
+    ]
+    df = pd.DataFrame(data, columns=["variant", "CC_L", "OM_L", "EC_L", "TRR_L"])
+
+    # convert to Mio EUR/a
+    df["CC_L_Mio"] = df["CC_L"] / 1e6
+    df["OM_L_Mio"] = df["OM_L"] / 1e6
+    df["EC_L_Mio"] = df["EC_L"] / 1e6
+    df["TRR_L_Mio"] = df["TRR_L"] / 1e6
+
+    return df
+
+
+def plot_trr_zusammensetzung(df, out_pdf="trr_zusammensetzung.pdf", out_png="trr_zusammensetzung.png"):
+    # plotting parameters
+    plt.rcParams.update({
+        "font.family": "serif",
+        "mathtext.fontset": "stix",
+        "font.size": 11,
+    })
+
+    variants = ["Einzel klein", "Einzel groß", "Doppel klein", "Doppel groß"]
+    df = df.set_index("variant").loc[variants]
+
+    cc = df["CC_L_Mio"].values
+    om = df["OM_L_Mio"].values
+    ec = df["EC_L_Mio"].values
+    trr = df["TRR_L_Mio"].values
+
+    x = np.arange(len(variants))
+
+    cc_color = "#4C6A92"
+    om_color = "#E69F00"
+    ec_color = "#2CA02C"
+
+    fig, ax = plt.subplots(figsize=(7.5, 4.8))
+
+    bars_cc = ax.bar(x, cc, color=cc_color, label="Kapitalgebundene Kosten $CC_L$", edgecolor="none")
+    bars_om = ax.bar(x, om, bottom=cc, color=om_color, label="Betriebs- und Wartungskosten $OM_L$", edgecolor="none")
+    bars_ec = ax.bar(x, ec, bottom=cc + om, color=ec_color, label="Energiekosten $EC_L$", edgecolor="none")
+
+    # y-axis label and title
+    ax.set_ylabel("Jahreskosten in Mio. EUR/a")
+    ax.set_title("Zusammensetzung des jährlichen Total Revenue Requirement")
+
+    # x ticks: variant names rotated
+    ax.set_xticks(x)
+    ax.set_xticklabels(variants, rotation=25, ha="right")
+
+    # horizontal grid only
+    ax.yaxis.grid(True, linestyle="--", linewidth=0.6, color="#cccccc", zorder=0)
+    ax.xaxis.grid(False)
+
+    # remove top and right spines
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+
+    # place legend to the right outside
+    ax.legend(loc="upper left", bbox_to_anchor=(1.02, 1), frameon=False)
+
+    # set y limit to leave room for labels
+    ymax = trr.max() * 1.12
+    ax.set_ylim(0, ymax)
+
+    # annotate TRR above bars
+    for xi, yi in zip(x, trr):
+        ax.text(xi, yi + ymax * 0.01, f"{yi:.1f}", ha="center", va="bottom", fontsize=10)
+
+    fig.tight_layout()
+
+    # adjust to make room for legend on the right
+    fig.subplots_adjust(right=0.78)
+
+    out_dir = r"C:\Users\Felin\Documents\Masterthesis\Simulation_Code\GIT\Overleaf_LaTeX\bilder"
+    os.makedirs(out_dir, exist_ok=True)
+    pdf_path = os.path.join(out_dir, out_pdf)
+    png_path = os.path.join(out_dir, out_png)
+    fig.savefig(pdf_path, bbox_inches="tight")
+    fig.savefig(png_path, dpi=300, bbox_inches="tight")
+
+    print(f"Saved TRR PDF: {os.path.abspath(pdf_path)}")
+    print(f"Saved TRR PNG: {os.path.abspath(png_path)}")
