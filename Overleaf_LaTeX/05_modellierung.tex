@@ -264,7 +264,7 @@ Umgebung mit einer Temperatur von $T_0 = 288{,}15\,\mathrm{K}$ und einem Druck
 von $p_0 = 1{,}013\,\mathrm{bar}$ angenommen. Die Berechnung der chemischen
 Exergie erfolgt auf Basis des Referenzmodells nach Szargut unter Verwendung
 tabellierter Standardwerte der molaren chemischen Exergien der Reinstoffe. Die
-detaillierten Berechnungsgrundlagen werden im Folgenden erläutert.
+detaillierten Berechnungsgrundlagen werden im Folgenden erläutert. Für die chemische Exergie wird zudem eine Referenzzusammensetzung der Umgebungsluft angenommen. Die Stoffdaten für die Berechnungen beziehen sich auf diese Umgebungswerte, ..........
 
 \subsection{Systemgrenze und Zerlegung in Funktionszonen}
 \label{sec:modell_System_funktion}
@@ -315,10 +315,13 @@ thermodynamischen Funktion festgelegt
 \cite{lazzaretto_speco_2006, tsatsaronis_definitions_2007}.\\
 Bei Verdichtern entspricht die zugeführte
 Wellenleistung der Brennstoffexergie, während die Erhöhung der physikalischen Exergie des Prozessstroms als Produktexergie bewertet wird. \\
+Ideale Splitter erfüllen keine eigenständige thermodynamische Funktion und verursachen keine Exergievernichtung. Sie werden daher in der Exergieanalyse nicht als separate Komponenten geführt, da der exergetische Zustand der Teilströme dem des Eintrittsstroms entspricht.\\
 Bei Turbinen wird
 die Abnahme der mechanischen Exergie des expandierten Stroms als
 Brennstoffexergie angesetzt. Die abgegebene Wellenleistung sowie die durch die
 Abkühlung erzeugte thermische Exergie bilden die Produktexergie. \\
+Die Zwischenkühler werden als dissipative Komponenten modelliert. Da ein separater Kühlstrom nicht explizit berücksichtigt wird, wird die Abkühlung des Prozessgases als vollständig irreversible Exergieabgabe an die Umgebung interpretiert. Folglich wird für diese Komponenten keine Produktexergie definiert, weshalb kein exergetischer Wirkungsgrad ausgewiesen werden kann. Die exergetische Bilanzierung beschränkt sich hierbei ausschließlich auf die Ermittlung der Exergievernichtung.\\
+
 Die Exergiebilanzierung der Drosselorgane erfolgt unter Berücksichtigung des
 Joule-Thomson-Effekts. Als Brennstoffexergie \(\dot{E}_F\) wird die Abnahme der
 mechanischen Exergie \(\dot{E}^M\) infolge der Druckentspannung definiert. Das
@@ -327,39 +330,56 @@ Exergie \(\dot{E}^T\), der durch die Abkühlung des Stoffstroms entsteht. Damit
 wird die Drosselung nicht ausschließlich als Verlustquelle, sondern entsprechend
 ihrer prozesstechnischen Funktion als Kälteerzeugung innerhalb des kryogenen
 Systems bewertet.\\
-Die Zwischenkühler werden als dissipative Komponenten modelliert. Da ein separater Kühlstrom nicht explizit berücksichtigt wird, wird die Abkühlung des Prozessgases als vollständig irreversible Exergieabgabe an die Umgebung interpretiert. Folglich wird für diese Komponenten keine Produktexergie definiert, weshalb kein exergetischer Wirkungsgrad ausgewiesen werden kann. Die exergetische Bilanzierung beschränkt sich hierbei ausschließlich auf die Ermittlung der Exergievernichtung.\\
-Ideale Splitter erfüllen keine eigenständige thermodynamische Funktion und verursachen keine Exergievernichtung. Sie werden daher in der Exergieanalyse nicht als separate Komponenten geführt, da der exergetische Zustand der Teilströme dem des Eintrittsstroms entspricht.\\
 
+Für den Mischer im kryogenen Bereich wird ein thermisch fokussierter Fuel-Product-Ansatz gewählt, der die Teilströme einzeln bilanziert. Als exergetisches Produkt wird die Zunahme der thermischen Exergie des wärmeren Massenstroms ($\dot{m}_{19}$) definiert, da dessen Abkühlung die primäre verfahrenstechnische Aufgabe an dieser Stelle ist. Der exergetische Aufwand (Brennstoff) ist die Abnahme der thermischen Exergie des kälteren Massenstroms ($\dot{m}_{17}$), der als Kältemedium fungiert und durch den Mischvorgang eine Temperaturerhöhung erfährt. Für den Mischer des Doppelkolonnenmodells wird eine vereinfachte thermische
+Fuel-Product-Definition verwendet. Da die eintretenden Ströme 16 und 31 eine
+ähnliche stoffliche Zusammensetzung sowie vergleichbare Druckniveaus
+aufweisen, wird keine detaillierte Zuordnung der chemischen und mechanischen
+Exergie vorgenommen. Der exergetische Aufwand wird als Abnahme der thermischen
+Exergie des Stroms 31 zwischen Eintrittszustand und Mischzustand definiert,
+während die Produktexergie der Zunahme der thermischen Exergie des Stroms 16
+entspricht. Der Mischer wird dabei vor allem mitgeführt, um die Gesamtbilanz
+des Doppelkolonnenmodells vollständig abzubilden und die resultierende
+Exergiebilanz besser kontrollieren zu können.\\
 
+Für die Trennstufe GW1 wird das exergetische Produkt als die gezielte Zunahme der chemischen Exergie im gereinigten Hauptstrom definiert. Der hierfür eingesetzte Brennstoff umfasst sowohl den physikalischen Exergieabbau des Hauptstroms als auch die vollständige Exergie des zur Stofftrennung abgezweigten Massenanteils. Methodisch wird der austretende Seitenstrom explizit als externer Exergieverlust und nicht als interne Vernichtung kategorisiert. Während die Exergievernichtung lediglich prozessbedingte Irreversibilitäten wie Druckverluste oder Mischungseffekte innerhalb des Apparats beschreibt, macht der Exergieverlust das ungenutzte chemische Potenzial des Abstroms transparent. Diese Differenzierung verhindert eine Verzerrung des Bauteilwirkungsgrads und kennzeichnet die Exergie im Nebenstrom als eine theoretisch wiedergewinnbare Ressource, deren Verlust auf einer systemtechnischen Entscheidung zur Nicht-Verwertung beruht, statt auf einer rein thermodynamischen Unzulänglichkeit der Komponente selbst.\\
+Die Bilanzierung des Separators GW2 erfolgt analog zur ersten Trennstufe nach dem Prinzip der stofflichen Aufreinigung. Das exergetische Produkt definiert sich über die Steigerung der chemischen Exergie im Hauptstrom S8, während der Brennstoff den physikalischen Exergieaufwand sowie die Exergie der abgeschiedenen Ströme S9 und S10 umfasst. Indem diese Nebenströme konsequent als Exergieverlust ausgewiesen werden, bleiben deren hohe chemische Potenziale als ungenutzte Ressourcen sichtbar. Diese methodische Abgrenzung verhindert, dass die systemtechnische Entscheidung zur Nicht-Verwertung dieser Ströme die interne Effizienzbewertung (Exergievernichtung) des Separators verfälscht. So wird präzise zwischen apparatetechnischen Irreversibilitäten und prozessbedingten Exergieverlusten unterschieden.\\
 
+In den Multistrom-Wärmeübertragern (MH/MW) wird die Prozessgaskühlung als
+funktionale Aufgabe bilanziert. Die Brennstoffexergie umfasst die physikalischen
+Exergieabnahmen der kalten Rückströme sowie die mechanischen Exergieverluste
+durch Reibungsdruckverluste. Als Produktexergie wird die thermische Exergie der
+abgekühlten Austrittsströme definiert. Dabei wird berücksichtigt, dass die Stoffströme über die Umgebungstemperatur
+$T_0$ hinweg abgekühlt werden. Da die thermische Exergie sowohl oberhalb als
+auch unterhalb von $T_0$ positive Werte annehmen kann, würde eine einfache
+Differenzbildung zwischen Ein- und Austritt den funktionalen Nutzen der
+Komponente verfälschen. In Anlehnung an Tsatsaronis \cite{lazzaretto2006speco} wird daher nur die
+thermische Exergie am Austritt $\dot{E}^T_\mathrm{out}$ als Produkt angesetzt.
+Damit wird das für den kryogenen Trennprozess relevante Kälteexergiepotenzial
+bewertet, während die am Eintritt vorhandene Wärmeexergie als abzuführende Last
+behandelt wird.\\
 
+Der Reboiler-Condenser (RC) wird als funktionale Kopplungseinheit zwischen
+Kondensation und Verdampfung bilanziert. Als Brennstoffexergie
+\(\dot{E}_F\) dient die Abnahme der physikalischen Exergie des kondensierenden
+Stroms sowie der mechanische Druckverlust auf der Gegenseite. Das exergetische
+Produkt \(\dot{E}_P\) wird als Zunahme der thermischen Exergie des
+verdampfenden Stroms definiert. Im kryogenen Temperaturbereich unterhalb der Umgebungstemperatur
+\((T<T_0)\) stellt die bereitgestellte Kälte das maßgebliche exergetische
+Potenzial dar. In Anlehnung an die SPECO-Methodik nach Lazzaretto und
+Tsatsaronis wird diese Kälteexergie daher als funktionaler Nutzen bewertet, da
+sie die thermodynamische Voraussetzung für die Rektifikation schafft. Der
+Wärmeaustausch wird damit als notwendiger Antrieb des Stofftrennungsprozesses
+innerhalb der Kolonne abgebildet.\\
 
-Nur für mehrstromige oder thermisch gekoppelte Apparate werden die zugrunde liegenden Gleichungen explizit angegeben. 
+Für die Hochdruckkolonne (\textit{KOLHP}) bzw. die Trennkolonne des Einkolonnenmodells (\textit{KOL}) wird eine Systemgrenze gewählt, welche die Kolonne als reinen Stofftrennungsapparat definiert und den Kopfkondensator als externe Einheit ausschließt. Die exergetische Bilanzierung der Trennkolonnen folgt in dieser Arbeit dem Addition/Removal-Prinzip der SPECO-Methodik nach Lazzaretto und Tsatsaronis \cite{lazzaretto_speco_2006}. Dabei wird für jeden Stoffstrom getrennt geprüft, ob die thermischen, mechanischen oder chemischen Exergieanteile beim Durchgang durch die Komponente zu- oder abnehmen.\\
+Als Produktexergie \(\dot{E}_P\) werden diejenigen Exergieanteile bilanziert, die eine Zunahme erfahren. Dies umfasst neben der chemischen Stofftrennung und der thermischen Abkühlung im kryogenen Bereich auch den mechanischen Exergiegewinn der stickstoffreichen Kopfströme. Dieser resultiert aus der Verringerung der mittleren Molmasse und der damit verbundenen Erhöhung der spezifischen Gaskonstante \(R\) des Gasstroms. Übersteigt dieser
+Effekt den exergetischen Verlust durch den Reibungsdruckabfall, nimmt das massenspezifische Arbeitsvermögen zu und wird als funktioneller Nutzen
+gewertet.\\
+Exergieabnahmen werden entsprechend als Brennstoffexergie \(\dot{E}_F\) berücksichtigt. Hierzu zählt primär der exergetische Aufwand des externen Kondensationskreislaufs: Da der flüssige Rücklauf im kryogenen Temperaturbereich aufgrund seiner geringen Entropie exergetisch höherwertig ist als der gasförmige Hinlauf zum Kondensator, stellt die Differenz dieser Ströme den notwendigen thermischen Antrieb dar, den die Kolonne für die Rektifikation benötigt. Auf mechanischer Ebene werden Abnahmen bilanziert, wenn der Druckverlust über die Kolonneneinbauten oder die Zunahme der Molmasse in den sauerstoffreichen Sumpfströmen, verbunden mit einer Verringerung der spezifischen Gaskonstante \(R\), das Arbeitsvermögen reduziert.\\
+Durch diese getrennte Betrachtung der Exergieanteile wird eine höhere analytische Trennschärfe erreicht als bei der Verwendung aggregierter physikalischer Exergiewerte. Dadurch können die Prozesse der Rektifikation sowie der Einfluss der Gemischzusammensetzung auf das mechanische Arbeitspotenzial transparent abgebildet werden.\\
 
-
-Da Exergie keine reine Systemeigenschaft ist, sondern das maximale Arbeitspotential eines Systems im Übergang zum Gleichgewicht mit seiner Umgebung beschreibt, ist die Definition eines Referenzzustands (Umgebungszustand) zwingend erforderlich. In dieser Arbeit wird der Umgebungszustand durch einen Standarddruck $p_0$ von 1,013 bar und eine Umgebungstemperatur $T_0$ von 298,15 K (25 °C) festgelegt.
-
-Für die chemische Exergie wird zudem eine Referenzzusammensetzung der Umgebungsluft angenommen. Die Stoffdaten für die Berechnungen beziehen sich auf diese Umgebungswerte, um eine konsistente Bilanzierung zu gewährleisten.
-
-
-Exergien:
-
-
-Die Gasaufbereitungseinheit wird als Gesamtsystem aus Wasserabscheider und Adsorber betrachtet. Aufgrund der trennenden Funktion und der nicht eindeutig zuordenbaren Produktströme wird für diese Einheit kein exergetischer Wirkungsgrad definiert, die Bewertung erfolgt ausschließlich über die Exergievernichtung. Beide Komponenten werden als offene Systeme ohne Arbeits- oder Wärmeaustausch modelliert, wobei die abgetrennten Stoffströme als Abfallströme geführt und nicht als Produkt der Anlage bewertet werden.
-
-Der Mixer, in denen die Produktströme mit unterschiedlichen Drücken und minimal unterschiedlicher Zusammensetzungen zusammengeführt werden, verursacht hingegen Irreversibilitäten durch Mischung und Druckangleichung, dieser wird folglich als dissipative Komponenten betrachtet.
-Die Intercooler werden als Ein-Strom-Komponenten modelliert, bei denen die Kühlung idealisiert über ein externes Wärmereservoir erfolgt; die Bewertung basiert auf der thermischen Exergieabfuhr, ohne explizite Modellierung eines Kühlstroms.
-
-
-
-
-HIER KOLLONNE ERST NUR BEISPIELL SINGLE!!!!!!!
-
-Kolonne als eigenständiges Trennaggregat ohne Reboiler und ohne Kondensator betrachtet wird. 
-
-Die Definition des exergetischen Produkts erfolgt funktional. Als Produkt wird nur jener Strom bewertet, dessen Bereitstellung dem Zweck des Prozesses entspricht. Ströme, die zwar Exergie aus dem Kontrollvolumen tragen, jedoch nicht als Zielgröße genutzt werden, stellen keine Verluste dar, sondern werden als Neben- beziehungsweise Ko-Produkte behandelt in diesem Fall die Bottomströme. Dadurch wird verhindert, dass die Kolonne für die Nichtnutzung eines Stoffstroms künstlich exergetisch benachteiligt wird. Die Bewertung erfolgt daher in zwei Varianten.
-
-
+Für die Bilanzierung der Niederdruckkolonne (KOLLP) wird aufgrund der multiplen Feedströme (14, 18, 21) ein massenstromgewichteter Mischzustand ($e_{mix}$) als Referenzniveau definiert. Dieser virtuelle Zustand repräsentiert das gemittelte exergetische Potenzial der eintretenden Ressourcen und ermöglicht die Anwendung des Addition/Removal-Prinzips nach Lazzaretto und Tsatsaronis für komplexe Mehrstromsysteme. Ein Exergieanteil eines Austrittsstroms wird genau dann als Produkt ($E_P$) gewertet, wenn sein spezifischer Wert über dem Niveau des Mischzustands liegt ($\Delta e > 0$). Dies bildet die gezielte Veredelung der Stoffströme durch Reinheitssteigerung, Abkühlung oder Erhöhung der spezifischen Gaskonstante ab. Unterschreitet ein Anteil das Referenzniveau ($e_{mix}$), wird die Differenz konsequent als Brennstoff ($E_F$) bilanziert. Diese methodische Vorgehensweise stellt sicher, dass die exergetische Effizienz der Niederdruckstufe die reale Aufwertung der Stoffströme gegenüber der Gesamtheit aller zugeführten Medien präzise widerspiegelt.
 
 \section{Wirtschaftliche Modellierung}
 \label{sec:modell_economics}

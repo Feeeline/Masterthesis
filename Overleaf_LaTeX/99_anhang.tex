@@ -45,12 +45,9 @@ Ozon (O$_3$)           & 0{,}003–0{,}03\,ppm \\
 \input{Overleaf_LaTeX/tabellen/aspen_luftzerlegung_streams_round}
 \end{landscape}
 
-
 \input{Overleaf_LaTeX/tabellen/aspen_luftzerlegung_streams_molfrac_round}
 
-
 \input{Overleaf_LaTeX/tabellen/Druckreihe_single}
-
 
 \input{Overleaf_LaTeX/tabellen/Druckreihe_doppel}
 
@@ -102,7 +99,7 @@ GW2 &
 $\dot{m}_{8}(e^{PH}_{6} - e^{PH}_{8}) + (\dot{m}_{9} + \dot{m}_{10})(e^{PH}_{6} + e^{CH}_{6})$ & 
 $\dot{m}_{8}(e^{CH}_{8} - e^{CH}_{6})$ \\
 \addlinespace
-MH &
+MW &
 $\begin{aligned}
 (&\dot{E}^{PH}_{14}-\dot{E}^{PH}_{15})
 +(\dot{E}^{PH}_{20}-\dot{E}^{PH}_{21}) \\
@@ -117,14 +114,13 @@ $\dot{E}^{PH}_{SZ27}-\dot{E}^{PH}_{SZ28}+\dot{E}^{M}_{SZ25}-\dot{E}^{M}_{SZ26}$ 
 $\dot{E}^{T}_{SZ26}-\dot{E}^{T}_{SZ25}$ \\
 \addlinespace
 KOL &
-$\begin{aligned}(\dot{E}^{PH}_{SZ26,liq}-\dot{E}^{PH}_{SZ25})
-+\dot{m}_{12}(e^{M}_{11}-e^{M}_{12}) \\
-+\dot{m}_{23}(e^{M}_{11}-e^{M}_{23})\end{aligned}$ &
+$\begin{aligned}(\dot{E}^{PH}_{SZ26}-\dot{E}^{PH}_{SZ25})
++\dot{m}_{12}(e^{M}_{11}-e^{M}_{12})\end{aligned}$ &
 $\begin{aligned}
 &\dot{m}_{12}(e^{CH}_{12}-e^{CH}_{11})
 +\dot{m}_{23}(e^{CH}_{23}-e^{CH}_{11}) \\
 &+\dot{m}_{12}(e^{T}_{12}-e^{T}_{11})
-+\dot{m}_{23}(e^{T}_{23}-e^{T}_{11})
++\dot{m}_{23}(e^{T}_{23}-e^{T}_{11})+\dot{m}_{23}(e^{M}_{11}-e^{M}_{23})
 \end{aligned}$\\
 \addlinespace
 D1 &
@@ -138,6 +134,10 @@ $\dot{E}^{T}_{19}-\dot{E}^{T}_{18}$ \\
 T &
 $\dot{E}^{M}_{16}-\dot{E}^{M}_{17}$ &
 $\dot{W}_{T}+\dot{E}^{T}_{17}-\dot{E}^{T}_{16}$ \\
+
+MIX &
+$\dot{m}_{17}\left(e^{T}_{17}-e^{T}_{20}\right)$ &
+$\dot{m}_{19}\left(e^{T}_{20}-e^{T}_{19}\right)$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -205,7 +205,6 @@ $\begin{aligned}
 &+\dot{m}_{15}(e^{M}_{15}-e^{M}_{12})
 +\dot{m}_{17}(e^{M}_{17}-e^{M}_{12})
 \end{aligned}$ \\
-\addlinespace
 KOLLP &
 $\begin{aligned}
 &(\dot{m}_{38}e^{PH}_{38}-\dot{m}_{37}e^{PH}_{37}) \\
@@ -255,6 +254,11 @@ $\dot{W}_{T}+\dot{E}^{T}_{21}-\dot{E}^{T}_{20}$ \\
 PK1 &
 $\dot{W}_{PK1}$ &
 $\dot{E}^{PH}_{31}-\dot{E}^{PH}_{30}$ \\
+
+MIX &
+$\dot{m}_{31}\left(e^{T}_{31}-e^{T}_{32}\right)$ &
+$\dot{m}_{16}\left(e^{T}_{32}-e^{T}_{16}\right)$ \\
+
 \bottomrule
 \end{tabular}
 \end{table}

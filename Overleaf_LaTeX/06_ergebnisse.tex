@@ -1,15 +1,15 @@
 \chapter{Ergebnisse}
 \label{ch:ergebnisse}
 
-Im folgenden Kapitel werden die Ergebnisse der energetischen Simulation, der Exergieanalyse sowie der wirtschaftlichen Kalkulationen dokumentiert. Die ermittelten Kennzahlen werden für den Einkolonnen- und den Doppelkolonnenprozess gegenübergestellt.
+Im folgenden Kapitel werden die Ergebnisse der energetischen Simulation, der Exergieanalyse und der wirtschaftlichen Bewertung dokumentiert. Dabei werden die zentralen Kennzahlen des Einkolonnen- und Doppelkolonnenprozesses gegenübergestellt. Für die wirtschaftliche Auswertung werden zusätzlich die kleine und große Anlagenvariante betrachtet.
 
 \section{Ergebnisse der energetischen Prozesssimulation}
 \label{sec:ergebinnse_simulation}
 
-Die Ergebnisse der Hauptströme der beiden modellierten Prozesse sind in Tabelle \ref{tab:stream_comparison_final_v3} zusammengefasst. Bei den dort aufgeführten Verlustströmen handelt es sich um die sauerstoffangereicherten Sumpfströme aus den Kolonnen. Dabei zeigt sich, dass alle im Kapitel \ref{ch:prozess} definierten Zielvorgaben hinsichtlich der geforderten Produktmenge und Reinheit vollständig eingehalten wurden. Alle hier betrachteten Edukt und Produkt Ströme liegen im gasförmigen Zustand vor. \\
+Die Ergebnisse der Hauptströme der beiden modellierten Prozesse sind in Tabelle \ref{tab:stream_comparison_compact} zusammengefasst. Bei den dort aufgeführten Verlustströmen handelt es sich um die sauerstoffangereicherten Sumpfströme aus den Kolonnen. Dabei zeigt sich, dass alle im Kapitel \ref{ch:prozess} definierten Zielvorgaben hinsichtlich der geforderten Produktmenge und Reinheit vollständig eingehalten wurden. Alle hier betrachteten Edukt- und Produktströme liegen im gasförmigen Zustand vor. \\
 Hinsichtlich der Produktqualität erreichen beide Anlagenkonfigurationen eine Stickstoffreinheit von über \SI{99,999}{\percent}. Im Einkolonnenmodell weist der Produktstrom (S24) lediglich Argon-Verunreinigungen von \SI{0,17}{ppm} auf, während Sauerstoff nur noch in Spuren (\SI{< 0,001}{ppm}) nachweisbar ist. Das Doppelkolonnenmodell (S32) zeigt mit \SI{2,14}{ppm} Argon und \SI{0,17}{ppm} Sauerstoff geringfügig höhere, jedoch technisch vernachlässigbare Verunreinigungen. Ein wesentlicher Unterschied zeigt sich in der Effizienz der Konzepte, während das Einkolonnenmodell eine Stickstoffausbeute von $\eta_{N_2} = \SI{45,25}{\percent}$ erreicht, kann diese durch das Doppelkolonnenmodell auf $\SI{69,01}{\percent}$ gesteigert werden. Dies spiegelt sich auch im spezifischen Luftbedarf wider, denn das Verhältnis von Produkt- zu Luftstrom verbessert sich von $0,350$ beim Single-Modell auf $0,533$ beim Doppelkolonnenmodell, was die deutlich höhere Trenneffizienz des zweistufigen Prozesses unterstreicht. \\
 
-\begin{table}[h]
+\begin{table}[H]
 \centering
 \caption{Vergleich der Stromdaten und Prozessausbeute für das Einkolonnen- und Doppelkolonnenmodell bei \SI{6}{bar}}
 \label{tab:stream_comparison_compact}
@@ -55,33 +55,49 @@ Waste (S28+S25) & 486 & 1,1 & 52,5 \\ \hline \hline
 \end{minipage}
 \end{table}
 
-Zu Beginn der energetischen Bewertung wurde der Einfluss des angestrebten Produktdrucks $p$ auf den spezifischen Energiebedarf untersucht (siehe Abb. \ref{fig:energie_druck}). Die Simulationen zeigen für beide Modellvarianten einen nahezu linearen Anstieg des Energiebedarfs mit zunehmendem Systemdruck.\\
+Zu Beginn der energetischen Bewertung wurde der Einfluss des angestrebten Produktdrucks $p$ auf den spezifischen Energiebedarf untersucht (siehe Abb.~\ref{fig:spez_energie_druck}). Die Simulationen zeigen für beide Modellvarianten einen annähernd linearen Anstieg des spezifischen Energiebedarfs mit zunehmendem Produktdruck. Dabei fällt der Anstieg beim Doppelkolonnenmodell deutlich geringer aus als beim Singlemodell. Dies zeigt, dass der zweistufige Prozess nicht nur insgesamt einen niedrigeren spezifischen Energiebedarf aufweist, sondern auch weniger sensitiv auf eine Erhöhung des Produktdrucks reagiert.\\
 Für das Doppelkolonnenmodell wurde dabei die methodische Randbedingung implementiert, dass der Betriebsdruck der Hochdruckkolonne (HP) entsprechend dem gewünschten Produktdruck angepasst wurde, während der Druck der Niederdruckkolonne (LP) konsistent auf die Hälfte des HP-Druckniveaus reduziert wurde.\\
 Das Doppelkolonnenmodell weist über das gesamte betrachtete Druckintervall von \SI{4,5}{bar} bis \SI{10}{bar} einen signifikant niedrigeren spezifischen Energiebedarf auf als das Singlemodell. Bei einem beispielhaften Druck von \SI{6}{bar} liegt der Bedarf des Doppelkolonnenmodells bei ca. \SI{0,165}{kWh/Nm^3}, während das Singlemodell etwa \SI{0,240}{kWh/Nm^3} benötigt. Dieser energetische Vorteil resultiert primär aus der höheren Stickstoffausbeute des zweistufigen Prozesses.\\
 Obwohl das energetische Minimum am unteren Rand des untersuchten Bereichs bei \SI{4,5}{bar} liegt, wurde für alle nachfolgenden detaillierten energetischen und exergetischen Betrachtungen ein Referenzdruck von \SI{6}{bar} festgelegt. Dies begründet sich durch die apparatetechnische Randbedingung der Gasdichte. Bei niedrigeren Drücken müssten die Wärmeübertrager sehr groß dimensioniert werden, um die Druckverluste gering zu halten. Der gewählte Druck von \SI{6}{bar} stellt somit einen praxisnahen Kompromiss zwischen thermodynamischer Effizienz und kompakter Apparatebauweise dar.
 
-\begin{figure}[h]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{Overleaf_LaTeX/bilder/vergleich_druckreihen_kwh_per_nm3.png}
     \caption{Spezifischer Energiebedarf des Single- und Doppelkolonnenmodells in Abhängigkeit des Produktdrucks}
-    \label{fig:exergieverluste_einzelkolonne}
+    \label{fig:spez_energie_druck}
 \end{figure}
 
 Der Vergleich der Simulationsdaten bei einem Referenzdruck von \SI{6}{bar} (abs.) verdeutlicht die signifikanten Performance-Unterschiede zwischen den beiden betrachteten Prozessvarianten. Für diesen Betriebspunkt wurde für das Einkolonnenmodell ein spezifischer Energiebedarf von \SI{0,2413}{kWh/Nm^3} ermittelt, während das Doppelkolonnenmodell einen Bedarf von \SI{0,1667}{kWh/Nm^3} aufweist. Dies entspricht einer energetischen Effizienzsteigerung des Doppelkolonnen-Konzepts von rund \SI{31}{\percent} gegenüber dem herkömmlichen Einkolonnen-Waste-Expander-Prozess. \\
-Bezogen auf den Standardzustand (\SI{15}{\celsius}) belaufen sich die Werte auf \SI{0,2288}{kWh/m^3} für das Einkolonnenmodell und \SI{0,1580}{kWh/m^3} für das Doppelkolonnenmodell. Die detaillierten Stoffstromdaten und Zustandsgrößen für sämtliche Druckpunkte sind den Tabellen im Anhang \ref{tab:spez_energie_single, tab:spez_energie_doppel} zu entnehmen mit $ESPECN$ auf den Normzustand ($0^\circ\text{C}$) und $ESPECST$ auf den Standardzustand ($15^\circ\text{C}$) bezogen ist, um die Vergleichbarkeit mit Industriedaten zu gewährleisten. Unter Berücksichtigung der Normdichte von Stickstoff ergibt sich für das Singlemodell ein massenspezifischer Bedarf von \SI{0,1929}{kWh/kg_{N2}}, wohingegen das Doppelkolonnenmodell lediglich \SI{0,1333}{kWh/kg_{N2}} benötigt.\\
+Bezogen auf den Standardzustand (\SI{15}{\celsius}) belaufen sich die Werte auf \SI{0,2288}{kWh/m^3} für das Einkolonnenmodell und \SI{0,1580}{kWh/m^3} für das Doppelkolonnenmodell. Die detaillierten Stoffstromdaten und Zustandsgrößen für sämtliche Druckpunkte sind den Tabellen im Anhang \ref{tab:spez_energie_single, tab:spez_energie_doppel} im Normzustand ($0^\circ\text{C}$) und im Standardzustand ($15^\circ\text{C}$) zu entnehmen, um die Vergleichbarkeit mit Industriedaten zu gewährleisten. Unter Berücksichtigung der Normdichte von Stickstoff ergibt sich für das Singlemodell ein massenspezifischer Bedarf von \SI{0,1929}{kWh/kg_{N2}}, während das Doppelkolonnenmodell lediglich \SI{0,1333}{kWh/kg_{N2}} benötigt.\\
 
-\begin{figure}[h]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{Overleaf_LaTeX/bilder/vergleich_component_work_side_by_side.png}
     \caption{Vergleich der Leistungen der Verdichter- und Expansionseinheiten für das Single- und Doppelkolonnenmodell bei \SI{6}{bar}}
-    \label{fig:exergieverluste_einzelkolonne}
+    \label{fig:vergleich_leistungen}
 \end{figure}
 
-Abbildung \ref{fig:power_comparison} vergleicht die effektive Leistungsaufnahme (Net Work) der Verdichterstufen und Expansionsturbinen bei \SI{6}{bar}. Der deutlich höhere Luftbedarf des Einkolonnenmodells resultiert in einer massiv gesteigerten Leistungsaufnahme der Luftverdichter (LK1, LK2) von jeweils über \SI{5}{MW}. \\
-Im Gegensatz dazu benötigt das Doppelkolonnenmodell für die Luftverdichtung lediglich ca. \SI{3,5}{MW} pro Stufe. Der zusätzliche Energieaufwand für den Produktverdichter (PK1) fällt mit unter \SI{1}{MW} gering aus und wird durch die Einsparungen bei der Hauptverdichtung überkompensiert. Während die Turbine im Singlemodell einen signifikanten Rückgewinnungsbeitrag leistet, ist die Turbinenleistung im Doppelkolonnen-Prozess aufgrund der optimierten Kälteintegration nahezu vernachlässigbar.
-\\
-Min Temp approach der MHEAT X
-\\
+Abbildung \ref{fig:vergleich_leistungen} vergleicht die effektive Leistungsaufnahme (Net Work) der Verdichterstufen und Expansionsturbinen bei \SI{6}{bar}. Der deutlich höhere Luftbedarf des Einkolonnenmodells resultiert in einer massiv gesteigerten Leistungsaufnahme der Luftverdichter (LK1, LK2) von jeweils über \SI{5}{MW}. \\
+Im Gegensatz dazu benötigt das Doppelkolonnenmodell für die Luftverdichtung lediglich ca. \SI{3,5}{MW} pro Stufe. Der zusätzliche Energieaufwand für den Produktverdichter (PK1) fällt mit unter \SI{1}{MW} gering aus und wird durch die Einsparungen bei der Hauptverdichtung überkompensiert. Während die Turbine im Einkolonnenmodell einen signifikanten Rückgewinnungsbeitrag leistet, ist die Turbinenleistung im Doppelkolonnen-Prozess aufgrund der optimierten Kälteintegration nahezu vernachlässigbar.\\
+Tabelle~\ref{tab:min_temp_approach_waermeuebertrager} zeigt die minimalen Temperaturabstände der betrachteten Wärmeübertrager für das Einkolonnen- und das Doppelkolonnenmodell. Berücksichtigt werden jeweils der Hauptwärmeübertrager sowie die im Modell enthaltenen Reboiler-Kondensatoren. Die Werte wurden aus den Simulationsergebnissen der jeweiligen Apparate entnommen und dienen der Dokumentation der thermischen Annäherung innerhalb der Wärmeübertrager.\\
+
+\begin{table}[H]
+\centering
+\caption{Minimaler Temperaturabstand der betrachteten Wärmeübertrager}
+\label{tab:min_temp_approach_waermeuebertrager}
+\begin{tabular}{llc}
+\toprule
+\textbf{Modellvariante} & \textbf{Wärmeübertrager} & \textbf{$\Delta T_\mathrm{min}$ [K]} \\
+\midrule
+Einkolonnenmodell      & MW  & 7{,}352 \\
+Einkolonnenmodell      & RC  & 0{,}570 \\
+Doppelkolonnenmodell   & MW  & 1{,}108 \\
+Doppelkolonnenmodell   & RC1 & 0{,}504 \\
+Doppelkolonnenmodell   & RC2 & 0{,}557 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \section{Ergebnisse der Exergieanalyse}
 \label{sec:ergebnisse_exergie}
 
@@ -93,7 +109,7 @@ Das Modell teilt die Trennung auf zwei Kolonnen auf, wobei die Niederdruckkolonn
 Die Exergievernichtung in den Hauptverdichtern LK1 und LK2 reduziert sich im Doppelkolonnenmodell auf jeweils etwa \SI{0.396}{\mega\watt}. In beiden Modellen bilden die thermischen Apparate die größte Gruppe der Exergievernichter.\\
 Der wesentliche Vorteil des Doppelkolonnenmodells liegt in der effizienteren Prozessführung im Hauptwärmeübertrager und der optimierten Trennung, wodurch die summierten Verluste um etwa 39\,\% niedriger ausfallen als im Single-Kolonnenmodell. Während im Single-Modell das Ventil D2 eine signifikante Schwachstelle darstellt, sind die Ventilströme im Doppelmodell exergetisch weitaus weniger belastet.\\
 
-\begin{figure}[h]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.9\textwidth]{Overleaf_LaTeX/bilder/vergleich_component_pareto_ED.png}
     \caption{Vergleich der Exergiedestruktionsraten $\dot{E}_D$ der Systemkomponenten im Doppelkolonnenprozess (oben) und Einzelkolonnenprozess (unten). Die Darstellung verdeutlicht die unterschiedlichen Hauptquellen irreversibler Verluste in beiden Prozesskonfigurationen.}
@@ -106,7 +122,7 @@ Im Bereich der Wärmeübertrager zeigen sich die gravierendsten Unterschiede in 
 Ein umgekehrtes Bild ergibt sich beim Kolonnenblock. Hier verursacht das Doppelkolonnenmodell mit rund 31\,\% einen wesentlich höheren Anteil an der relativen Exergiedestruktion als das Einzelkolonnenmodell, dessen Kolonnenblock lediglich für etwa 11\,\% der Verluste verantwortlich ist.\\
 Die unter der Kategorie \glqq Rest\grqq{} zusammengefassten übrigen Komponenten spielen im Doppelkolonnenmodell mit einem Anteil von nahezu 0\,\% fast keine Rolle für die gesamte Exergievernichtung. Im Gegensatz dazu weist das Einzelkolonnenmodell in dieser Kategorie einen nennenswerten Beitrag von etwa 14\,\% auf, was die exergetische Relevanz der dortigen Zusatzkomponenten unterstreicht.\\
 
-\begin{figure}[h]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.9\textwidth]{Overleaf_LaTeX/bilder/vergleich_yD_funktionsbloecke.png}
     \caption{Vergleich der relativen Exergiedestruktion $y_{D,b}$ der Hauptprozessblöcke für das Einzelkolonnen- und Doppelkolonnenmodell. Dargestellt sind die Beiträge des Verdichtungs- und Gasaufbereitungsblocks (V+G Block), der Wärmeübertrager, des Kolonnenblocks sowie der übrigen Komponenten (Rest). Die Markierungen kennzeichnen zusätzlich die Unterpunkte Kompression und Reinigung innerhalb des V+G Blocks.}
@@ -119,7 +135,7 @@ Diese Effizienzsteigerung resultiert daraus, dass der benötigte Aufwand beim Do
 Während im Single-Kolonnenmodell das Restsystem einen nennenswerten Beitrag zur Vernichtung leistet, was maßgeblich auf die Integration des Ventils D2 in diesen Bilanzraum zurückzuführen ist, entfallen vergleichbare Verluste im Doppelkolonnenmodell nahezu vollständig.\\
 Die externen Exergieverluste $\dot{E}_{L,tot}$ sind in beiden Modellen mit \SI{0.505}{\mega\watt} beziehungsweise \SI{0.487}{\mega\watt} nahezu identisch. Dies unterstreicht, dass die Verbesserung der Gesamteffizienz primär durch eine prozessinterne Optimierung und die damit verbundene Verringerung der Irreversibilitäten innerhalb der Komponenten realisiert wurde.\\
 
-\begin{figure}[h]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.9\textwidth]{Overleaf_LaTeX/bilder/vergleich_global_kennzahlen_grouped.png}
     \caption{Vergleich der Exergiebilanz beider Prozesskonfigurationen. Dargestellt sind Gesamt-Exergieinput $\dot{E}_F$, Produkt-Exergie $\dot{E}_P$, Exergiedestruktion $\dot{E}_D$ sowie Exergieverluste $\dot{E}_L$ für den Doppelkolonnen- und Einzelkolonnenprozess.}
