@@ -172,11 +172,12 @@ TCI
 \end{tabular}
 \end{table}
 
-
-Die grafische Darstellung der Kostenverteilung erfolgt auf Basis der Bare-Module-Kosten \(C_{\mathrm{BM}}\). Dabei werden die apparatespezifischen Bare-Module-Kosten einschließlich des Kolonnenblocks und der pauschal
-berücksichtigten Luftvorreinigung den jeweiligen Funktionsblöcken zugeordnet.
-Indirekte Kosten, Unvorhergesehenes sowie die zusätzlichen Bestandteile des Total Capital Investment werden nicht auf die Funktionsblöcke verteilt, da diese Zuschläge summarisch angesetzt werden.
-
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.90\textwidth]{Overleaf_LaTeX/bilder/trr_zusammensetzung.png}
+\caption{Zusammensetzung des jährlichen Total Revenue Requirement \(TRR_L\) aus kapitalgebundenen Kosten \(CC_L\), Betriebs- und Wartungskosten \(OM_L\) sowie Energiekosten \(EC_L\) für die untersuchten Prozessvarianten im Basisfall.}
+\label{fig:trr_zusammensetzung}
+\end{figure}
 
 \begin{figure}[H]
 \centering
@@ -238,10 +239,6 @@ Doppelkolonne groß
 \end{table}
 
 
-
-
-
-
 \begin{table}[H]
 \centering
 \caption{Jährliche Kosten und spezifische Stickstoffbereitstellungskosten im Basisfall}
@@ -269,8 +266,19 @@ $c_{N_2}$ (EUR/t$_{N_2}$)
 \end{tabular}
 \end{table}
 
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.75\textwidth]{Overleaf_LaTeX/bilder/spezifische_stickstoffkosten_basisfall.png}
+\caption{Spezifische Stickstoffbereitstellungskosten der Einzel- und Doppelkolonnenmodelle im Basisfall. Die Kosten sind auf die erzeugte Stickstoffmasse bezogen und in EUR/kg$_{N_2}$ angegeben.}
+\label{fig:spezifische_stickstoffkosten_basisfall}
+\end{figure}
 
-
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.80\textwidth]{bilder/sensitivitaet_stickstoffkosten_strompreis.pdf}
+\caption{Sensitivität der spezifischen Stickstoffbereitstellungskosten gegenüber dem angesetzten Strompreis. Dargestellt sind die spezifischen Kosten für Strompreise von \(0{,}13\), \(0{,}16\) und \(0{,}19~\mathrm{EUR/kWh}\).}
+\label{fig:sensitivitaet_stickstoffkosten_strompreis}
+\end{figure}
 
 \section{Validierung und Fehlerbetrachtung}
 \label{sec:validierung}
