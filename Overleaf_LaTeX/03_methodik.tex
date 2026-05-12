@@ -1,7 +1,7 @@
 \chapter{Methodik}
 \label{ch:methodik_modellierung}
 
-In diesem Kapitel werden die verwendeten Methoden zur Energie- und Exergiebewertung sowie zur ökonomischen Einordnung vorgestellt. Sie bilden die Grundlage für die Modellannahmen in Kapitel \ref{ch:modell} und die Ergebnisdarstellung in Kapitel \ref{ch:ergebnisse}.
+In diesem Kapitel werden die verwendeten Methoden zur Energie- und Exergiebewertung sowie zur ökonomischen Einordnung vorgestellt. Sie bilden die Grundlage für die Modellannahmen in Kapitel \ref{ch:modell} und der Auswertung.
 
 \section{Energieanalyse}
 \label{sec:energieanalyse}
@@ -85,8 +85,7 @@ Die wirtschaftliche Analyse dient der Bewertung der ökonomischen Machbarkeit de
 \begin{equation}
 TRR_L = CC_L + OM_L + EC_L
 \end{equation}
-wobei $CC_L$ die nivellierten kapitalgebundenen Kosten, $OM_L$ die nivellierten Betriebs- und Wartungskosten und $EC_L$ die nivellierten Energiekosten darstellen.
-
+wobei $CC_L$ die nivellierten kapitalgebundenen Kosten, $OM_L$ die nivellierten Betriebs- und Wartungskosten und $EC_L$ die nivellierten Energiekosten darstellen.\\
 Die kapitalgebundenen Kosten werden über die Annuität der Gesamtinvestition berechnet. Grundlage bildet das Total Capital Investment (TCI), welches die gesamten Investitionskosten der Anlage umfasst. Diese setzen sich aus direkten und indirekten Anlagekosten sowie gegebenenfalls weiteren projektbezogenen Aufwendungen zusammen. Die Umrechnung der einmaligen Investition in äquivalente jährliche Kosten erfolgt mithilfe des Kapitalrückgewinnungsfaktors, sodass sich ergibt
 \begin{equation}
 CC_L = TCI \cdot CRF
@@ -95,32 +94,22 @@ mit dem Kapitalrückgewinnungsfaktor
 \begin{equation}
 CRF = \frac{i_\mathrm{eff} (1+i_\mathrm{eff})^n}{(1+i_\mathrm{eff})^n - 1}
 \end{equation}
-wobei $i_\mathrm{eff}$ den effektiven Zinssatz und $n$ die ökonomische Lebensdauer der Anlage beschreibt \cite{bejan_thermal_1996}.
-
-Die Investitionskosten werden komponentenbasiert ermittelt, wobei die Kosten einzelner Apparate auf Basis von Literaturwerten und Skalierungsgesetzen bestimmt werden. Die Kosten eines Apparates bei gegebener Kapazität können aus bekannten Referenzwerten unter Verwendung eines Skalierungsexponenten berechnet werden zu
-\begin{equation}
-C_Y = C_W \left( \frac{X_Y}{X_W} \right)^a
-\end{equation}
-wobei $C_Y$ die Kosten bei der gewünschten Kapazität $X_Y$ und $C_W$ die bekannten Kosten bei der Referenzkapazität $X_W$ darstellen. Der Skalierungsexponent $a$ berücksichtigt Skaleneffekte und liegt typischerweise unter eins \cite{bejan_thermal_1996}.
-
-Zur detaillierteren Abschätzung der Apparatekosten wird die Bare-Module-Methode herangezogen. Dabei werden die Basiskosten eines Apparates durch Korrekturfaktoren für Material, Druck, Temperatur sowie konstruktive Ausführung angepasst, sodass sich ergibt
-\begin{equation}
-C_M = C_B \cdot f_d \cdot f_m \cdot f_T \cdot f_p \cdot f_{BM}
-\end{equation}
-wobei $C_M$ die modulbezogenen Apparatekosten, $C_B$ die Basiskosten und $f_d$, $f_m$, $f_T$, $f_p$ sowie $f_{BM}$ entsprechende Korrektur- und Bare-Module-Faktoren darstellen. Die verwendeten Ansätze basieren auf etablierten Methoden der verfahrenstechnischen Kostenabschätzung \cite{bejan_thermal_1996, tesch_exergy-based_nodate}.
-
-Zur Gewährleistung der Vergleichbarkeit werden alle Kosten auf ein einheitliches Bezugsjahr normiert, wofür geeignete Kostenindizes herangezogen werden. Die Betriebs- und Wartungskosten werden in vereinfachter Form als konstanter Anteil der Gesamtinvestition angesetzt und unter Berücksichtigung der allgemeinen Kostensteigerung nivelliert:
+wobei $i_\mathrm{eff}$ den effektiven Zinssatz und $n$ die ökonomische Lebensdauer der Anlage beschreibt. \cite{bejan_thermal_1996}\\
+\\
+Die Ermittlung der Investitionskosten erfolgt nach einem komponentenbasierten Ansatz. Dabei werden zunächst die Anschaffungskosten (Purchased Equipment Costs, PEC) der Hauptapparate auf Basis ihrer charakteristischen Kapazitätsgrößen (z. B. elektrische Leistung, Wärmeübertragerfläche oder geometrische Abmessungen) bestimmt. Hierzu werden literaturbasierte Kostenkorrelationen herangezogen, die den Zusammenhang zwischen Größe und Kosten unter Berücksichtigung von Skaleneffekten mathematisch beschreiben. Je nach Apparategruppe kommen dabei unterschiedliche mathematische Ansätze zum Einsatz, die von klassischen Skalierungsgesetzen (Potenzfunktionen) bis hin zu spezifischen Kostenpolynomen reichen.\\
+Um von den reinen Anschaffungskosten zu den installierten Kosten zu gelangen, wird die Bare-Module-Methode angewendet. Dabei werden die Basiskosten der Apparate durch Korrekturfaktoren für Material, Druck und Temperatur sowie durch modulspezifische Installationsfaktoren angepasst. Letztere berücksichtigen pauschal die Aufwendungen für Montage, Rohrleitungen, Mess- und Regeltechnik sowie bauliche Maßnahmen. Die Summe der so ermittelten Modulkosten bildet, ergänzt um Zuschläge für indirekte Anlagenkosten wie Engineering und Unvorhergesehenes, die Basis für das Total Capital Investment (TCI).\\
+Zur Gewährleistung der Vergleichbarkeit werden alle Kosten auf ein einheitliches Bezugsjahr normiert, wofür geeignete Kostenindizes herangezogen werden. \\
+\\
+Die Betriebs- und Wartungskosten werden in vereinfachter Form als konstanter Anteil der Gesamtinvestition angesetzt und unter Berücksichtigung der allgemeinen Kostensteigerung nivelliert:
 \begin{equation}
 OM_L = f_{OM} \cdot TCI \cdot CELF_{OM}
 \end{equation}
-wobei $f_{OM}$ einen empirischen Faktor darstellt, der typische industrielle Verhältnisse abbildet, und $CELF_{OM}$ den Nivellierungsfaktor für die Betriebs- und Wartungskosten beschreibt \cite{bejan_thermal_1996}.
-
-Energiebedingte Betriebskosten, insbesondere durch den elektrischen Energiebedarf von Kompressoren und weiteren Aggregaten, werden als eigenständige nivellierte Energiekosten berücksichtigt. Die jährlichen Stromkosten ergeben sich aus der elektrischen Leistungsaufnahme, den jährlichen Betriebsstunden und dem angesetzten Strompreis im Bezugsjahr. Zur Berücksichtigung zeitlicher Preisänderungen werden die Energiekosten mithilfe eines konstanten Eskalations-Nivellierungsfaktors berechnet. Für die nivellierten Energiekosten gilt
+wobei $f_{OM}$ einen empirischen Faktor darstellt, der typische industrielle Verhältnisse abbildet, und $CELF_{OM}$ den Nivellierungsfaktor für die Betriebs- und Wartungskosten beschreibt \cite{bejan_thermal_1996}.\\
+Energiebedingte Betriebskosten, insbesondere durch den elektrischen Energiebedarf von Kompressoren und weiteren Aggregaten, werden als eigenständige nivellierte Energiekosten berücksichtigt. Die jährlichen Stromkosten ergeben sich aus der elektrischen Leistungsaufnahme, den jährlichen Betriebsstunden und dem angesetzten Strompreis im Bezugsjahr. Zur Berücksichtigung zeitlicher Preisänderungen werden die Energiekosten mithilfe eines konstanten Nivellierungsfaktors berechnet. Für die nivellierten Energiekosten gilt
 \begin{equation}
 EC_L = \dot{W}_\mathrm{el} \cdot t_\mathrm{op} \cdot c_\mathrm{el} \cdot CELF_\mathrm{el}
 \end{equation}
-wobei $\dot{W}_\mathrm{el}$ die elektrische Leistungsaufnahme, $t_\mathrm{op}$ die jährlichen Betriebsstunden, $c_\mathrm{el}$ den Strompreis im Bezugsjahr und $CELF_\mathrm{el}$ den Nivellierungsfaktor für die Stromkosten beschreibt.
-
+wobei $\dot{W}_\mathrm{el}$ die elektrische Leistungsaufnahme, $t_\mathrm{op}$ die jährlichen Betriebsstunden, $c_\mathrm{el}$ den Strompreis im Bezugsjahr und $CELF_\mathrm{el}$ den Nivellierungsfaktor für die Stromkosten beschreibt.\\
 Der Nivellierungsfaktor berücksichtigt die nominale Eskalationsrate der jeweiligen Kosten sowie den effektiven Zinssatz und wird berechnet zu
 \begin{equation}
 CELF_j =
