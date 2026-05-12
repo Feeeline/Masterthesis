@@ -408,6 +408,104 @@ def plot_spezifische_stickstoffkosten(df, out_pdf="spezifische_stickstoffkosten_
 
     print(f"Saved specific N2 PDF: {os.path.abspath(pdf_path)}")
     print(f"Saved specific N2 PNG: {os.path.abspath(png_path)}")
+
+
+def create_sensitivity_dataframe():
+    """Create DataFrame for sensitivity analysis over electricity prices."""
+    prices = [0.13, 0.16, 0.19]
+    data = []
+
+    # Einzelkolonne klein
+    ek_small = [42.91, 50.00, 57.09]
+    for p, v in zip(prices, ek_small):
+        data.append(("Einzel klein", "Einzelkolonnenmodell", "klein", p, v))
+
+    # Einzelkolonne groß
+    ek_large = [41.07, 48.17, 55.25]
+    for p, v in zip(prices, ek_large):
+        data.append(("Einzel groß", "Einzelkolonnenmodell", "groß", p, v))
+
+    # Doppelkolonne klein
+    dk_small = [39.41, 44.77, 50.13]
+    for p, v in zip(prices, dk_small):
+        data.append(("Doppel klein", "Doppelkolonnenmodell", "klein", p, v))
+
+    # Doppelkolonne groß
+    dk_large = [47.86, 53.23, 58.59]
+    for p, v in zip(prices, dk_large):
+        data.append(("Doppel groß", "Doppelkolonnenmodell", "groß", p, v))
+
+    df = pd.DataFrame(data, columns=["variant", "model_type", "size", "c_el_EUR_per_kWh", "c_N2_EUR_per_t"]) 
+    df["c_N2_EUR_per_kg"] = df["c_N2_EUR_per_t"] / 1000.0
+    return df
+
+
+def plot_sensitivitaet_stickstoffkosten(df, out_pdf="sensitivitaet_stickstoffkosten_strompreis.pdf", out_png="sensitivitaet_stickstoffkosten_strompreis.png"):
+    plt.rcParams.update({
+        "font.family": "serif",
+        "mathtext.fontset": "stix",
+        "font.size": 11,
+        "axes.titlesize": 12,
+        "axes.labelsize": 11,
+        "xtick.labelsize": 10,
+        "ytick.labelsize": 10,
+        "legend.fontsize": 10,
+    })
+    linestyles = {"klein": "-", "groß": "--"}
+
+    fig, ax = plt.subplots(figsize=(7.0, 4.5))
+
+    variants = ["Einzel klein", "Einzel groß", "Doppel klein", "Doppel groß"]
+    prices = sorted(df["c_el_EUR_per_kWh"].unique())
+
+    for variant in variants:
+        sub = df[df.variant == variant].sort_values("c_el_EUR_per_kWh")
+        x = sub["c_el_EUR_per_kWh"].values
+        y = sub["c_N2_EUR_per_kg"].values
+        size = sub["size"].iloc[0]
+        model = sub["model_type"].iloc[0]
+        # color by model type (both sizes share the same color)
+        color = COLOR_SINGLE if "Einzel" in model else COLOR_DOUBLE
+        # create descriptive legend label
+        label_map = {
+            "Einzel klein": "Einkolonnenmodell klein",
+            "Einzel groß": "Einkolonnenmodell groß",
+            "Doppel klein": "Doppelkolonnenmodell klein",
+            "Doppel groß": "Doppelkolonnenmodell groß",
+        }
+        ax.plot(x, y, marker="o", linestyle=linestyles.get(size, "-"), color=color, label=label_map.get(variant, variant))
+
+    # no title per request
+    ax.set_xlabel("Strompreis in EUR/kWh", fontsize=11)
+    ax.set_ylabel("Spezifische Kosten in EUR/kg$_{N_2}$", fontsize=11)
+
+    # x-ticks exactly as requested
+    ax.set_xticks(prices)
+
+    # y-axis start — choose 0.035 for better readability
+    ax.set_ylim(0.035, None)
+
+    # subtle horizontal grid
+    ax.yaxis.grid(True, linestyle="--", linewidth=0.6, color="#dddddd", zorder=0)
+    ax.xaxis.grid(False)
+
+    # remove top and right spines
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+
+    ax.legend(loc="best", fontsize=10)
+
+    fig.tight_layout()
+
+    out_dir = r"C:\Users\Felin\Documents\Masterthesis\Simulation_Code\GIT\Overleaf_LaTeX\bilder"
+    os.makedirs(out_dir, exist_ok=True)
+    pdf_path = os.path.join(out_dir, out_pdf)
+    png_path = os.path.join(out_dir, out_png)
+    fig.savefig(pdf_path, bbox_inches="tight")
+    fig.savefig(png_path, dpi=300, bbox_inches="tight")
+
+    print(f"Saved sensitivity PDF: {os.path.abspath(pdf_path)}")
+    print(f"Saved sensitivity PNG: {os.path.abspath(png_path)}")
     print(f"Saved specific N2 PNG: {os.path.abspath(png_path)}")
 
 def main():
@@ -429,6 +527,12 @@ def main():
     print("N2 DataFrame preview:")
     print(df_n2)
     plot_spezifische_stickstoffkosten(df_n2)
+
+    # --- Sensitivity: specific N2 costs vs electricity price ---
+    df_sens = create_sensitivity_dataframe()
+    print("Sensitivity DataFrame preview:")
+    print(df_sens)
+    plot_sensitivitaet_stickstoffkosten(df_sens)
 
 
 if __name__ == "__main__":
