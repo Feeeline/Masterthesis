@@ -384,7 +384,7 @@ Für die Bilanzierung der Niederdruckkolonne (KOLLP) wird aufgrund der multiplen
 \section{Wirtschaftliche Modellierung}
 \label{sec:modell_economics}
 
-Die wirtschaftliche Modellierung der beiden Prozessvarianten erfolgt auf Basis der in Kapitel~\ref{sec:wirtschaftlichkeitsanalyse} beschriebenen Methodik. Ziel ist es, die Einzel- und Doppelkolonnenkonfiguration unter einheitlichen ökonomischen Randbedingungen vergleichbar zu bewerten. Die detaillierten apparatespezifischen Kostenrechnungen sind in Anhang~\ref{ch:a_kosten} dokumentiert; im vorliegenden Kapitel werden die verwendeten Randbedingungen, Kostenblöcke und Modellannahmen zusammengefasst.
+Die wirtschaftliche Modellierung der beiden Prozessvarianten erfolgt auf Basis der in Kapitel~\ref{sec:wirtschaftlichkeitsanalyse} beschriebenen Methodik. Ziel ist es, die Einzel- und Doppelkolonnenkonfiguration in der großen und kleinen Variante unter einheitlichen ökonomischen Randbedingungen vergleichbar zu bewerten. Die detaillierten apparatespezifischen Kostenrechnungen sind in Anhang~\ref{ch:a_kosten} dokumentiert. Im vorliegenden Kapitel werden die verwendeten Randbedingungen, Kostenblöcke und Modellannahmen zusammengefasst.
 
 Die ökonomischen Annahmen der Wirtschaftlichkeitsanalyse sind in Tabelle~\ref{tab:oekonomische_rahmenparameter} dargestellt. Die Anlage wird als kontinuierlich betriebene Industrieanlage mit 8000 Jahresvolllaststunden betrachtet. Für die ökonomische Lebensdauer werden 20 Jahre angesetzt. Die Umrechnung der Investitionskosten in jährliche kapitalgebundene Kosten erfolgt mit einem effektiven Zinssatz von 10~\%/a. Die Betriebs- und Wartungskosten werden vereinfachend mit 5~\% des Total Capital Investment angesetzt und mit einer allgemeinen Kostensteigerungsrate nivelliert. Für die Stromkosten wird im Basisfall ein Strompreis von 0{,}16~EUR/kWh angenommen \cite{noauthor_smard_nodate}. Zusätzlich wird eine Sensitivität im Bereich von 0{,}13 bis 0{,}19~EUR/kWh betrachtet. Da ein Teil der verwendeten Kostenkorrelationen in USD angegeben ist, erfolgt die Kostenanpassung zunächst auf das Bezugsjahr 2026 und anschließend die Umrechnung in EUR mit einem einheitlichen Wechselkurs \cite{bank_euro_2026}.
 
@@ -412,26 +412,11 @@ CEPCI Bezugsjahr & $CEPCI_{2026}$ & 840{,}6 & -- \\
 \end{tabular}
 \end{table}
 
-Die apparatespezifischen Kosten werden in Anlehnung an Tesch komponentenbasiert
-bestimmt. Je nach Apparategruppe liefern die verwendeten Kostenkorrelationen
-entweder Purchased-Equipment-Kosten ($PEC$) oder bereits modulbezogene Kosten
-($C_{BM}$). Für Kostenblöcke, die als $PEC$ vorliegen, werden zur Abschätzung der
-Investitionskosten zusätzlich die Zuschläge aus
-Tabelle~\ref{tab:zuschlagsfaktoren_investition} berücksichtigt. Diese umfassen
-direkte Kostenanteile wie Installation, Rohrleitungen, Mess- und Regeltechnik,
-elektrische Ausrüstung sowie Nebenanlagen und bauliche Maßnahmen. Unter den
-direkten Kosten ($DC$) wird hierbei die Summe aus den Anschaffungskosten ($PEC$)
+Die apparatespezifischen Kosten werden in Anlehnung an Tesch \cite{tesch_exergy-based_nodate} komponentenbasiert bestimmt. Je nach Apparategruppe liefern die verwendeten Kostenkorrelationen entweder Purchased-Equipment-Kosten ($PEC$) oder bereits modulbezogene Kosten ($C_{BM}$). Für Kostenblöcke, die als $PEC$ vorliegen, werden zur Abschätzung der Investitionskosten zusätzlich die Zuschläge aus Tabelle \ref{tab:zuschlagsfaktoren_investition} berücksichtigt. Diese umfassen direkte Kostenanteile wie Installation, Rohrleitungen, Mess- und Regeltechnik, elektrische Ausrüstung sowie Nebenanlagen und bauliche Maßnahmen. Unter den direkten Kosten ($DC$) wird hierbei die Summe aus den Anschaffungskosten ($PEC$)
 und den unmittelbaren onsite- und offsite-Kosten verstanden.
 
-Da die Kostenkorrelationen für die Rektifikationskolonnen nach Tesch bereits als
-Bare-Module-Kosten ($C_{BM}$) definiert sind, enthalten diese bereits
-modulbezogene Aufwendungen für Montage, Material und apparatenahe
-Zusatzkosten. Eine erneute Anwendung der Zuschläge aus
-Tabelle~\ref{tab:zuschlagsfaktoren_investition} entfällt daher für den
-Kolonnenblock, um eine Überbewertung der Investitionskosten zu vermeiden. Die
-Luftvorreinigung wird ebenfalls nicht mit den Zuschlägen aus
-Tabelle~\ref{tab:zuschlagsfaktoren_investition} beaufschlagt, da sie im
-Anhang~\ref{ch:a_kosten} als pauschaler Kostenblock berücksichtigt wird.
+Da die Kostenkorrelationen für die Rektifikationskolonnen bereits als Bare-Module-Kosten ($C_{BM}$) definiert sind, enthalten diese bereits modulbezogene Aufwendungen für Montage, Material und apparatenahe
+Zusatzkosten. Eine erneute Anwendung der Zuschläge aus Tabelle~\ref{tab:zuschlagsfaktoren_investition} entfällt daher für die Kolonne, um eine Überbewertung der Investitionskosten zu vermeiden. Die Luftvorreinigung wird ebenfalls nicht mit den Zuschlägen aus Tabelle~\ref{tab:zuschlagsfaktoren_investition} beaufschlagt, da sie als pauschaler Kostenblock berücksichtigt wird. Einen Überblick über die Rechnungen der Hauptapparate gibt Tabelle \ref{tab:kostenbasis_hauptapparate}.
 
 \begin{table}[H]
 \centering
@@ -453,40 +438,57 @@ Luftvorreinigung & GW1, GW2 & pauschaler Zuschlag \\
 \end{tabular}
 \end{table}
 
-Für die Kostenblöcke, die als $PEC$ vorliegen, werden die in
-Tabelle~\ref{tab:zuschlagsfaktoren_investition} dargestellten Zuschläge
-verwendet. Die Werte orientieren sich an den von Tesch angegebenen
-Kostenstrukturen für das Fixed Capital Investment und werden als mittlere
-Annahmen innerhalb der dort angegebenen Spannbreiten gewählt.
-
 \begin{table}[H]
 \centering
-\caption{Verwendete Zuschläge für PEC-basierte Kostenblöcke in Anlehnung an Bejan et al. und Tesch}
-\label{tab:zuschlagsfaktoren_investition}
+\caption{Detaillierte Zuschlagsfaktoren zur Ermittlung der Investitionskosten in Anlehnung an Bejan et al. und Tsatsaronis \cite{bejan_thermal_1996}}
+\label{tab:zuschlagsfaktoren_detailliert}
 \begin{tabular}{lll}
 \hline
-Kostenposition & Ansatz & Bezug \\
+\textbf{Kostenposition} & \textbf{Ansatz} & \textbf{Bezug} \\
 \hline
-Apparatekosten & 100~\% & $PEC$ \\
-Installation der Apparate & 40~\% & $PEC$ \\
-Rohrleitungen & 30~\% & $PEC$ \\
-Mess- und Regeltechnik & 20~\% & $PEC$ \\
-Elektrische Ausrüstung und Material & 10~\% & $PEC$ \\
-Bau, Struktur und Architektur & 21~\% & $PEC$ \\
-Hilfseinrichtungen / Service Facilities & 35~\% & $PEC$ \\
+\textit{Direkte Kosten (Onsite \& Offsite):} & & \\
+Apparatekosten (Anschaffung) & 100\,\% & $PEC$ \\
+Installation der Anlagenkomponenten & 40\,\% & $PEC$ \\
+Rohrleitungen & 35\,\% & $PEC$ \\
+Mess- und Regelungstechnik (MSR) & 20\,\% & $PEC$ \\
+Elektrische Ausrüstung und Material & 10\,\% & $PEC$ \\
+Bau, Struktur und Architektur & 21\,\% & $PEC$ \\
+Hilfseinrichtungen / Service Facilities & 30\,\% & $PEC$ \\
 \hline
-Bare-Module-Faktor & $f_\mathrm{BM}=2{,}56$ & $PEC$ \\
+\textbf{Bare-Module-Faktor} & $f_\mathrm{BM}=2{,}56$ & $PEC$ \\
 \hline
-Engineering und Überwachung & 8~\% & $DC$ \\
-Baukosten einschließlich Gewinn der Baufirma & 15~\% & $DC$ \\
-Unvorhergesehenes & 15~\% & $DC+IC$ \\
+\textit{Indirekte Kosten \& Sonstiges:} & & \\
+Engineering und Überwachung & 8\,\% & $C_\mathrm{BM,tot}$ \\
+Baukosten einschließlich Gewinn der Baufirma & 15\,\% & $C_\mathrm{BM,tot}$ \\
+Unvorhergesehenes (Contingencies) & 10\,\% & $C_\mathrm{BM,tot}+IC$ \\
 \hline
 \end{tabular}
 \end{table}
 
-Die wirtschaftliche Bewertung erfolgt anschließend über den jährlichen nivellierten
-Gesamtumsatzbedarf $TRR_L$ sowie über die spezifischen
-Stickstoffbereitstellungskosten. Diese werden auf die jährlich erzeugte
+Das Fixed Capital Investment \(FCI\) wird in dieser Arbeit aus den
+Bare-Module-Kosten der kostenrelevanten Hauptapparate sowie den darauf
+bezogenen indirekten Kosten und dem Zuschlag für Unvorhergesehenes bestimmt.
+Damit umfasst das \(FCI\) die direkten und indirekten Investitionskosten der
+Anlage. Eine erneute Beaufschlagung dieser Kostenbestandteile im Rahmen der
+Berechnung des Total Capital Investment wird vermieden.\\
+Nach Bejan et al. und Tsatsaronis setzt sich das Total Capital Investment
+aus dem Fixed Capital Investment und weiteren sonstigen Ausgaben zusammen:
+\begin{equation}
+TCI = FCI + SUC + WC + LRD + AFUDC .
+\end{equation}
+Dabei bezeichnen \(SUC\) die Anfahrkosten, \(WC\) das Umlaufkapital,
+\(LRD\) Lizenz-, Forschungs- und Entwicklungskosten sowie \(AFUDC\) die
+Zinsen während der Bauzeit. Da diese Größen in der frühen Planungsphase nicht
+projektspezifisch bestimmt werden können, wird die vereinfachte Beziehung nach
+Bejan et al. verwendet:
+\begin{equation}
+TCI = 1{,}47\,FCI .
+\end{equation}
+Der Faktor berücksichtigt ausschließlich die zusätzlichen sonstigen Ausgaben
+des \(TCI\) und stellt keine erneute Berücksichtigung der bereits im \(FCI\)
+enthaltenen direkten und indirekten Kosten dar.\\
+
+Die wirtschaftliche Bewertung erfolgt anschließend über den jährlichen nivellierten Gesamtumsatzbedarf $TRR_L$ sowie über die spezifischen Stickstoffbereitstellungskosten. Diese werden auf die jährlich erzeugte
 Stickstoffmenge bezogen:
 \begin{equation}
 c_{N_2}
@@ -494,8 +496,7 @@ c_{N_2}
 \frac{TRR_L}{\dot m_{N_2}\cdot t_\mathrm{op}} .
 \end{equation}
 Dabei beschreibt $\dot m_{N_2}$ den Produktmassenstrom des erzeugten Stickstoffs.\\
-Die wirtschaftliche Modellierung ist als vergleichende Vorabschätzung zu
-verstehen. Standortabhängige Kosten, detaillierte Rohrleitungsdimensionierung,
+Die wirtschaftliche Modellierung ist als vergleichende Vorabschätzung zu verstehen. Standortabhängige Kosten, detaillierte Rohrleitungsdimensionierung,
 Gebäudeauslegung, Genehmigungskosten sowie Herstellerangebote werden nicht
 explizit berücksichtigt, sondern nur über die gewählten und beschriebenen Zuschläge angenähert.
 
