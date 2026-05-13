@@ -1,34 +1,57 @@
-% Layout-Einstellungen
-\KOMAoptions{DIV=22}  % Seitenlayout fein einstellen
+% Layout-Einstellungen für Titelseite
+\KOMAoptions{DIV=22}
 
-\titlehead{%
-    \begin{minipage}[t]{\textwidth}
-        \begin{minipage}[t]{0.7\textwidth}
-            \raggedright
-            \vspace{0.6cm} % Logo weiter runter!
-            Technische Universität Berlin\\
-            Fakultät III -- Prozesswissenschaften\\
-            Institut für Energietechnik
-        \end{minipage}%
-        \begin{minipage}[t]{0.3\textwidth}
-            \raggedleft
-            \vspace{0cm} % Logo weiter runter!
-            \includegraphics[height=2.2cm]{bilder/TU_Berlin.png}
-        \end{minipage}
-    \end{minipage}
-    \vspace{1.5cm} % Abstand zum Titel
+\begin{titlepage}
+\thispagestyle{empty}
+
+% Kopfbereich mit Uni-Text und Logo
+\noindent
+\begin{minipage}[t]{0.45\textwidth}
+    \vspace{0pt}
+    \raggedright
+    Technische Universität Berlin\\
+    Fakultät III -- Prozesswissenschaften\\
+    Institut für Energietechnik
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.28\textwidth}
+    \vspace{0pt}
+    \raggedleft
+    \includegraphics[height=2.2cm]{bilder/TU_Berlin.png}
+\end{minipage}
+
+\vspace{3.0cm}
+
+\begin{center}
+
+{\Large \textbf{Masterthesis}}\\[1.5cm]
+
+\begin{minipage}{0.85\textwidth}
+\centering
+\large\textbf{Modellierung und vergleichende exergetische sowie ökonomische Analyse von Luftzerlegungsanlagen zur Stickstoffbereitstellung}
+\end{minipage}
+
+\vspace{3.0cm}
+
+{\large
+Feline Ehresmann\\
+Energie und Verfahrenstechnik\\
+Matrikel-Nr. 0490546
+}\\[1.2cm]
+
+{\large Berlin, 1.3.2026}\\[2.0cm]
+
+{\large
+Betreut von\\[0.2cm]
+Prof.~Dr.-Ing.~Fontina~Petrakopoulou\\
+Robert~Müller, M.\,Sc.
 }
 
-\title{Masterthesis}
-\\
-\subtitle{Modellierung und vergleichende exergetische sowie ökonomische Analyse von Luftzerlegungsanlagen zur Stickstoffbereitstellung}
-\author{Feline Ehresmann\\Energie und Verfahrenstechnik\\Matrikel-Nr. 0490546}
-\date{Berlin, 1.3.2026}
-\publishers{Betreut von Prof.~Dr.-Ing.~Fontina~Petrakopoulou und Robert~Müller, M.\,Sc.}
+\vfill
 
-\maketitle	
+\end{center}
 
-%\dedication{Widmung}
+\end{titlepage}
 
 
 \clearpage
@@ -38,7 +61,7 @@
 
 \noindent
 Hiermit erkläre ich, dass ich die vorliegende Arbeit selbstständig und eigenhändig sowie ohne unerlaubte fremde Hilfe und ausschließlich unter Verwendung der aufgeführten Quellen und
-Hilfsmittel angefertigt habe. Alle Stellen die den benutzten Quellen und 
+Hilfsmittel angefertigt habe. Alle Stellen, die den benutzten Quellen und 
 Hilfsmitteln wörtlich oder inhaltlich entnommen sind, habe ich als solche kenntlich gemacht.  
 Zur Unterstützung bei der sprachlichen Ausformulierung einzelner Textpassagen wurden KI-basierte Textwerkzeuge verwendet, darunter ChatGPT (OpenAI, Modelle GPT-4o und GPT-5, Stand 2026) sowie Gemini (Google DeepMind, Modell Gemini 1.5 Pro, Stand 2026).
 Ich verantworte die Auswahl, die Übernahme und sämtliche Ergebnisse des von mir verwendeten KI-generierten Outputs vollumfänglich selbst. Sämtliche Ergebnisse wurden eigenständig geprüft und gegebenenfalls angepasst.
@@ -47,7 +70,7 @@ Ich verantworte die Auswahl, die Übernahme und sämtliche Ergebnisse des von mi
 \noindent
 Berlin, den \rule{40mm}{0.4pt}
 
-\vspace{3cm}
+\vspace{2cm}
 
 \noindent
 \rule{60mm}{0.4pt} \\
@@ -62,11 +85,19 @@ Vorname, Nachname
 
 \begin{abstract}
 \addcontentsline{toc}{chapter}{Zusammenfassung}
-deutsch
+Diese Masterarbeit untersucht die kryogene Luftzerlegung zur gezielten Bereitstellung von hochreinem Stickstoff für industrielle Anwendungen, insbesondere im Kontext zukünftiger grüner Ammoniaksynthese. Im Fokus steht der vergleichende Aufbau und die Bewertung zweier Prozesskonzepte: eines Einkolonnenmodells und eines Doppelkolonnenmodells. Beide Varianten werden in Aspen Plus stationär modelliert und unter einheitlichen Randbedingungen energetisch, exergetisch und wirtschaftlich analysiert. Ziel der Arbeit ist der konsistente Vergleich der beiden Prozesskonzepte hinsichtlich Energiebedarf, Verlustquellen und spezifischer Stickstoffbereitstellungskosten.\\
+Die methodische Umsetzung erfolgt durch Prozesssimulationen in der Software Aspen Plus unter Verwendung des Stoffdatenmodells Peng-Robinson. Für die energetische Bewertung wird ein definierter Produktdruckbereich ausgewertet. Dabei zeigt sich, dass das Doppelkolonnenmodell über den betrachteten Druckbereich weniger spezifische Energie benötigt. Bei 6 bar liegt der Bedarf bei etwa 0,167 \si{\kilo\watt\hour\per\normal\cubic\metre} Stickstoff gegenüber 0,241 \si{\kilo\watt\hour\per\normal\cubic\metre} beim Einkolonnenmodell. Ursache sind vor allem die höhere Stickstoffausbeute, der geringere Luftbedarf und die bessere thermische Integration.\\
+Die exergetische Analyse identifiziert die Gasverdichtung und die Wärmeübertragung im kryogenen Bereich als dominante Quellen der Exergievernichtung. Beim Einkolonnenmodell ist außerdem insbesondere der zur Kältebereitstellung expandierte Reststrom im Waste-Expander mit hohen Exergievernichtungen verbunden. Im Doppelkolonnenmodell verteilen sich die wesentlichen Exergieverluste stärker auf die kryogenen Wärmeübertragungs- und Trennprozesse. Die Unterschiede zwischen den Varianten lassen sich daher nicht allein einzelnen Apparaten zuordnen, sondern ergeben sich aus der gesamten thermodynamischen Prozessführung und Wärmeintegration.\\
+Ergänzend werden Investitionskosten, jährliche Kosten und spezifische Stickstoffbereitstellungskosten abgeschätzt. Aufgrund der verwendeten Literaturkorrelationen, Kostenindizes und Zuschlagsfaktoren sind die absoluten Kostenwerte als Screening-Ergebnisse zu verstehen. Der Vergleich zeigt jedoch, dass der geringere Energiebedarf des Doppelkolonnenmodells die höhere apparative Komplexität wirtschaftlich teilweise kompensieren kann, insbesondere bei steigenden Strompreisen.\\
+Insgesamt erweist sich das Doppelkolonnenmodell unter den gewählten Randbedingungen als energetisch und exergetisch vorteilhaft. Das Einkolonnenmodell bleibt aufgrund seiner einfacheren Struktur für kompakte Anwendungen interessant, ist im betrachteten Fall jedoch energetisch nachteiliger. Die Arbeit liefert damit eine fundierte Entscheidungsgrundlage für die Auswahl von Prozesskonzepten in der industriellen Stickstoffbereitstellung und bildet eine Grundlage für weiterführende Optimierungen von Druckniveau, Wärmeintegration und Kolonnenauslegung kryogener Stickstoffgeneratoren.
 \end{abstract}
 
 \renewcommand\abstractname{Abstract} 
 \begin{abstract}
 \addcontentsline{toc}{chapter}{Abstract}
-englisch
+This master’s thesis investigates cryogenic air separation for the targeted supply of high-purity nitrogen for industrial applications, particularly in the context of future green ammonia synthesis. The study focuses on the comparative development and evaluation of two process concepts: a single-column model and a double-column model. Both variants are modelled as steady-state processes in Aspen Plus and are analysed under consistent boundary conditions from an energetic, exergetic and economic perspective. The objective of the work is to provide a consistent comparison of both process concepts with regard to energy demand, sources of thermodynamic losses and specific nitrogen production costs.\\
+The methodology is based on process simulations in Aspen Plus using the Peng-Robinson property method. For the energetic evaluation, a defined product pressure range is assessed. The results show that the double-column model requires less specific energy over the investigated pressure range. At 6 bar, the specific energy demand is approximately 0.167 \si{\kilo\watt\hour\per\normal\cubic\metre} of nitrogen, compared with 0.241 \si{\kilo\watt\hour\per\normal\cubic\metre} for the single-column model. This advantage is mainly attributed to the higher nitrogen recovery, the lower specific air demand and the improved thermal integration.\\
+The exergetic analysis identifies gas compression and heat transfer in the cryogenic section as dominant sources of exergy destruction. In the single-column model, the expanded waste stream used for refrigeration in the waste expander is additionally associated with significant exergy destruction. In the double-column model, the main exergy losses are distributed more strongly across the cryogenic heat transfer and separation processes. The differences between the variants can therefore not be attributed solely to individual components, but result from the overall thermodynamic process design and heat integration.\\
+In addition, investment costs, annual costs and specific nitrogen production costs are estimated. Due to the use of literature-based cost correlations, cost indices and surcharge factors, the absolute cost values should be understood as screening results. Nevertheless, the comparison shows that the lower energy demand of the double-column model can partly compensate for its higher equipment complexity from an economic perspective, particularly at increasing electricity prices.\\
+Overall, the double-column model proves to be energetically and exergetically advantageous under the selected boundary conditions. The single-column model remains of interest for compact applications due to its simpler structure, but is energetically less favourable in the investigated case. This work therefore provides a sound basis for selecting suitable process concepts for industrial nitrogen supply and serves as a foundation for further optimisation of operating pressure, heat integration and column design in cryogenic nitrogen generators.
 \end{abstract}

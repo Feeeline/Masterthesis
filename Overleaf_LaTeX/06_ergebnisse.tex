@@ -142,42 +142,76 @@ Die externen Exergieverluste $\dot{E}_{L,tot}$ sind in beiden Modellen mit \SI{0
     \label{fig:exergiebilanz_vergleich}
 \end{figure}
 
-\section{Wirtschaftliche Bewertung}
+\section{Ergebnisse der wirtschaftlichen Auswertung}
 \label{sec:ergebnisse_wirtschaft}
 
+
+Die wirtschaftliche Bewertung der untersuchten Prozessvarianten erfolgt auf
+Basis der Investitionskosten, des jährlichen Total Revenue Requirement
+\(TRR_L\) sowie der spezifischen Stickstoffbereitstellungskosten \(c_{N_2}\).
+Die Ergebnisse werden für das Einkolonnenmodell und das Doppelkolonnenmodell
+jeweils in einer kleinen und einer großen Auslegungsvariante gegenübergestellt.
+Dabei repräsentiert die kleine Variante den geforderten Produktmassenstrom von
+\(\dot{m}_{N_2}=\SI{4.65}{\kilogram\per\second}\), während die große Variante
+einen Produktmassenstrom von \(\dot{m}_{N_2}=\SI{15.01} {\kilogram\per\second}\) abbildet. Auf dieser Grundlage werden zunächst die Investitionskosten und anschließend die jährlichen sowie spezifischen Bereitstellungskosten ausgewertet. Die Kosten werden in EUR$_{2026}$ angegeben.
+
+Die zusammengefassten Investitionskosten der untersuchten Prozessvarianten sind
+in Tabelle~\ref{tab:investitionskosten_zusammenfassung} dargestellt. Die
+detaillierte Herleitung der einzelnen Kostenpositionen erfolgt im
+Anhang~\ref{ch:a_kosten}. Dort werden die apparatespezifischen Kosten für
+Verdichter, Expander, Wärmeübertrager und Kolonnen zunächst einzeln bestimmt
+und anschließend in Bare-Module-Kosten überführt. Auf dieser Grundlage werden
+die Kosten der Hauptapparate, der Kolonnenblock sowie die pauschal angesetzte
+Luftvorreinigung zu den gesamten Investitionskosten zusammengeführt. \\
+In Tabelle~\ref{tab:investitionskosten_zusammenfassung} ist zu erkennen, dass
+die Investitionskosten mit zunehmender Anlagengröße deutlich ansteigen. Für
+beide Anlagengrößen liegen die Kosten des Doppelkolonnenmodells über denen des
+Einkolonnenmodells. Der größte Kostenbeitrag ergibt sich in allen Varianten aus den
+Bare-Module-Kosten der Hauptapparate. Zu beachten ist in dieser Tabelle, dass die Kosten welche die Kolonne zu den gesamten Investitionskosten beiträgt, der reine Kolonnenkörper ohne Verdampfer und Kondensator darstellt. Die gekoppelten Reboiler-Kondensator-Apparate werden in den Hauptapperaten als individuelle Komponenten berechnet. Die Luftvorreinigung wird pauschal als Zuschlag auf die Hauptapparatekosten berücksichtigt.
+Das Total Capital Investment ergibt sich anschließend aus dem Fixed Capital
+Investment unter Berücksichtigung der in der wirtschaftlichen Modellierung
+definierten Zuschläge.
 
 \begin{table}[H]
 \centering
 \caption{Zusammenfassung der Investitionskosten der untersuchten Varianten}
 \label{tab:investitionskosten_zusammenfassung}
 \small
-\begin{tabular}{lrrrr}
-\hline
-Größe & Einzel klein & Einzel groß & Doppel klein & Doppel groß \\
-& \multicolumn{4}{c}{(EUR$_{2026}$)} \\
-\hline
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{l
+                S[table-format=8.0]
+                S[table-format=8.0]
+                S[table-format=8.0]
+                S[table-format=8.0]}
+\toprule
+\textbf{Kostenposition}
+& \multicolumn{2}{c}{\textbf{Einkolonnenmodell}}
+& \multicolumn{2}{c}{\textbf{Doppelkolonnenmodell}} \\
+\cmidrule(lr){2-3}
+\cmidrule(lr){4-5}
+& {\textbf{klein}}
+& {\textbf{groß}}
+& {\textbf{klein}}
+& {\textbf{groß}} \\
+\midrule
+&\multicolumn{4}{c}{\textit{Kosten in EUR$_{2026}$}} \\
+\midrule
 PEC-Summe Hauptapparate
-& 1\,408\,580 & 4\,526\,871 & 1\,688\,732 & 10\,889\,135 \\
+& 1408580 & 4526871 & 1688732 & 10889135 \\
 Bare-Module-Kosten Hauptapparate
-& 3\,605\,965 & 11\,588\,790 & 4\,323\,152 & 27\,876\,186 \\
+& 3605965 & 11588790 & 4323152 & 27876186 \\
 Kolonnenblock
-& 657\,500 & 802\,300 & 1\,329\,700 & 1\,588\,200 \\
+& 657500 & 802300 & 1329700 & 1588200 \\
 Luftvorreinigung
-& 341\,077 & 991\,287 & 452\,228 & 2\,357\,151 \\
+& 341077 & 991287 & 452228 & 2357151 \\
+\midrule
 FCI
-& 6\,229\,945 & 18\,106\,356 & 8\,260\,173 & 43\,054\,540 \\
+& 6229945 & 18106356 & 8260173 & 43054540 \\
 TCI
-& 9\,158\,019 & 26\,616\,343 & 12\,142\,454 & 63\,290\,174 \\
-\hline
+& 9158019 & 26616343 & 12142454 & 63290174 \\
+\bottomrule
 \end{tabular}
 \end{table}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.90\textwidth]{Overleaf_LaTeX/bilder/trr_zusammensetzung.png}
-\caption{Zusammensetzung des jährlichen Total Revenue Requirement \(TRR_L\) aus kapitalgebundenen Kosten \(CC_L\), Betriebs- und Wartungskosten \(OM_L\) sowie Energiekosten \(EC_L\) für die untersuchten Prozessvarianten im Basisfall.}
-\label{fig:trr_zusammensetzung}
-\end{figure}
 
 \begin{figure}[H]
 \centering
@@ -185,7 +219,49 @@ TCI
 \caption{Verteilung der gesamten Bare-Module-Kosten \(C_{\mathrm{BM,tot}}\) auf die Funktionsblöcke der untersuchten Prozessvarianten}
 \label{fig:kostenverteilung_bare_module}
 \end{figure}
-
+Zur übersichtlichen Darstellung der Kostenverteilung werden die einzelnen
+Apparate zu übergeordneten Funktionsblöcken zusammengefasst. Diese Einteilung
+orientiert sich an der zuvor verwendeten Struktur der Exergieanalyse und
+umfasst die Blöcke Luftverdichtung, Gasaufbereitung, Hauptwärmeübertrager,
+Kolonnenblock sowie Rest. Die zugehörige Verteilung der gesamten
+Bare-Module-Kosten \(C_{\mathrm{BM,tot}}\) ist in
+Abbildung \ref{fig:kostenverteilung_bare_module} dargestellt. Die detaillierten
+apparatespezifischen Kosten und die zugehörigen Wärmeübertragerflächen sind im
+Anhang aufgeführt. \\
+Bei der Kostenaufteilung werden die Zwischenkühler \(ZK1\) und \(ZK2\) dem
+Block Luftverdichtung zugeordnet, da sie unmittelbar mit der mehrstufigen
+Verdichtung gekoppelt sind. Die gekoppelten Verdampfer-Kondensatoren
+\(RECO\), \(RC\) und \(RC2\) werden dem Kolonnenblock zugeordnet, da sie
+verfahrenstechnisch direkt mit der Rektifikation verbunden sind. Der
+Hauptwärmeübertrager \(MW\) wird separat ausgewiesen,
+um dessen Beitrag zu den gesamten Bare-Module-Kosten getrennt darzustellen.\\
+Für das kleine Einkolonnenmodell entfällt mit \(47{,}4\,\%\) der größte Anteil
+der Bare-Module-Kosten auf die Luftverdichtung. Der Kolonnenblock bildet mit
+\(26{,}6\,\%\) den zweitgrößten Kostenanteil. Im großen Einkolonnenmodell
+verschiebt sich die Kostenverteilung zugunsten des Kolonnenblocks, der dort
+\(45{,}5\,\%\) der gesamten Bare-Module-Kosten ausmacht. Gleichzeitig nimmt
+auch der Anteil des Hauptwärmeübertragers von \(8{,}2\,\%\) auf
+\(10{,}3\,\%\) zu. Die absoluten Bare-Module-Kosten des Hauptwärmeübertragers
+steigen dabei von \(0{,}38\,\mathrm{Mio.\,EUR}\) auf
+\(1{,}38\,\mathrm{Mio.\,EUR}\).\\
+Beim Doppelkolonnenmodell ist der Anteil des Kolonnenblocks bereits in der
+kleinen Variante mit \(38{,}0\,\%\) ausgeprägt. Dies ist auf die Zuordnung der
+beiden gekoppelten Verdampfer/Kondensatoren sowie der Hoch- und
+Niederdruckkolonne zum Kolonnenblock zurückzuführen. In der großen
+Doppelkolonnenvariante wird dagegen der Hauptwärmeübertrager zum dominierenden
+Kostenblock. Sein Anteil beträgt \(52{,}4\,\%\) der gesamten
+Bare-Module-Kosten. Die zugehörigen absoluten Kosten steigen von
+\(0{,}83\,\mathrm{Mio.\,EUR}\) in der kleinen auf
+\(16{,}67\,\mathrm{Mio.\,EUR}\) in der großen Doppelkolonnenvariante.\\
+Die zugrunde liegenden Wärmeübertragerflächen sind im Anhang in
+Tabelle~\ref{tab:hx_area_aspen} und Tabelle~\ref{tab:hx_area_zk}
+zusammengefasst. Für die kryogenen Wärmeübertrager zeigt sich insbesondere beim
+Doppelkolonnenmodell eine deutliche Zunahme der berechneten Flächen mit
+steigendem Produktmassenstrom. Der Hauptwärmeübertrager \(MW\) vergrößert sich
+von \(\SI{2893.52}{\square\metre}\) in der kleinen auf
+\(\SI{9899.75}{\square\metre}\) in der großen Doppelkolonnenvariante. Auch die
+gekoppelten Wärmeübertrager \(RC\) und \(RC2\) weisen entsprechend größere
+Flächen auf.
 \begin{table}[H]
 \centering
 \caption{Bare-Module-Kosten der Funktionsblöcke der untersuchten Prozessvarianten}
@@ -237,11 +313,41 @@ Doppelkolonne groß
 \hline
 \end{tabular}
 \end{table}
-
+Die jährlichen Kosten der untersuchten Prozessvarianten sind in
+Tabelle \ref{tab:jahreskosten_spezifische_kosten} zusammengefasst und in
+Abbildung \ref{fig:trr_zusammensetzung} nach Kostenanteilen aufgeschlüsselt.
+Das jährliche Total Revenue Requirement \(TRR_L\) setzt sich aus den
+kapitalgebundenen Kosten \(CC_L\), den Betriebs- und Wartungskosten \(OM_L\)
+sowie den Energiekosten \(EC_L\) zusammen.\\
+In allen betrachteten Varianten bilden die Energiekosten den dominierenden
+Anteil der jährlichen Gesamtkosten. Dies ergibt sich daraus, dass der Betrieb
+der kryogenen Luftzerlegung maßgeblich durch den elektrischen Leistungsbedarf
+der Verdichter und der Produktverdichtung bestimmt wird. Entsprechend folgt die
+Höhe der Energiekosten direkt dem Netto-Strombedarf der jeweiligen
+Prozessvariante. Varianten mit geringerem spezifischem Strombedarf weisen daher
+bei gleicher Strompreisannahme niedrigere jährliche Energiekosten auf.\\
+Mit zunehmendem Produktmassenstrom steigen die absoluten Jahreskosten in beiden
+Prozesskonfigurationen deutlich an. Dieser Anstieg ist auf die größere
+Anlagenkapazität zurückzuführen, da sowohl der Energiebedarf als auch die
+Investitionskosten mit der Anlagengröße zunehmen. Die kapitalgebundenen Kosten
+steigen dabei infolge des höheren Total Capital Investment, während die
+Betriebs- und Wartungskosten ebenfalls zunehmen, da sie aus den
+Investitionskosten abgeleitet werden. Der Anstieg der Jahreskosten ist daher
+nicht nur auf den höheren Strombedarf, sondern auch auf die größere
+apparative Auslegung der Anlagen zurückzuführen.\\
+Zwischen den beiden Prozesskonfigurationen zeigen sich unterschiedliche
+Kostenverteilungen. In den kleinen Varianten liegt das jährliche \(TRR_L\) des
+Doppelkolonnenmodells unterhalb des Einkolonnenmodells. Dies ist vor allem auf
+die geringeren Energiekosten der kleinen Doppelkolonnenvariante zurückzuführen,
+während die kapitalgebundenen Kosten aufgrund des höheren Investitionsaufwands
+größer sind. Bei den großen Varianten weist dagegen das Doppelkolonnenmodell
+das höhere jährliche \(TRR_L\) auf. Hier wirken sich neben den Energiekosten
+insbesondere die deutlich höheren kapitalgebundenen Kosten und die daraus
+resultierenden Betriebs- und Wartungskosten aus.\\
 
 \begin{table}[H]
 \centering
-\caption{Jährliche Kosten und spezifische Stickstoffbereitstellungskosten im Basisfall}
+\caption{Jährliche Kosten und spezifische Stickstoffbereitstellungskosten für die betrachteten Varianten}
 \label{tab:jahreskosten_spezifische_kosten}
 \small
 \begin{tabular}{lrrrr}
@@ -265,24 +371,53 @@ $c_{N_2}$ (EUR/t$_{N_2}$)
 \hline
 \end{tabular}
 \end{table}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.90\textwidth]{Overleaf_LaTeX/bilder/trr_zusammensetzung.png}
+\caption{Zusammensetzung des jährlichen Total Revenue Requirement \(TRR_L\) aus kapitalgebundenen Kosten \(CC_L\), Betriebs- und Wartungskosten \(OM_L\) sowie Energiekosten \(EC_L\) für die untersuchten Prozessvarianten.}
+\label{fig:trr_zusammensetzung}
+\end{figure}
 
+Die spezifischen Stickstoffbereitstellungskosten \(c_{N_2}\) ergeben sich aus
+dem Verhältnis der jährlichen Gesamtkosten zur jährlich produzierten
+Stickstoffmenge. Dadurch können die Varianten unabhängig von ihrer absoluten
+Anlagengröße miteinander verglichen werden. Während die absoluten Jahreskosten
+mit der Anlagengröße steigen, verändern sich die spezifischen Kosten nicht in
+gleichem Maß, da gleichzeitig eine größere Produktmenge erzeugt wird. Für das
+Einkolonnenmodell sinken die spezifischen Kosten in der großen Variante leicht,
+während sie beim Doppelkolonnenmodell in der großen Variante ansteigen. Die
+niedrigsten spezifischen Kosten ergeben sich im Basisfall für das kleine
+Doppelkolonnenmodell, die höchsten für das große Doppelkolonnenmodell.
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.75\textwidth]{Overleaf_LaTeX/bilder/spezifische_stickstoffkosten_basisfall.png}
 \caption{Spezifische Stickstoffbereitstellungskosten der Einzel- und Doppelkolonnenmodelle im Basisfall. Die Kosten sind auf die erzeugte Stickstoffmasse bezogen und in EUR/kg$_{N_2}$ angegeben.}
 \label{fig:spezifische_stickstoffkosten_basisfall}
 \end{figure}
-
+Die Sensitivität der spezifischen Stickstoffbereitstellungskosten gegenüber
+dem Strompreis ist in Abbildung \ref{fig:sensitivitaet_stickstoffkosten_strompreis} dargestellt.
+Dazu werden drei Strompreisniveaus von \(\SI{0.13}{\EUR\per\kWh}\),
+\(\SI{0.16}{\EUR\per\kWh}\) und \(\SI{0.19}{\EUR\per\kWh}\) betrachtet.\\
+In allen Varianten steigen die spezifischen Kosten mit zunehmendem Strompreis
+annähernd linear an. Dies ist auf den direkten Zusammenhang zwischen
+Strompreis, elektrischem Netto-Strombedarf und Energiekosten \(EC_L\)
+zurückzuführen. Der Anstieg fällt beim Einkolonnenmodell stärker aus als beim
+Doppelkolonnenmodell. Dies zeigt sich an der steileren Steigung der beiden
+grünen Verläufe in Abbildung \ref{fig:sensitivitaet_stickstoffkosten_strompreis}. Entsprechend
+reagieren die spezifischen Stickstoffbereitstellungskosten des
+Einkolonnenmodells im betrachteten Strompreisbereich stärker auf Änderungen
+des Strompreises.\\
+Innerhalb des betrachteten Strompreisbereichs bleibt die relative Reihenfolge
+der Varianten weitgehend erhalten. Das kleine Doppelkolonnenmodell weist über
+den gesamten Bereich die niedrigsten spezifischen Kosten auf, während das große
+Doppelkolonnenmodell die höchsten Werte erreicht. Die beiden
+Einkolonnenvarianten liegen dazwischen, wobei die große Variante geringfügig
+unterhalb der kleinen Variante verläuft.
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.80\textwidth]{bilder/sensitivitaet_stickstoffkosten_strompreis.pdf}
+\includegraphics[width=0.80\textwidth]{Overleaf_LaTeX/bilder/sensitivitaet_stickstoffkosten_strompreis.png}
 \caption{Sensitivität der spezifischen Stickstoffbereitstellungskosten gegenüber dem angesetzten Strompreis. Dargestellt sind die spezifischen Kosten für Strompreise von \(0{,}13\), \(0{,}16\) und \(0{,}19~\mathrm{EUR/kWh}\).}
 \label{fig:sensitivitaet_stickstoffkosten_strompreis}
 \end{figure}
 
-\section{Validierung und Fehlerbetrachtung}
-\label{sec:validierung}
-
-Gesamtexergiebilanz (kleine Abweichung)
-Kostenrechnung und Sensitivität
 
