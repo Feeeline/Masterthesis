@@ -924,49 +924,48 @@ def plot_component_work_side_by_side(single_tex: Path, double_tex: Path, out_pat
         vals_map_s = parse_component_ed_map(single_tex)
         vals_map_d = parse_component_ed_map(double_tex)
 
+    # Sequential layout: first all single-column components, then all double-column
+    # Preserve the component order as they appear in the LaTeX tables (do not sort).
     comps_s = list(vals_map_s.keys())
-    vals_s = [vals_map_s[c] for c in comps_s]
-
     comps_d = list(vals_map_d.keys())
-    vals_d = [vals_map_d[c] for c in comps_d]
+    vals_s = [ (vals_map_s.get(c, 0.0) / 1e6) if isinstance(vals_map_s.get(c, None), (int, float)) else 0.0 for c in comps_s ]
+    vals_d = [ (vals_map_d.get(c, 0.0) / 1e6) if isinstance(vals_map_d.get(c, None), (int, float)) else 0.0 for c in comps_d ]
 
     _apply_plot_theme()
-    fig, (axL, axR) = plt.subplots(1, 2, figsize=(12.0, 6.0), sharey=True)
+    fig, ax = plt.subplots(1, 1, figsize=(12.0, 6.0))
 
-    # Left: Single
-    x_s = list(range(len(comps_s)))
-    bar_width = 0.40
-    bars_s = axL.bar(x_s, vals_s, width=bar_width, color=COLOR_SINGLE, edgecolor="none")
-    axL.set_xticks(x_s)
-    axL.set_xticklabels(comps_s, rotation=45, ha="right")
-    axL.set_title("Singlekolonne")
-    axL.set_ylabel(r"$\dot{E}$ [W]")
-    _style_axis(axL, grid_axis="y")
+    # x positions: 0..len(comps_s)-1 for single, then len(comps_s).. for double
+    xs_s = list(range(len(comps_s)))
+    xs_d = list(range(len(comps_s), len(comps_s) + len(comps_d)))
 
-    # Right: Double
-    x_d = list(range(len(comps_d)))
-    bars_d = axR.bar(x_d, vals_d, width=bar_width, color=COLOR_DOUBLE, edgecolor="none")
-    axR.set_xticks(x_d)
-    axR.set_xticklabels(comps_d, rotation=45, ha="right")
-    axR.set_title("Doppelkolonne")
-    _style_axis(axR, grid_axis="y")
+    ax.bar(xs_s, vals_s, width=0.8, color=COLOR_SINGLE, label='Einkolonnenmodell', edgecolor='none')
+    ax.bar(xs_d, vals_d, width=0.8, color=COLOR_DOUBLE, label='Doppelkolonnenmodell', edgecolor='none')
 
-    # Shared Y formatting: use same ticks on both axes
-    # determine nice y-limits based on global max
-    max_val = max([abs(v) for v in vals_s + vals_d] or [1.0])
-    # allow negative values (e.g., turbine work)
-    min_val = min([v for v in vals_s + vals_d] or [0.0])
-    lower = min(0.0, min_val * 1.08)
-    axL.set_ylim(lower, max_val * 1.08)
+    # xticks and labels: single labels first, then double labels
+    x_all = xs_s + xs_d
+    labels = comps_s + comps_d
+    ax.set_xticks(x_all)
+    ax.set_xticklabels(labels, rotation=45, ha='right')
+    ax.set_ylabel(r'$\dot{W}_\mathrm{netto}\;[\mathrm{MW}]$')
+    _style_axis(ax, grid_axis='y')
 
-    # small legend centered below
-    from matplotlib.lines import Line2D
+    # y-limits with margin; support negative values
+    all_vals = (vals_s or []) + (vals_d or [])
+    if all_vals:
+        vmax = max(max(all_vals), 0.0)
+        vmin = min(min(all_vals), 0.0)
+        margin = max(0.05 * (vmax - vmin) if vmax != vmin else 0.1 * max(abs(vmax),1.0), 0.01)
+        ax.set_ylim(vmin - margin, vmax + margin)
 
-    legend_handles = [Line2D([0], [0], color=COLOR_SINGLE, marker='s', markersize=8, linestyle='None'), Line2D([0], [0], color=COLOR_DOUBLE, marker='s', markersize=8, linestyle='None')]
-    legend_labels = ["Singlekolonne", "Doppelkolonne"]
-    fig.legend(legend_handles, legend_labels, loc="upper center", bbox_to_anchor=(0.5, -0.06), ncol=2, frameon=True, fancybox=False, edgecolor="black")
+    # Add a vertical separator between single and double groups if both present
+    if comps_s and comps_d:
+        sep_x = len(comps_s) - 0.5
+        ax.axvline(sep_x, color='gray', linestyle='--', linewidth=0.8, zorder=0)
 
-    fig.subplots_adjust(left=0.08, right=0.98, bottom=0.22, top=0.92, wspace=0.22)
+    # Legend centered below plot
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.12), ncol=2, frameon=True, fancybox=False, edgecolor='black')
+
+    fig.subplots_adjust(left=0.08, right=0.98, bottom=0.22, top=0.94)
     fig.savefig(out_path, dpi=300)
     plt.close(fig)
 
