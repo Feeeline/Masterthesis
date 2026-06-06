@@ -1,0 +1,8 @@
+ ? SETUP UNITS-SET SET1 ? \ UNITSET BASESET = SI (1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+ 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1  
+ 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1  
+ 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1  
+ 1 1 1 1 1 7 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1) \                               
+ ? HEATSTREAMS Q2 ? ? WORKSTREAMS W1 ? ? WORKSTREAMS W2 ? ? WORKSTREAMS W3 ? ?  
+ WORKSTREAMS W4 ? ? BLOCK VALVE D3 ? ; SET1 ; \ PARAM P-OUT = 125000.0 <20> <1> 
+ \ ? DISABLE ? ; SET1 ; \ SENSITIVITY LIST = ( "S-1" ) \ "\@"                   
