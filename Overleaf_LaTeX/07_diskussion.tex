@@ -1,9 +1,47 @@
 \chapter{Diskussion}
 \label{ch:diskussion}
 
-Hier schreibe ich was, dass ich noch überarbeiten muss. Und
+Die vorliegende Arbeit ist als modellbasierte Vergleichsstudie zu verstehen. Die Bewertung der untersuchten Prozessvarianten basiert auf stationären Prozesssimulationen in Aspen Plus und eine experimentelle Validierung anhand einer
+realen Anlage wurde nicht durchgeführt. Ziel ist daher nicht die industrielle Detailauslegung einer Luftzerlegungsanlage, sondern der relative Vergleich des Einzel- und Doppelkolonnenmodells unter konsistenten Randbedingungen.\\
+Die in Kapitel \ref{ch:prozess} definierten Zielgrößen wurden in allen betrachteten Varianten eingehalten. Wie Tabelle \ref{tab:stream_comparison_compact} zeigt, werden die geforderten Produktreinheiten und Produktmassenströme erreicht, sodass die simulierten Betriebspunkte als Grundlage für die energetische, exergetische und wirtschaftliche Bewertung
+herangezogen werden können.\\
+Eine Unsicherheit in der Simulation ergibt sich aus der thermo-physikalischen Modellierung und der vereinfachten Prozessabbildung. Das verwendete Peng-Robinson-Stoffdatenmodell (\texttt{PENG-ROB}) kann bei kryogenen Temperaturen, Phasengleichgewichten und kleinen Temperaturdifferenzen zu Abweichungen gegenüber realen Stoffdaten führen. Das Stoffdatenmodell wurde anhand
+experimenteller NIST-Daten, aus dem Jahr 1965 mit der Kennnummer "Binary
+VLE 024" für das binäre System Stickstoff/Sauerstoff
+plausibilisiert. Der Vergleich des isobaren Siedediagramms in Abbildung \ref{fig:vle_n2_o2_pengrob} bei \SI{6.08}{bar} zeigt eine gute Übereinstimmung zwischen Modell und Referenzdaten, sodass die Daten im simulierten Druckbereich für ausreichend genau befunden werden können.
 
-srzhearearzh
+
+
+
+
+Zudem werden die Kolonnen als Gleichgewichtsstufenmodelle beschrieben; reale Stoffübergangswiderstände und hydraulische Effekte werden daher nur näherungsweise erfasst. Die Übertragung auf 
+Packungskolonnen über eine HETP-Annahme ersetzt keine detaillierte hydraulische
+Auslegung.
+
+
+
+
+
+
+Auch Druckverluste, Wärmeübertrager und Luftvorreinigung werden vereinfacht
+berücksichtigt. Feststoffbildung bzw. Ausfrieren von Komponenten wie \ce{CO2}
+oder \ce{H2O} wird nicht explizit modelliert, da deren ausreichende Entfernung in
+der Luftvorreinigung vorausgesetzt wird. Kleine Abweichungen in den
+weiterverarbeiteten Stoff-, Energie- und Exergiebilanzen können zudem durch
+Rundungen, exportierte Tabellenwerte und externe Datenverarbeitung entstehen.
+
+Vor diesem Hintergrund sind die absoluten Werte mit entsprechender Vorsicht zu
+interpretieren. Die zentrale Aussagekraft liegt im relativen Vergleich der
+Prozessvarianten, da beide Konzepte mit derselben Methodik und unter
+einheitlichen Randbedingungen bewertet wurden.
+
+
+
+
+
+
+
+
 
 Die berechneten Flächen der kryogenen Wärmeübertrager liegen in einer
 Größenordnung von etwa \(2{,}7 \cdot 10^3\) bis
