@@ -29,6 +29,14 @@ Ozon (O$_3$)           & 0{,}003–0{,}03\,ppm \\
 \end{tabular}
 \end{table}
 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Overleaf_LaTeX/bilder/PENG-NIST.png}
+    \caption{Vergleich des mit Peng-Robinson berechneten isobaren \(T\)-\(x\)-\(y\)-Diagramms des binären Systems Stickstoff/Sauerstoff mit experimentellen VLE-Daten aus der NIST-Datenbank \cite{national_institute_of_standards_and_technology_nist_2026, wilson_argonoxygennitrogen_1965} bei \(p=\SI{6.08}{bar}\).}
+    \label{fig:txy_n2_o2_peng_robinson_nist}
+\end{figure}
+
+
 \chapter{Modellierung}
 \label{ch:a_sim}
 
@@ -36,7 +44,6 @@ Ozon (O$_3$)           & 0{,}003–0{,}03\,ppm \\
 \centering
 \input{Overleaf_LaTeX/tabellen/aspen_luftzerlegung_streams_single_round}
 \end{landscape}
-
 
 \input{Overleaf_LaTeX/tabellen/aspen_luftzerlegung_streams_molfrac_single_round}
 
@@ -583,7 +590,8 @@ Doppelkolonne klein & ZK2 & Shell-and-Tube & 97{,}46 & 8878 & 16801 & 14358 \\
 Während die Literatur für kryogene Luftzerlegungskolonnen häufig
 Siebbodenkolonnen betrachtet, wird in dieser Arbeit eine Ausführung als
 Packungskolonne angenommen. In der Simulation wurden für die Kolonnen zunächst jeweils \(N_{\text{theo}}=50\) theoretische Stufen gewählt. 
-Ergänzende Sensitivitätsanalysen zeigen für das Einkolonnenmodell und die Hochdruckkolonne, dass eine Reduktion auf unter \(N_{\text{theo}}=30\) theoretische Stufen technisch möglich ist, ohne dass signifikante Einbußen bei Produktreinheit, Ausbeute oder thermischen Lasten der Wärmeübertrager auftreten. Als Stufenzahl wird daher \(N_{\text{theo}}=35\) als kompaktes Design für die kleinskalige Variante des Einkolonnenmodells und der Doppelkolonne angesetzt.\\
+Ergänzende Sensitivitätsanalysen zeigen für das Einkolonnenmodell und die Hochdruckkolonne, dass eine Reduktion auf unter \(N_{\text{theo}}=30\) theoretische Stufen technisch möglich ist, ohne dass signifikante Einbußen bei Produktreinheit, Ausbeute oder thermischen Lasten der Wärmeübertrager auftreten. Da sich die kleinen und großen Varianten in dieser Arbeit im Wesentlichen durch den skalierten Massenstrom unterscheiden, wird für die wirtschaftliche Abschätzung keine zusätzliche Skalierung der theoretischen Stufenzahl vorgenommen. Die Kolonnenhöhe wird daher für kleine und große Anlagenvarianten einheitlich auf Basis von (N_{\text{theo}}=50) bestimmt. Die Skalierung der Kolonnengröße erfolgt primär über den Durchmesser, da dieser unmittelbar von den internen Gasvolumenströmen abhängt.
+\\
 Zur Überführung der theoretischen Stufen in eine reale Bauhöhe wird der
 \(HETP\)-Ansatz (Height Equivalent to a Theoretical Plate) nach Kraume
 verwendet \cite{kraume_transportvorgange_2020}. Die erforderliche
@@ -612,29 +620,35 @@ H_{\text{Kolonne}}
 =
 N_{\text{theo}} \cdot HETP + 4{,}5\,\mathrm{m}.
 \end{equation}
-Für \(N_{\text{theo}}=50\) ergibt sich damit eine Packungshöhe von
-\(15{,}0\,\mathrm{m}\) und eine Gesamthöhe von \(19{,}5\,\mathrm{m}\). Für das kompakte Design mit \(N_{\text{theo}}=35\) ergibt sich eine Packungshöhe von \(10{,}5\,\mathrm{m}\) und eine Gesamthöhe von \(15{,}0\,\mathrm{m}\). Die für die Kostenabschätzung verwendeten Bauhöhen sind in Tabelle~\ref{tab:dimensionierung_vergleich} zusammengefasst.
+
+Für (N_{\text{theo}}=50) ergibt sich eine Packungshöhe von
+(15{,}0,\mathrm{m}) und eine Gesamthöhe von (19{,}5,\mathrm{m}). Diese
+Bauhöhe wird für alle betrachteten Kolonnen angesetzt. Damit wird vermieden,
+aus einer reinen Massenstromskalierung eine veränderte Trennstufenzahl
+abzuleiten. Eine mögliche Reduktion der Kolonnenhöhe wäre nur dann
+begründbar, wenn eine geringere erforderliche theoretische Stufenzahl durch
+eine separate Auslegung oder Sensitivitätsanalyse nachgewiesen würde.
 
 \begin{table}[H]
 \centering
 \caption{Für die Kostenabschätzung angesetzte Kolonnenhöhen
-(\(HETP=0{,}30\,\mathrm{m}\))}
-\label{tab:dimensionierung_vergleich}
+((N_{\text{theo}}=50), (HETP=0{,}30,\mathrm{m}))}
+\label{tab}
 \small
 \begin{tabular}{llccc}
 \hline
 \textbf{Modell} & \textbf{Kolonne} &
-\(\boldsymbol{N_{\text{theo}}}\) &
-\(\boldsymbol{H_{\text{Packung}}}\) &
-\(\boldsymbol{H_{\text{Kolonne}}}\) \\
-& & -- & m & m \\
+(\boldsymbol{N_{\text{theo}}}) &
+(\boldsymbol{H_{\text{Packung}}}) &
+(\boldsymbol{H_{\text{Kolonne}}}) \
+& & -- & m & m \
 \hline
-Einkolonnenmodell groß & Single & 50 & 15{,}0 & 19{,}5 \\
-Einkolonnenmodell klein & Single & 35 & 10{,}5 & 15{,}0 \\
-Doppelkolonnenmodell groß & HPC & 50 & 15{,}0 & 19{,}5 \\
-Doppelkolonnenmodell klein & HPC & 35 & 10{,}5 & 15{,}0 \\
-Doppelkolonnenmodell groß & LPC & 50 & 15{,}0 & 19{,}5 \\
-Doppelkolonnenmodell klein & LPC & 50 & 15{,}0 & 19{,}5 \\
+Einkolonnenmodell groß & Single & 50 & 15{,}0 & 19{,}5 \
+Einkolonnenmodell klein & Single & 50 & 15{,}0 & 19{,}5 \
+Doppelkolonnenmodell groß & HPC & 50 & 15{,}0 & 19{,}5 \
+Doppelkolonnenmodell klein & HPC & 50 & 15{,}0 & 19{,}5 \
+Doppelkolonnenmodell groß & LPC & 50 & 15{,}0 & 19{,}5 \
+Doppelkolonnenmodell klein & LPC & 50 & 15{,}0 & 19{,}5 \
 \hline
 \end{tabular}
 \end{table}
@@ -789,12 +803,12 @@ Januar 2002. Die Anpassung auf das Bezugsjahr 2026 erfolgt mithilfe des CEPCI. D
 \multicolumn{6}{c}{\(\mathrm{USD}_{2002}\)} &
 \(\mathrm{EUR}_{2026}\) \\
 \hline
-Einkolonnenmodell groß & 17\,000 & 12\,000 & 51\,000 & 50\,400 & 101\,400 & 436\,020 & 802\,300 \\
-Einkolonnenmodell klein & 13\,000 & 10\,500 & 39\,000 & 44\,100 & 83\,100 & 357\,330 & 657\,500 \\
-Hochdruckkolonne (HPC) groß & 16\,000 & 11\,000 & 48\,000 & 46\,200 & 94\,200 & 405\,060 & 745\,400 \\
-Hochdruckkolonne (HPC) klein & 12\,000 & 10\,300 & 36\,000 & 43\,260 & 79\,260 & 340\,818 & 627\,100 \\
-Niederdruckkolonne (LPC) groß & 18\,000 & 12\,500 & 54\,000 & 52\,500 & 106\,500 & 457\,950 & 842\,800 \\
-Niederdruckkolonne (LPC) klein & 13\,500 & 11\,500 & 40\,500 & 48\,300 & 88\,800 & 381\,840 & 702\,600 \\
+Einkolonnenmodell groß & 70\,000 & 25\,000 & 210\,000 & 105\,000 & 315\,000 & 1\,354\,500 & 2\,492\,300 \\
+Einkolonnenmodell klein & 25\,000 & 15\,000 & 75\,000 & 63\,000 & 138\,000 & 593\,400 & 1\,091\,900 \\
+Hochdruckkolonne (HPC) groß & 45\,000 & 18\,000 & 135\,000 & 75\,600 & 210\,600 & 905\,580 & 1\,666\,300 \\
+Hochdruckkolonne (HPC) klein & 20\,000 & 12\,000 & 60\,000 & 50\,400 & 110\,400 & 474\,720 & 873\,500 \\
+Niederdruckkolonne (LPC) groß & 65\,000 & 24\,000 & 195\,000 & 100\,800 & 295\,800 & 1\,271\,940 & 2\,340\,400 \\
+Niederdruckkolonne (LPC) klein & 23\,000 & 14\,000 & 69\,000 & 58\,800 & 127\,800 & 549\,540 & 1\,011\,200 \\
 \hline
 \end{tabular}
 \end{table}
