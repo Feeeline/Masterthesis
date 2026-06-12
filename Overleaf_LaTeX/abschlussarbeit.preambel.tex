@@ -18,7 +18,9 @@
 \usepackage{amsmath}
 \usepackage{amsxtra}
 \usepackage{eurosym}
-\usepackage{siunitx}  
+\usepackage{siunitx} 
+\DeclareSIUnit{\volpercent}{Vol.\%}
+\DeclareSIUnit{\normalcubicmetre}{\text{Nm}^3}
 \sisetup{locale=DE}
 \usepackage[version=4]{mhchem}
 
@@ -28,11 +30,6 @@
 \displaywidowpenalty = 10000
 
 
-%Glossary
-\usepackage[acronym,nogrouptoc]{glossaries}
-\newglossary[lg]{latin}{lat}{latgls}{Lateinische Symbole}
-\newglossary[gg]{greek}{grk}{grkgls}{Griechische Symbole}
-\makeglossaries
 
 
 %Einbindung von Bildern, Tabellen, pdf-Seiten, Quellcode
