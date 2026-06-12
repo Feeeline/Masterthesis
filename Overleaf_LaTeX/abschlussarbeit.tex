@@ -10,7 +10,6 @@
 \renewcommand{\thepage}{\Roman{page}}  % <-- Große römische Zahlen
 
 
-
 %Titelseiten
 \input{00_titelei}
 
@@ -37,35 +36,6 @@
 % Symbol- und Abkürzungsverzeichnis
 \clearpage
 \input{98_symbole_abk}
-\glsaddall[types={latin,greek}]
-% Kein Seitenumbruch zwischen den Glossaren
-\begingroup
-  \let\cleardoublepage\relax
-  \let\clearpage\relax
-  \chapter*{Symbol- und Abkürzungsverzeichnis}
-  \addcontentsline{toc}{chapter}{Symbol- und Abkürzungsverzeichnis}
-  \printglossary[
-  type=latin,
-  style=long,
-  nonumberlist,
-  title={\normalsize Lateinische Symbole}
-  ]
-  \vspace{1em}
-  \printglossary[
-  type=greek,
-  style=long,
-  nonumberlist,
-  title={\normalsize Griechische Symbole}
-  ]
-  \vspace{1em}
-  \printglossary[
-  type=\acronymtype,
-  style=long,
-  nonumberlist,
-  title={\normalsize Abkürzungen}
-  ]
-\endgroup
-
 \clearpage
 
 %Seitennummerierung zurücksetzen und arabisch

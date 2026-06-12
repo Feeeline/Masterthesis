@@ -11,46 +11,35 @@ den Vergleich des Einkolonnen- und Doppelkolonnenprozesses geschaffen.
 \section{Grundlegende Annahmen und Rahmenbedingungen}
 \label{sec:modell_basic_assumptions}
 Alle Anlagenkomponenten werden für einen stationären Auslegungsbetriebspunkt
-modelliert. Dynamische Effekte, Teillastverhalten und Abweichungen vom
-Auslegungspunkt werden nicht berücksichtigt. \\
-Die Systemgrenze umfasst die kryogene Luftzerlegungsanlage einschließlich der
-wesentlichen Hauptapparate. Externe Versorgungssysteme wie Elektrizitäts- und
-Kühlwasserversorgung werden nicht separat modelliert, sondern über
-Randbedingungen berücksichtigt. Innerhalb der definierten Systemgrenze werden
-alle relevanten Ein- und Austrittsströme bilanziert. Geometrische Apparatedetails, Fouling, Alterung, Leckströme sowie Regelungs-
-und Steuerungssysteme werden nicht explizit abgebildet. Die Apparate werden
-daher als stationär betrieben und ideal geregelt angenommen.\\
+modelliert. Dynamische Effekte, Teillastverhalten und Abweichungen vom Auslegungspunkt werden nicht berücksichtigt. \\
+Die Systemgrenze umfasst die kryogene Luftzerlegungsanlage einschließlich der wesentlichen Apparate. Externe Versorgungssysteme wie Elektrizitäts- und Kühlwasserversorgung werden nicht separat modelliert, sondern über Randbedingungen berücksichtigt. Innerhalb der definierten Systemgrenze werden alle relevanten Ein- und Austrittsströme bilanziert. Geometrische Apparatedetails, Fouling, Alterung, Leckströme sowie Regelungs- und Steuerungssysteme werden nicht explizit abgebildet. Die Apparate werden daher als stationär betriebene Einheiten am jeweiligen Auslegungspunkt abgebildet.\\
 \\
 Die Zusammensetzung der Umgebungsluft wird im vorliegenden Modell auf die
 wesentlichen Hauptkomponenten Stickstoff, Sauerstoff, Argon, Kohlenstoffdioxid
 und Wasserdampf reduziert. Für den Umgebungszustand werden
-$T_0 = 15\,^\circ\mathrm{C}$, $p_0 = 1{,}01325\,\mathrm{bar}$ und eine relative
-Luftfeuchte von $\varphi = 60\,\%$ als repräsentative Referenzbedingungen
-angesetzt. Als Grundlage dient die reale Zusammensetzung der Umgebungsluft gemäß Anhang ~\ref{ch:a_grund} \cite{hausen_tieftemperaturtechnik_1985, windmeier_cryogenic_2013}. Für die Modellierung der kryogenen Luftzerlegung wird eine vereinfachte Luftzusammensetzung verwendet, die in Tabelle~\ref{tab:modell_Luftzusammensetzung} dargestellt ist und nur die Hauptbestandteile Stickstoff (N\textsubscript{2}), Sauerstoff (O\textsubscript{2}), Kohlendioxidgehalt (CO\textsubscript{2}) und Argon (Ar) sowie Wasserdampf (H\textsubscript{2}O) als Begleitkomponente der feuchten Luft berücksichtigt. Spurengase und weitere Edelgase, wie Neon, Krypton oder Xenon, werden aufgrund ihrer geringen Konzentration nicht explizit modelliert.
+\(T_0 = \SI{15}{\celsius}\), \(p_0 = \SI{1,01325}{\bar}\) und eine relative Luftfeuchte von \(\varphi = \SI{60}{\percent}\) als repräsentative Referenzbedingungen
+angesetzt. Als Grundlage dient die reale Zusammensetzung der Umgebungsluft gemäß Anhang~\ref{ch:a_grund} \cite{hausenTieftemperaturtechnik1985, windmeierCryogenicTechnology2013}. Für die Modellierung der kryogenen Luftzerlegung wird eine vereinfachte Luftzusammensetzung verwendet, die in Tabelle~\ref{tab:modell_Luftzusammensetzung} dargestellt ist. Berücksichtigt werden die Hauptbestandteile Stickstoff (\ce{N2}), Sauerstoff (\ce{O2}), Argon (Ar) und Kohlendioxid (\ce{CO2}) sowie Wasserdampf (\ce{H2O}) als Begleitkomponente der feuchten Luft. Spurengase und weitere Edelgase wie Neon, Krypton oder Xenon werden aufgrund ihrer geringen Konzentration nicht explizit modelliert.\\
+Die thermodynamische Berechnung der Prozessströme erfolgt in Aspen Plus mit dem Stoffdatenmodell Peng--Robinson. Damit wird das reale Gas- und Flüssigkeitsverhalten der betrachteten Hauptkomponenten beschrieben. Flüssig- und Gasphase werden innerhalb der betrachteten Apparate als im thermodynamischen Gleichgewicht befindlich angenommen und eine ideale Durchmischung der jeweiligen Phasen innerhalb einzelner Apparate wird vorausgesetzt. Feststoffphasen und Ausfriervorgänge werden nicht modelliert, da Wasser und Kohlenstoffdioxid vor dem kryogenen Anlagenteil durch die Luftvorreinigung als entfernt angenommen werden.\\
 
 \begin{table}[h!]
 \centering
-\caption{Zusammensetzung der trockenen Luft und der modellierten feuchten Luft bei 15\,$^\circ$C und 60\,\% relativer Feuchte}
+\caption{Zusammensetzung der trockenen Luft und der modellierten feuchten Luft bei \SI{15}{\celsius} und \SI{60}{\percent} relativer Feuchte}
 \label{tab:modell_Luftzusammensetzung}
 \begin{tabular}{l r r}
 \hline
 \textbf{Komponente} 
-  & \textbf{Vol.\,(trocken) / \%} 
+  & \textbf{Volumenanteil trocken (\%)}
   & \textbf{Molfraktion (60\,\% r.\,F., 15\,$^\circ$C)} \\
 \hline
-N\textsubscript{2}  & 78.08  & 0.7729 \\
-O\textsubscript{2}  & 20.95  & 0.2074 \\
-Ar                  & 0.93   & 0.00921 \\
-CO\textsubscript{2} & 0.04   & 0.00040 \\
-H\textsubscript{2}O & 0      & 0.0101 \\
+\ce{N2} & 78,08  & 0,7729 \\
+\ce{O2}  & 20,95  & 0,2074 \\
+\ce{Ar}                 & 0,93   & 0,00921 \\
+\ce{CO2} & 0,04   & 0,00040 \\
+\ce{H2O} & 0      & 0,0101 \\
 \hline
 \end{tabular}
 \end{table}
 
-
-Die thermodynamische Berechnung der Prozessströme erfolgt in Aspen Plus mit dem Stoffdatenmodell Peng-Robinson. Damit wird das reale Gas- und
-Flüssigkeitsverhalten der betrachteten Hauptkomponenten beschrieben. 
-Flüssig- und Gasphase werden innerhalb der betrachteten Apparate als im thermodynamischen Gleichgewicht befindlich angenommen und eine ideale Durchmischung der jeweiligen Phasen innerhalb einzelner Apparate wird vorausgesetzt. Feststoffphasen und Ausfriervorgänge werden nicht modelliert, da Wasser und Kohlenstoffdioxid vor dem kryogenen Anlagenteil durch die Luftvorreinigung als entfernt angenommen werden.\\
 
 
 \section{Modellannahmen von Komponentengruppen}
@@ -59,13 +48,12 @@ Flüssig- und Gasphase werden innerhalb der betrachteten Apparate als im thermod
 Im Folgenden werden die Modellannahmen der einzelnen Komponenten und
 zusammengefassten Komponentengruppen sowie deren verfahrenstechnische Abbildung
 in der Simulation beschrieben. Sofern nicht explizit anders angegeben, gelten
-diese Annahmen einheitlich für alle untersuchten Prozessvarianten, Fall A und
-Fall B.\\
+diese Annahmen einheitlich für alle untersuchten Prozessvarianten, für das Einkolonnenmodell und das Doppelkolonnenmodell.\\
 
 \paragraph{Luftkompression}\label{sec:modell_komression} Der Luftstrom wird in zwei hintereinandergeschalteten Verdichterstufen (\textit{LK1} und \textit{LK2}) komprimiert. Zur Reduktion der spezifischen Verdichterarbeit ist zwischen den beiden Verdichterstufen eine Zwischenkühlung vorgesehen (\textit{ZK1}). Zusätzlich wird auch nach der zweiten Verdichterstufe eine Kühlung des komprimierten Luftstroms vor der Gasreinigung realisiert (\textit{ZK2}). \\
-Für beide Zwischenkühler wird ein konstanter Druckverlust von $\Delta p = 0{,}1~\mathrm{bar}$ angesetzt. Dieser pauschale Ansatz liegt bei den hier betrachteten Druckniveaus im unteren einstelligen Prozentbereich des jeweiligen Eintrittsdrucks und entspricht typischen Literaturangaben für Druckverluste in Wärmeübertragern bzw. in vorgeschalteten Aggregaten in kryogenen Luftzerlegungsanlagen (ca. 1--3\,\%) \cite{stefanie_janine_tesch_exergy-based_nodate, zhou_process_2012}.
+Für beide Zwischenkühler wird ein konstanter Druckverlust von \(\Delta p = \SI{0,1}{\bar}\) angesetzt. Dieser pauschale Ansatz liegt bei den hier betrachteten Druckniveaus im unteren einstelligen Prozentbereich des jeweiligen Eintrittsdrucks und entspricht typischen Literaturangaben für Druckverluste in Wärmeübertragern bzw. in vorgeschalteten Aggregaten in kryogenen Luftzerlegungsanlagen (ca. \SIrange{1}{3}{\percent}) \cite{teschExergybasedMethodsApplied, zhouProcessConfigurationsSimulations}.
 Der Austrittsdruck der zweiten Verdichterstufe (\textit{LK2}) wird als
-Zielwert vorgegeben. Er ergibt sich aus dem erforderlichen Einspeisedruck der nachgeschalteten Kolonne zuzüglich der Druckverluste in Luftreinigung und Multistromwärmeübertrager. Der Austrittsdruck der ersten Verdichterstufe (\textit{LK1}) wird dagegen so berechnet, dass nach dem Druckverlust im Zwischenkühler \textit{ZK1} der gewünschte Eintrittsdruck in \textit{LK2} erreicht wird. Zur Minimierung der Verdichterarbeit wird das Gesamt-Druckverhältnis gleichmäßig auf beide Verdichterstufen verteilt. Für beide Stufen wird daher
+Zielwert vorgegeben. Er ergibt sich aus dem erforderlichen Einspeisedruck der nachgeschalteten Kolonne zuzüglich der Druckverluste in Luftreinigung und Multistromwärmeübertrager. Der Austrittsdruck der ersten Verdichterstufe (\textit{LK1}) wird dagegen so berechnet, dass nach dem Druckverlust im Zwischenkühler \textit{ZK1} der gewünschte Eintrittsdruck in \textit{LK2} erreicht wird. Zur Reduktion der spezifischen Kompressionsarbeit wird das Gesamt-Druckverhältnis gleichmäßig auf beide Verdichterstufen verteilt. Für beide Stufen wird daher
 ein identisches Druckverhältnis angenommen:
 \[
 \frac{p_{\mathrm{out, LK1}}}{p_{\mathrm{in, LK1}}}
@@ -81,13 +69,12 @@ vorgegebenen Enddruck der Verdichterstrecke eindeutig bestimmt. Die Berechnung
 erfolgt in Aspen Plus über einen Calculator-Block. Beide Verdichter werden als stationäre, adiabate Kompressoren modelliert. Für
 die Kompression wird ein konstanter isentroper Wirkungsgrad von
 $\eta_\mathrm{is} = 0{,}84$ angesetzt. Mechanische Verluste werden über einen
-mechanischen Wirkungsgrad von $\eta_\mathrm{mech} = 0{,}99$ berücksichtigt.
-Eine Wärmeabgabe der Verdichter an die Umgebung wird nicht explizit modelliert.
-Die Zwischenkühler werden im Modell als wassergekühlte Kühler mit einer vorgegebenen Austrittstemperatur von $35\,^\circ\mathrm{C}$ abgebildet. Dieser Ansatz orientiert sich an Tesch, die für die wassergekühlten Zwischenkühler einer kryogenen Luftzerlegungsanlage ebenfalls eine Luftaustrittstemperatur von $35\,^\circ\mathrm{C}$ annimmt. Industrielle Anlagen können die verdichtete Luft vor der Vorreinigung durch zusätzliche Kühlstufen bzw. Direktkontaktkühler auch auf niedrigere Temperaturen im Bereich von etwa $5$ bis $20\,^\circ\mathrm{C}$ abkühlen \cite{stefanie_janine_tesch_exergy-based_nodate, heinz-wolfgang_haring_air_2007}.\\
+mechanischen Wirkungsgrad von $\eta_\mathrm{mech} = 0{,}99$ berücksichtigt. Eine Wärmeabgabe der Verdichter an die Umgebung wird aufgrund der adiabaten Modellierung nicht berücksichtigt.
+Die Zwischenkühler werden im Modell als wassergekühlte Kühler mit einer vorgegebenen Austrittstemperatur von \SI{35}{\celsius} abgebildet. Dieser Ansatz orientiert sich an Tesch, die für die wassergekühlten Zwischenkühler einer kryogenen Luftzerlegungsanlage ebenfalls eine Luftaustrittstemperatur von \SI{35}{\celsius}annimmt. Industrielle Anlagen können die verdichtete Luft vor der Vorreinigung durch zusätzliche Kühlstufen bzw. Direktkontaktkühler auch auf niedrigere Temperaturen im Bereich von etwa \SIrange{5}{20}{\celsius} abkühlen \cite{teschExergybasedMethodsApplied, heinz-wolfgangharingAirGasesNitrogen2007}.\\
 
 \paragraph{Luftreinigung}\label{sec:modell_reinigung} Die Luftreinigung wird in der Simulation idealisiert abgebildet. Eine detaillierte Modellierung realer Vorreinigungseinheiten, wie etwa Molekularsieb- oder Adsorptionsprozesse, erfolgt nicht. Ziel der Gasreinigung ist die Entfernung von Wasser und Kohlendioxid aus dem komprimierten Luftstrom und erfolgt über zwei Komponenten. Zunächst wird das Kondensat im Phasenabscheider (Flash, GW1) mechanisch abgetrennt, um den Eintritt flüssigen Wassers in die Adsorptionsstufe zu verhindern, was zur Verklumpung des Adsorptionsmittels bzw. zur Zerstörung des Molekularsiebs führen würde. Diese erste partielle Abscheidung von Wasser im Flash-Block ist adiabatisch, arbeitsfrei modelliert, und es wird ein konstanter Druckverlust von 0,1 bar berücksichtigt. \\
-Die vollständige Entfernung von Wasser und Kohlendioxid wird über einen Separator (Component-Separator, GW2) idealisiert modelliert. Der Separator besitzt drei Auslassströme: einen gereinigten Luftstrom als Hauptstrom, einen Wasser-Abfallstrom sowie einen Kohlenstoffdioxid-Abfallstrom. Die Stofftrennung wird über feste Split-Faktoren definiert. Stickstoff, Sauerstoff und Argon werden vollständig im gereinigten Luftstrom geführt, während Wasser und Kohlendioxid vollständig aus dem Hauptstrom entfernt und den jeweiligen Abfallströmen zugeordnet werden. Die Abtrennung erfolgt idealisiert mit einer Abscheideeffizienz von \(100\,\%\) für H\(_2\)O und CO\(_2\). Thermodynamische oder kinetische Effekte realer Adsorptionsprozesse werden dabei nicht berücksichtigt. Die idealisierte vollständige Entfernung von Wasser und Kohlendioxid repräsentiert die in realen Vorreinigungseinheiten erreichten sehr geringen Restgehalte im ppm-Bereich, die keinen relevanten Einfluss auf die energetische oder exergetische Bewertung der nachgeschalteten kryogenen Prozesse erwarten lassen. \\
-Auch hier wird ein wird ein konstanter Druckverlust von 0,1 bar berücksichtigt, sodass die Luftreinigung einen gesamt Druckverlust von ca. 3 \% aufweist \cite{stefanie_janine_tesch_exergy-based_nodate}.\\
+Die vollständige Entfernung von Wasser und Kohlendioxid wird über einen Separator (Component-Separator, GW2) idealisiert modelliert. Der Separator besitzt drei Auslassströme: einen gereinigten Luftstrom als Hauptstrom, einen Wasser-Abfallstrom sowie einen Kohlenstoffdioxid-Abfallstrom. Die Stofftrennung wird über feste Split-Faktoren definiert. Stickstoff, Sauerstoff und Argon werden vollständig im gereinigten Luftstrom geführt, während Wasser und Kohlendioxid vollständig aus dem Hauptstrom entfernt und den jeweiligen Abfallströmen zugeordnet werden. Die Abtrennung erfolgt idealisiert mit einer Abscheideeffizienz von \(100\,\%\) für \ce{H2O} und \ce{CO2}. Thermodynamische oder kinetische Effekte realer Adsorptionsprozesse werden dabei nicht berücksichtigt. Die idealisierte vollständige Entfernung von Wasser und Kohlendioxid repräsentiert die in realen Vorreinigungseinheiten erreichten sehr geringen Restgehalte im ppm-Bereich, die keinen relevanten Einfluss auf die energetische oder exergetische Bewertung der nachgeschalteten kryogenen Prozesse erwarten lassen. \\
+Auch hier wird ein wird ein konstanter Druckverlust von 0,1 bar berücksichtigt, sodass die Luftreinigung einen gesamt Druckverlust von ca. 3 \% aufweist \cite{teschExergybasedMethodsApplied}.\\
 
 \paragraph{Wärmeübertragung}\label{sec:modell_Wärmeübertragung}
 Die Wärmeübertragung wird im Modell hauptsächlich über den
@@ -98,13 +85,13 @@ Restströmen, und nutzt deren Kälte zur Vorkühlung der Luft.\\
 Neben der Wärmerückgewinnung bestimmt der Hauptwärmeübertrager den
 thermodynamischen Zustand der Kolonnen-Feeds. In der Einkolonnenkonfiguration
 sowie in der Hochdruckkolonne der Doppelkolonnenkonfiguration wird die Luft am
-unteren Kolonnenende eingespeist, ohne dass ein separater Reboiler am
+unteren Kolonnenende eingespeist, ohne dass ein separater Verdampfer am
 Kolonnenboden vorhanden ist. Die Trennleistung wird daher wesentlich durch den
 Zustand des eingespeisten Luftstroms beeinflusst. Der Hauptwärmeübertrager wird
 entsprechend über die Zielbedingungen der
 Luftströme am Austritt spezifiziert.\\
 Für die Einkolonnenkonfiguration und die Hochdruckkolonne der
-Doppelkolonnenkonfiguration wird der Luftstrom als Sattdampf bzw. leicht nasser Dampf in den Kolonnensumpf eingespeist. In dieser Arbeit wird hierfür ein Zielwert von $x = 0{,}95$ gewählt, um eine ausreichende interne Verdampfung sicherzustellen, ohne eine vollständige Verflüssigung des Feeds zu erzwingen.\\
+Doppelkolonnenkonfiguration wird der Luftstrom als Sattdampf oder leicht nasser Dampf in den Kolonnensumpf eingespeist. In dieser Arbeit wird hierfür ein Zielwert von $x = 0{,}95$ gewählt, um eine ausreichende interne Verdampfung sicherzustellen, ohne eine vollständige Verflüssigung des Feeds zu erzwingen.\\
 Der Luftstrom zur Niederdruckkolonne wird nach dem Hauptwärmeübertrager in
 einer Expansionsturbine entspannt. Für einen stabilen Turbinenbetrieb muss der Eintrittszustand vollständig gasförmig sein. Daher wird dieser Strom im Hauptwärmeübertrager als Sattdampf mit einer geringen Überhitzung von etwa $2\,\mathrm{K}$ geführt, um Flüssigkeitsbildung sicher auszuschließen.\\
 Für alle im Hauptwärmeübertrager geführten Ströme wird ein konstanter
@@ -129,14 +116,14 @@ Eine höhere Stufenzahl verbessert grundsätzlich die Trennleistung, erhöht bei
 Packungskolonnen jedoch die Packungshöhe und damit die Kosten für
 Kolonnenmantel und Einbauten. Der Einfluss auf die Betriebskosten ist bei der
 betrachteten kryogenen Luftzerlegung nur indirekt zu bewerten, da Verdampfung
-und Kondensation über eine gekoppelte Reboiler-Kondensator-Einheit
+und Kondensation über eine gekoppelte Verdampfer-Kondensator-Einheit
 wärmeintegriert sind. Die Stufenzahl beeinflusst daher vor allem Umlaufströme,
 Druckniveaus, Temperaturdifferenzen sowie die zugehörige Verdichter- und
 Kälteleistung.\\
 Für die Kolonne werden zunächst \(N_{\text{theo}}=50\) theoretische Stufen
 angesetzt. Diese Wahl orientiert sich an Literaturwerten für industrielle
 Luftzerlegungsanlagen
-\cite{stefanie_janine_tesch_exergy-based_nodate, agrawal_efficient_1991, van_der_ham_exergy_2010}. Ergänzende Sensitivitätsanalysen zeigen für
+\cite{teschExergybasedMethodsApplied, agrawalEfficientCryogenicNitrogen1991, vanderhamExergyAnalysisTwo2010}. Ergänzende Sensitivitätsanalysen zeigen für
 das Einkolonnenmodell, dass eine Reduktion auf \(N_{\text{theo}}=35\)
 theoretische Stufen technisch möglich ist, ohne signifikante Einbußen bei
 Produktreinheit, Ausbeute oder thermischen Lasten der Wärmeübertrager zu
@@ -150,52 +137,45 @@ angegeben, da keine diskreten Flüssigkeitsspiegel überwunden werden müssen.
 Typische Werte liegen im Bereich weniger Millibar pro Meter Packungshöhe. In
 dieser Arbeit wird daher ein konstanter Druckabfall von
 \(0{,}08\,\mathrm{kPa}\) pro Stufe angenommen und linear über die Kolonne
-verteilt \cite{heinz-wolfgang_haring_air_2007}. Der Einspeisedruck ergibt sich aus dem
+verteilt \cite{heinz-wolfgangharingAirGasesNitrogen200}. Der Einspeisedruck ergibt sich aus dem
 Kolonnendruckniveau unter Berücksichtigung der Druckverluste in Gasreinigung
 und Hauptwärmeübertrager. \\
-Der Feedstrom wird am unteren Ende der Kolonne auf Stufe~1 eingespeist, sodass kein ausgeprägter Abtriebsteil unterhalb der Feedstufe vorhanden ist. Der thermodynamische Zustand des Feeds nasser Dampf mit einer Dampfqualität von \(x=0{,}95\) beeinflusst daher maßgeblich die
+Der Feedstrom wird am unteren Ende der Kolonne auf Stufe~50 eingespeist, sodass kein ausgeprägter Abtriebsteil unterhalb der Feedstufe vorhanden ist. Der thermodynamische Zustand des Feeds als zweiphasiger Strom mit einer Dampfqualität von \(x=0{,}95\) beeinflusst daher maßgeblich die
 Trennleistung, insbesondere die interne Verdampfungsrate und den Stoffaustausch, wie bereits im Abschnitt zur Wärmeübertragung beschrieben. \\
 
-\paragraph{Kolonnenblock des Doppelkolonnenmodells}\label{sec:modell_kolonne_double} Ziel des Doppelkolonnenprozesses, bestehend aus einer Hochdruckkolonne (HP-Kolonne, \textit{KOLHP}) und einer Niederdruckkolonne (LP-Kolonne, \textit{KOLLP}), ist die Erzeugung von gasförmigem Stickstoff unter Nutzung einer thermisch integrierten Kolonnenanordnung. Die grundlegenden thermodynamischen Annahmen entsprechen denen des Einkolonnenmodells und werden an dieser Stelle nicht erneut ausgeführt.\\
+\paragraph{Kolonnenblock des Doppelkolonnenmodells}\label{sec:modell_kolonne_double} Ziel des Doppelkolonnenprozesses, bestehend aus einer Hochdruckkolonne (\textit{KOLHP}) und Niederdruckkolonne (\textit{KOLLP}), ist die Erzeugung von gasförmigem Stickstoff unter Nutzung einer thermisch integrierten Kolonnenanordnung. Die grundlegenden thermodynamischen Annahmen entsprechen denen des Einkolonnenmodells und werden an dieser Stelle nicht erneut ausgeführt.\\
 Die Hochdruckkolonne (\textit{KOLHP}) wird analog zur Kolonne des
 Einkolonnenmodells mit \texttt{RadFrac} als Gleichgewichtsstufenmodell
 abgebildet. Es werden ebenfalls \(N_{\text{theo}}=50\) theoretische Stufen,
 eine Einspeisung des Feeds auf Stufe~1, eine Dampfqualität des Feedstroms von
 \(x=0{,}95\), ein Kopfdruck von \(6{,}1\,\mathrm{bar}\) sowie ein linear
 verteilter Druckverlust von \(0{,}08\,\mathrm{kPa}\) pro theoretischer Stufe
-angesetzt \cite{heinz-wolfgang_haring_air_2007}.\\
-Der Bodenstrom der Hochdruckkolonne wird als Feedstrom der Niederdruckkolonne zugeführt. Zusätzlich wird ein Teilstrom des flüssigen Stickstoffprodukts der Hochdruckkolonne abgezweigt. Dieser Flüssigstrom entspricht 10\,\% des Stickstoffprodukts und wird dem Rücklauf der Niederdruckkolonne zugeführt \cite{agrawal_production_1991}. Mit Hilfe dieses Stroms, können beide Rückläufe der Kolonnen ideal eingestellt werden.\\
-Die Niederdruckkolonne (LP-Kolonne, \textit{KOLLP}) wird auf einem gegenüber der Hochdruckkolonne niedrigeren Druckniveau betrieben. Der Kopfdruck der Niederdruckkolonne beträgt 3,1\,bar. In die Niederdruckkolonne werden insgesamt drei Stoffströme eingespeist.
+angesetzt \cite{heinz-wolfgangharingAirGasesNitrogen200}.\\
+Der Bodenstrom der Hochdruckkolonne wird als Feedstrom der Niederdruckkolonne zugeführt. Zusätzlich wird ein Teilstrom des flüssigen Stickstoffprodukts der Hochdruckkolonne abgezweigt. Dieser Flüssigstrom entspricht 10\,\% des Stickstoffprodukts und wird dem Rücklauf der Niederdruckkolonne zugeführt \cite{agrawalProductionMediumPressure1991}. Mithilfe dieses Stroms können die Rücklaufverhältnisse beider Kolonnen gezielt eingestellt werden.\\
+Die Niederdruckkolonne wird auf einem gegenüber der Hochdruckkolonne niedrigeren Druckniveau betrieben. Der Kopfdruck der Niederdruckkolonne beträgt \SI{3,1}{\bar}. In die Niederdruckkolonne werden insgesamt drei Stoffströme eingespeist.
 Die der Niederdruckkolonne zugeführten Stoffströme werden jeweils auf den Druck der zugehörigen Einspeisestufe angepasst. Die Druckanpassung erfolgt in Aspen Plus über Calculator-Blöcke. Die Entspannung dient sowohl der Druckanpassung als auch der weiteren Abkühlung der jeweiligen Ströme.\\
-Für die Niederdruckkolonne werden ebenfalls die \(50\) theoretischen Stufen des
-Standard-Designs der großskaligen Varianten angesetzt. Diese Stufenzahl liegt im
-Bereich der in der Literatur verwendeten Werte für kryogene Luftzerlegungsanlagen
-\cite{stefanie_janine_tesch_exergy-based_nodate, agrawal_efficient_1991,
-van_der_ham_exergy_2010}. In einigen Literaturquellen wird die
-Niederdruckkolonne jedoch mit einer deutlich höheren Stufenzahl als die
-Hochdruckkolonne ausgeführt
-\cite{stefanie_janine_tesch_exergy-based_nodate, cornelissen_exergy_1998}.
-Da eine weitere Erhöhung der Stufenzahl in der vorliegenden Simulation die
-Produktreinheiten nur geringfügig beeinflusst, wird die gewählte Stufenzahl als
-ausreichend für den verfahrenstechnischen Vergleich bewertet. Ihr Einfluss wird
-daher vor allem im Rahmen der wirtschaftlichen Betrachtung berücksichtigt, da
-eine größere Stufenzahl unmittelbar zu höheren Packungshöhen und damit zu
-höheren Kolonnenkosten führt.\\
+Für die Niederdruckkolonne werden ebenfalls die \(50\) theoretischen Stufen des Standard-Designs der großskaligen Varianten angesetzt. Diese Stufenzahl liegt im Bereich der in der Literatur verwendeten Werte für kryogene Luftzerlegungsanlagen
+\cite{teschExergybasedMethodsApplied, agrawalEfficientCryogenicNitrogen1991,
+vanderhamExergyAnalysisTwo2010}. In einigen Literaturquellen wird die
+Niederdruckkolonne jedoch mit einer deutlich höheren Stufenzahl als die Hochdruckkolonne ausgeführt
+\cite{teschExergybasedMethodsApplied, cornelissenExergyAnalysisCryogenic1998}.
+Da eine weitere Erhöhung der Stufenzahl in der vorliegenden Simulation die Produktreinheiten nur geringfügig beeinflusst, wird die gewählte Stufenzahl als ausreichend für den verfahrenstechnischen Vergleich bewertet. Ihr Einfluss wird
+daher vor allem im Rahmen der wirtschaftlichen Betrachtung berücksichtigt, da eine größere Stufenzahl unmittelbar zu höheren Packungshöhen und damit zu höheren Kolonnenkosten führt.\\
 Das flüssige Stickstoffdestillat der Hochdruckkolonne wird dem Rücklauf der Niederdruckkolonne zugeführt und auf der obersten Stufe (Stufe~1) der Kolonne eingebracht. Die beiden weiteren Feedströme werden auf unterschiedlichen Stufen eingespeist, um eine günstige stoffliche und thermische Integration zu gewährleisten. Der Luftstrom wird auf Stufe~20 zugeführt, während der Bodenstrom der Hochdruckkolonne auf Stufe~38 in die Niederdruckkolonne eingespeist wird. Da die Gesamtzahl der theoretischen Stufen der Niederdruckkolonne etwas oberhalb der minimal erforderlichen Stufenzahl liegt, bestehen mehrere mögliche Einspeisebereiche für diese Feedströme. Die gewählten Einspeisestufen stellen eine geeignete Positionierung dar, um eine stabile Trennung und eine effiziente Kopplung der Stoffströme innerhalb der Kolonne zu gewährleisten.\\
 
-\paragraph{Reboiler-Kondesnator} \label{sec:modell_Recon} 
-Die gekoppelte Verdampfer-Kondensator-Einheit wird in der Simulation, durch übertragen der Wärmeströme mit Hilfe von Strömen oder einem Calculator-Block zwischen den Verdampfern und Kondensatoren am Radfracmodell ermöglicht. Des weiteren wird ein expliziter Nachbau der gekoppelten Reboiler-Kondensator-Systeme als Wärmeübertrager (MHeatX) simuliert. Zum einen ermöglicht diese Modellierung eine getrennte Betrachtung der beteiligten Stoff- und Wärmeströme in Aspen Plus, sodass diese im Rahmen der späteren Exergieanalyse einzeln ausgewertet werden können. Zu diesem Zweck werden die zusätzlich eingeführten internen Wärmeströme als separate Zusatzströme mit der Bezeichnung \textit{SZ} modelliert. \\
+\paragraph{Verdampfer-Kondesnator} \label{sec:modell_Recon} 
+Die thermisch gekoppelte Kondensator-Reboiler-Einheit wird in der Simulation über die Übertragung von Wärmeströmen zwischen den Kondensator- und Reboilerfunktionen des \texttt{RadFrac}-Modells abgebildet. Zusätzlich wird die gekoppelte Einheit explizit als Wärmeübertrager mit \texttt{MHeatX} nachgebildet. Diese Modellierung ermöglicht eine getrennte Betrachtung der beteiligten Stoff- und Wärmeströme in Aspen Plus, sodass sie im Rahmen der Exergieanalyse separat ausgewertet werden können. Zu diesem Zweck werden zusätzlich eingeführte interne Stoffströme als separate Zusatzströme mit der Bezeichnung \textit{SZ} modelliert.\\
 \begin{wrapfigure}{r}{0.38\textwidth}
     \centering
     \vspace{-6pt}
     \includegraphics[width=0.36\textwidth]{bilder/RECON.png}
-    \caption{Gekoppelter Reboiler-Kondensator im Einkolonnenmodell}
+    \caption{Gekoppelter Verdampfer-Kondensator im Einkolonnenmodell}
     \label{fig:reboiler_kondensator_einkolonne}
     \vspace{-10pt}
-\end{wrapfigure} Zum anderen bietet die explizite Abbildung der gekoppelten Reboiler-Kondensatoren auch innerhalb der Prozesssimulation einen zusätzlichen Kontrollmechanismus. Durch die separate Modellierung kann überprüft werden, ob die thermische Kopplung zwischen den warmen und kalten Strömen physikalisch sinnvoll ausgelegt ist und keine Temperaturüberschneidungen zwischen den Ein- und Austrittsströmen auftreten. Darüber hinaus erlaubt diese Vorgehensweise die direkte Auswertung des minimalen Temperaturunterschieds (\textit{minimum temperature approach}) innerhalb der Reboiler-Kondensator-Systeme, wodurch sichergestellt wird, dass die Wärmeübertragung auch unter realistischen betrieblichen Bedingungen möglich ist. \\
-Abbildung~\ref{fig:reboiler_kondensator_einkolonne} zeigt den vereinfachten Aufbau des gekoppelten Reboiler-Kondensator-Systems im Einkolonnenmodell. Der heiße Strom entspricht dem Kondensatorstrom der Kolonne (Stickstoffstrom grün dargestellt), der bei der Kondensation Wärme abgibt. Der kalte Strom repräsentiert den Reboilerstrom, der diese Wärme aufnimmt und dadurch teilweise verdampft wird (sauerstoffreicher Strom rot dargestellt). 
-Der gekoppelte Reboiler-Kondensator wird in der Simulation explizit über einen Mehrstromwärmeübertrager (\texttt{MHeatX}) nachgebildet. Zur Abbildung identischer thermodynamischer Zustände werden die relevanten Ströme zunächst mittels \texttt{Transfer}-Funktion in Aspen Plus auf zusätzliche Stoffströme (SZ-Ströme) kopiert. Auf diese Weise werden identische thermodynamische Zustände der ursprünglichen Kolonnenströme sichergestellt. Der molare Stoffstrom des kopierten Zusatzstroms wird anschließend über einen Calculator-Block exakt auf den im Kolonnenmodell eingestellten Refluxstrom skaliert. Analog wird mit dem Bodenstrom der Kolonne vorgegangen. Die im \texttt{RadFrac}-Modell berechnete Wärmeleistung des gekoppelten Reboiler-Kondensators wird dem \texttt{MHeatX} direkt als Wärmestrom über einen Calculator-Block vorgegeben. Dadurch bildet der Wärmetauscher exakt die thermische Kopplung zwischen Kondensation am Kolonnenkopf und Verdampfung im Kolonnensumpf ab. Die Korrektheit der Abbildung wird überprüft, indem die austretenden Ströme des \texttt{MHeatX} mit den entsprechenden Strömen aus dem ursprünglichen gekoppeltem \texttt{RadFrac} bzw. \texttt{Heater} hinsichtlich der thermodynamischen Eigenschaften des Stoffstroms verglichen werden.
-Eine zusätzliche Überhitzung oder Unterkühlung der Kolonnenströme außerhalb der gekoppelten Reboiler-Kondensator-Einheit wird nicht explizit modelliert.
+\end{wrapfigure} Zum anderen bietet die explizite Abbildung der gekoppelten Verdampfer-Kondensatoren auch innerhalb der Prozesssimulation einen zusätzlichen Kontrollmechanismus. Durch die separate Modellierung kann überprüft werden, ob die thermische Kopplung zwischen den warmen und kalten Strömen physikalisch sinnvoll ausgelegt ist und keine Temperaturüberschneidungen zwischen den Ein- und Austrittsströmen auftreten. Darüber hinaus erlaubt diese Vorgehensweise die direkte Auswertung des minimalen Temperaturunterschieds (minimum temperature approach) innerhalb der Verdampfer-Kondensator-Systeme, wodurch sichergestellt wird, dass die Wärmeübertragung auch unter realistischen betrieblichen Bedingungen möglich ist. \\
+Abbildung~\ref{fig:reboiler_kondensator_einkolonne} zeigt den vereinfachten Aufbau des gekoppelten Verdampfer-Kondensator-Systems im Einkolonnenmodell. Der heiße Strom entspricht dem Kondensatorstrom der Kolonne (Stickstoffstrom grün dargestellt), der bei der Kondensation Wärme abgibt. Der kalte Strom repräsentiert den Verdampferstrom, der diese Wärme aufnimmt und dadurch teilweise verdampft wird (sauerstoffreicher Strom rot dargestellt). 
+Der gekoppelte Verdampfer-Kondensator wird in der Simulation explizit über einen Mehrstromwärmeübertrager (\texttt{MHeatX}) nachgebildet. Zur Abbildung identischer thermodynamischer Zustände werden die relevanten Ströme zunächst mittels \texttt{Transfer}-Funktion in Aspen Plus auf zusätzliche Stoffströme (SZ-Ströme) kopiert. Auf diese Weise werden identische thermodynamische Zustände der ursprünglichen Kolonnenströme sichergestellt. Der molare Stoffstrom des kopierten Zusatzstroms wird anschließend über einen Calculator-Block exakt auf den im Kolonnenmodell eingestellten Refluxstrom skaliert. Analog wird mit dem Bodenstrom der Kolonne vorgegangen. Die im \texttt{RadFrac}-Modell berechnete Wärmeleistung des gekoppelten Verdampfer-Kondensators wird dem \texttt{MHeatX} direkt als Wärmestrom über einen Calculator-Block vorgegeben. Dadurch bildet der Wärmeübertrager exakt die thermische Kopplung zwischen Kondensation am Kolonnenkopf und Verdampfung im Kolonnensumpf ab. Die Korrektheit der Abbildung wird überprüft, indem die austretenden Ströme des \texttt{MHeatX} mit den entsprechenden Strömen aus dem ursprünglichen gekoppeltem \texttt{RadFrac} bzw. \texttt{Heater} hinsichtlich der thermodynamischen Eigenschaften des Stoffstroms verglichen werden.
+Eine zusätzliche Überhitzung oder Unterkühlung der Kolonnenströme außerhalb der gekoppelten Verdampfer-Kondensator-Einheit wird nicht explizit modelliert.
 
 \paragraph{Integrierter Kältekreislauf des sauerstoffreichen Reststroms im Einkolonnenmodell}
 \label{sec:modell_loop} Im Einkolonnenmodell wird die erforderliche Kälteleistung über einen internen
@@ -222,9 +202,7 @@ Im Doppelkolonnenmodell wird ein Teilstrom der vorgekühlten Luft in einer
 Expansionsturbine entspannt. Dies dient zum einen der Bereitstellung der für den
 kryogenen Prozess notwendigen Kälteleistung und zum anderen der Anpassung des
 Luftstroms an das erforderliche Feed-Druckniveau der Niederdruckkolonne. Für die
-Turbine werden ein isentroper Wirkungsgrad von
-$\eta_\mathrm{is}=0{,}85$ sowie ein mechanischer Wirkungsgrad von
-$\eta_\mathrm{mech}=0{,}99$ angenommen.\\
+Turbine werden ein isentroper Wirkungsgrad von \(\eta_\mathrm{is}=\num{0,85}\) und ein mechanischer Wirkungsgrad von \(\eta_\mathrm{mech}=\num{0,99}\) vorgegeben.\\
 Der Produktverdichter dient dabei nicht der internen Prozessintegration, sondern
 gewährleistet die Vergleichbarkeit der beiden Prozessvarianten, da der Stickstoff
 im Einkolonnenmodell systembedingt bereits auf einem höheren Druckniveau anfällt.
@@ -235,9 +213,9 @@ $\eta_\mathrm{is}=0{,}84$ und $\eta_\mathrm{mech}=0{,}99$ berücksichtigt.
 \paragraph{Purge im Doppelkolonnenmodell}
 \label{sec:modell_Purge}
 
-In kryogenen Luftzerlegungsanlagen können sich leicht siedende, nicht
+In kryogenen Luftzerlegungsanlagen können sich leichtsiedende, nicht
 kondensierbare Komponenten wie Neon, Helium und Wasserstoff im Kopfbereich der
-Druckkolonne bzw. des Kondensators anreichern. Da diese Bestandteile bei der
+Hochdruckkolonne bzw. des Kondensators anreichern. Da diese Bestandteile bei der
 Stickstoffkondensation nicht vollständig mitverflüssigt werden und den
 Kondensationsprozess beeinträchtigen können, werden sie in realen Anlagen über
 einen kleinen Purge-Strom gezielt abgeführt
@@ -248,23 +226,19 @@ Im Doppelkolonnenmodell wird jedoch ein zusätzlicher Reststrom-Purge
 vorgesehen. Dieser wird von dem sauerstoffreichen Reststrom abgezweigt, der
 ansonsten in den Hauptwärmeübertrager zurückgeführt wird. Der Teilstrom dient
 nicht der Entfernung nicht kondensierbarer Spurengase, sondern der gezielten
-Einstellung des Massen- und Energiehaushalts. Dadurch kann die thermische
-Kopplung der Prozessströme im Reboiler-Kondensator stabilisiert und ein
+Einstellung der Massen- und Energiebilanz. Dadurch kann die thermische
+Kopplung der Prozessströme im Verdampfer-Kondensator stabilisiert und ein
 ungünstiges Temperaturprofil im Hauptwärmeübertrager vermieden werden.\\
 Der Reststrom-Purge wird in Aspen Plus über einen Splitter realisiert und so
-eingestellt, dass der Reboiler-Kondensator sowie der Hauptwärmeübertrager ohne
+eingestellt, dass der Verdampfer-Kondensator sowie der Hauptwärmeübertrager ohne
 Temperaturkreuzungen betrieben werden. 
 
 
 \section{Annahmen zur Exergieanalyse}
 \label{sec:modell_basic_assumptions_exergie}
 
-Für die exergetische Bewertung wird ein einheitlicher Referenzzustand der
-Umgebung mit einer Temperatur von $T_0 = 288{,}15\,\mathrm{K}$ und einem Druck
-von $p_0 = 1{,}013\,\mathrm{bar}$ angenommen. Die Berechnung der chemischen
-Exergie erfolgt auf Basis des Referenzmodells nach Szargut unter Verwendung
-tabellierter Standardwerte der molaren chemischen Exergien der Reinstoffe. Die
-detaillierten Berechnungsgrundlagen werden im Folgenden erläutert. Für die chemische Exergie wird zudem eine Referenzzusammensetzung der Umgebungsluft angenommen. Die Stoffdaten für die Berechnungen beziehen sich auf diese Umgebungswerte, ..........
+Für die exergetische Bewertung wird ein einheitlicher Referenzzustand der Umgebung mit einer Temperatur von  \(T_0 = \SI{288,15}{\kelvin}\) und einem Druck von \(p_0 = \SI{1,013}{\bar}\) angenommen. Die Berechnung der chemischen Exergie erfolgt auf Basis des Referenzumgebungsmodells nach Szargut unter Verwendung tabellierter molarer Standardexergien der Reinstoffe. Die
+detaillierten Berechnungsgrundlagen werden im Folgenden erläutert.
 
 \subsection{Systemgrenze und Zerlegung in Funktionszonen}
 \label{sec:modell_System_funktion}
@@ -277,7 +251,7 @@ zeitlichen Speicherterme in den Exergiebilanzen auf. Externe Medien wie die
 Umgebung, Kühlmedien oder das elektrische Versorgungsnetz werden als
 Randbedingungen behandelt und nicht gesondert modelliert.\\
 Zur lokalen Zuordnung von Exergieverlusten wird die Gesamtanlage in wenige funktionale Bilanzräume unterteilt. Die Zerlegung erfolgt nach verfahrenstechnischen Funktionen, um eine physikalisch sinnvolle Interpretation der Ergebnisse sowie eine Vergleichbarkeit mit Literaturdaten zu gewährleisten und ist in Tabelle \ref{tab:block_definition} dargestellt.\\
-Die detaillierte exergetische Bewertung einzelner Komponenten erfolgt im folgenden Abschnitt über die Definition von Brennstoff- und Produktexergien.
+Die detaillierte exergetische Bewertung der Vernichtungen einzelner Komponenten erfolgt im folgenden Abschnitt über die Definition von Brennstoff- und Produktexergien.
 
 \begin{table}[h]
 \centering
@@ -288,14 +262,13 @@ Die detaillierte exergetische Bewertung einzelner Komponenten erfolgt im folgend
 \begin{tabular}{p{3.5cm} p{5.5cm} p{5.5cm}}
 \toprule
 Block &
-Zugeordnete Komponenten Einzelkolonnenmodell &
+Zugeordnete Komponenten Einkolonnenmodell &
 Zugeordnete Komponenten Doppelkolonnenmodell\\
 \midrule
-gekühlte Luftverdichtung & ZK1, LK2 & ZK1, LK2\\
-Luftverdichtung & LK1, ZK1, LK2 & LK1, ZK1, LK2\\
-Gasaufbereitung & ZK2, GW1, GW2 & ZK2, GW1, GW2\\
-Verdichtungs- und Reinigungsblock & LK1, ZK1, LK2, ZK2, GW1, GW2 & LK1, ZK1, LK2, ZK2, GW1, GW2\\
-Hauptwärmeübertrager & MW & MW\\
+Verdichtung & LK1, ZK1, LK2 & LK1, ZK1, LK2\\
+Gasreinigung & ZK2, GW1, GW2 & ZK2, GW1, GW2\\
+Verdichtungs- und Gasreinigungsblock & LK1, ZK1, LK2, ZK2, GW1, GW2 & LK1, ZK1, LK2, ZK2, GW1, GW2\\
+(Haupt-) Wärmeübertrager & MW & MW\\
 Rektifikation & KOL, RC, D1 & KOLHP, KOLLP, RC1, RC2, D1, D2, D3,\\
 Rest & T, D2, MIX & T, D4, MIX, PK1 \\
 \bottomrule
@@ -306,7 +279,7 @@ Rest & T, D2, MIX & T, D4, MIX, PK1 \\
 \label{sec:modell_komponenten}
 
 Zur lokalen Quantifizierung der Exergievernichtung wird für jede betrachtete
-Komponente eine exergetische Brennstoff- und Produktexergie definiert. 
+Komponente eine Brennstoff- und Produktexergie definiert. 
 Die vollständige komponentenspezifische Zuordnung der Stoffströme für das
 Einkolonnen- und Doppelkolonnenmodell ist im Anhang dargestellt
 (vgl. Anhang~\ref{ch:a_exergie}). Die Definitionen orientieren sich am
@@ -320,8 +293,8 @@ Bei Turbinen wird
 die Abnahme der mechanischen Exergie des expandierten Stroms als
 Brennstoffexergie angesetzt. Die abgegebene Wellenleistung sowie die durch die
 Abkühlung erzeugte thermische Exergie bilden die Produktexergie. \\
-Die Zwischenkühler werden als dissipative Komponenten modelliert. Da ein separater Kühlstrom nicht explizit berücksichtigt wird, wird die Abkühlung des Prozessgases als vollständig irreversible Exergieabgabe an die Umgebung interpretiert. Folglich wird für diese Komponenten keine Produktexergie definiert, weshalb kein exergetischer Wirkungsgrad ausgewiesen werden kann. Die exergetische Bilanzierung beschränkt sich hierbei ausschließlich auf die Ermittlung der Exergievernichtung.\\
-
+Die Zwischenkühler werden als dissipative Komponenten modelliert. Da ein separater Kühlstrom nicht explizit berücksichtigt wird, wird die Abkühlung des Prozessgases als Exergieverlust an die Umgebung und als damit verbundene Exergievernichtung innerhalb der Bilanzgrenze interpretiert. Folglich wird für diese Komponenten keine Produktexergie definiert, weshalb kein exergetischer Wirkungsgrad ausgewiesen werden kann. Die exergetische Bilanzierung beschränkt sich hierbei ausschließlich auf die Ermittlung der Exergievernichtung.\\
+\\
 Die Exergiebilanzierung der Drosselorgane erfolgt unter Berücksichtigung des
 Joule-Thomson-Effekts. Als Brennstoffexergie \(\dot{E}_F\) wird die Abnahme der
 mechanischen Exergie \(\dot{E}^M\) infolge der Druckentspannung definiert. Das
@@ -330,9 +303,8 @@ Exergie \(\dot{E}^T\), der durch die Abkühlung des Stoffstroms entsteht. Damit
 wird die Drosselung nicht ausschließlich als Verlustquelle, sondern entsprechend
 ihrer prozesstechnischen Funktion als Kälteerzeugung innerhalb des kryogenen
 Systems bewertet.\\
-
-Für den Mischer im kryogenen Bereich wird ein thermisch fokussierter Fuel-Product-Ansatz gewählt, der die Teilströme einzeln bilanziert. Als exergetisches Produkt wird die Zunahme der thermischen Exergie des wärmeren Massenstroms ($\dot{m}_{19}$) definiert, da dessen Abkühlung die primäre verfahrenstechnische Aufgabe an dieser Stelle ist. Der exergetische Aufwand (Brennstoff) ist die Abnahme der thermischen Exergie des kälteren Massenstroms ($\dot{m}_{17}$), der als Kältemedium fungiert und durch den Mischvorgang eine Temperaturerhöhung erfährt. Für den Mischer des Doppelkolonnenmodells wird eine vereinfachte thermische
-Fuel-Product-Definition verwendet. Da die eintretenden Ströme 16 und 31 eine
+\\
+Für den Mischer im kryogenen Bereich wird ein thermisch fokussierter Fuel-Product-Ansatz gewählt, der die Teilströme einzeln bilanziert. Als exergetisches Produkt wird die Zunahme der thermischen Exergie des wärmeren Stoffstroms \(S_{19}\) definiert, da dessen Abkühlung die primäre verfahrenstechnische Aufgabe an dieser Stelle ist. Der exergetische Aufwand (Brennstoff) ist die Abnahme der thermischen Exergie des kälteren Massenstroms ($\dot{m}_{17}$), der als Kältemedium fungiert und durch den Mischvorgang eine Temperaturerhöhung erfährt. Für den Mischer des Doppelkolonnenmodells wird eine vereinfachte thermische Fuel-Product-Definition verwendet. Da die eintretenden Ströme 16 und 31 eine
 ähnliche stoffliche Zusammensetzung sowie vergleichbare Druckniveaus
 aufweisen, wird keine detaillierte Zuordnung der chemischen und mechanischen
 Exergie vorgenommen. Der exergetische Aufwand wird als Abnahme der thermischen
@@ -341,15 +313,13 @@ während die Produktexergie der Zunahme der thermischen Exergie des Stroms 16
 entspricht. Der Mischer wird dabei vor allem mitgeführt, um die Gesamtbilanz
 des Doppelkolonnenmodells vollständig abzubilden und die resultierende
 Exergiebilanz besser kontrollieren zu können.\\
-
-Für die Trennstufe GW1 wird das exergetische Produkt als die gezielte Zunahme der chemischen Exergie im gereinigten Hauptstrom definiert. Der hierfür eingesetzte Brennstoff umfasst sowohl den physikalischen Exergieabbau des Hauptstroms als auch die vollständige Exergie des zur Stofftrennung abgezweigten Massenanteils. Methodisch wird der austretende Seitenstrom explizit als externer Exergieverlust und nicht als interne Vernichtung kategorisiert. Während die Exergievernichtung lediglich prozessbedingte Irreversibilitäten wie Druckverluste oder Mischungseffekte innerhalb des Apparats beschreibt, macht der Exergieverlust das ungenutzte chemische Potenzial des Abstroms transparent. Diese Differenzierung verhindert eine Verzerrung des Bauteilwirkungsgrads und kennzeichnet die Exergie im Nebenstrom als eine theoretisch wiedergewinnbare Ressource, deren Verlust auf einer systemtechnischen Entscheidung zur Nicht-Verwertung beruht, statt auf einer rein thermodynamischen Unzulänglichkeit der Komponente selbst.\\
-Die Bilanzierung des Separators GW2 erfolgt analog zur ersten Trennstufe nach dem Prinzip der stofflichen Aufreinigung. Das exergetische Produkt definiert sich über die Steigerung der chemischen Exergie im Hauptstrom S8, während der Brennstoff den physikalischen Exergieaufwand sowie die Exergie der abgeschiedenen Ströme S9 und S10 umfasst. Indem diese Nebenströme konsequent als Exergieverlust ausgewiesen werden, bleiben deren hohe chemische Potenziale als ungenutzte Ressourcen sichtbar. Diese methodische Abgrenzung verhindert, dass die systemtechnische Entscheidung zur Nicht-Verwertung dieser Ströme die interne Effizienzbewertung (Exergievernichtung) des Separators verfälscht. So wird präzise zwischen apparatetechnischen Irreversibilitäten und prozessbedingten Exergieverlusten unterschieden.\\
-
+\\
+Für die Trennstufen der Luftreinigung (GW1 und GW2) wird das exergetische Produkt als Aufreinigung des Hauptstroms definiert. Die Produktexergie ergibt sich aus der Zunahme der chemischen Exergie des gereinigten Luftstroms. Als Brennstoffexergie werden der physikalische Exergieabbau des Hauptstroms sowie die Exergie der abgeschiedenen Nebenströme berücksichtigt. Die mit den abgeschiedenen Wasser- und Kohlendioxidströmen abgeführte Exergie wird als Exergieverlust über die Systemgrenze ausgewiesen und nicht der internen Exergievernichtung der jeweiligen Komponente zugerechnet. Dadurch wird zwischen apparatebedingten Irreversibilitäten, etwa infolge von Druckverlusten oder Mischungseffekten, und der ungenutzten Exergie abgeführter Stoffströme unterschieden. Diese Abgrenzung verhindert, dass die Exergie der abgeschiedenen Nebenströme fälschlich als interne Exergievernichtung interpretiert wird und dadurch die komponentenbezogene Effizienzbewertung verzerrt.\\
+\\
 In den Multistrom-Wärmeübertragern (MH/MW) wird die Prozessgaskühlung als
 funktionale Aufgabe bilanziert. Die Brennstoffexergie umfasst die physikalischen
 Exergieabnahmen der kalten Rückströme sowie die mechanischen Exergieverluste
-durch Reibungsdruckverluste. Als Produktexergie wird die thermische Exergie der
-abgekühlten Austrittsströme definiert. Dabei wird berücksichtigt, dass die Stoffströme über die Umgebungstemperatur
+durch Reibungsdruckverluste. Als Produktexergie wird die am Austritt bereitgestellte thermische Exergie der abgekühlten Prozessströme definiert. Dabei wird berücksichtigt, dass die Stoffströme über die Umgebungstemperatur
 $T_0$ hinweg abgekühlt werden. Da die thermische Exergie sowohl oberhalb als
 auch unterhalb von $T_0$ positive Werte annehmen kann, würde eine einfache
 Differenzbildung zwischen Ein- und Austritt den funktionalen Nutzen der
@@ -358,8 +328,8 @@ thermische Exergie am Austritt $\dot{E}^T_\mathrm{out}$ als Produkt angesetzt.
 Damit wird das für den kryogenen Trennprozess relevante Kälteexergiepotenzial
 bewertet, während die am Eintritt vorhandene Wärmeexergie als abzuführende Last
 behandelt wird.\\
-
-Der Reboiler-Condenser (RC) wird als funktionale Kopplungseinheit zwischen
+\\
+Der Verdampfer-Condenser (RC) wird als funktionale Kopplungseinheit zwischen
 Kondensation und Verdampfung bilanziert. Als Brennstoffexergie
 \(\dot{E}_F\) dient die Abnahme der physikalischen Exergie des kondensierenden
 Stroms sowie der mechanische Druckverlust auf der Gegenseite. Das exergetische
@@ -371,52 +341,51 @@ Tsatsaronis wird diese Kälteexergie daher als funktionaler Nutzen bewertet, da
 sie die thermodynamische Voraussetzung für die Rektifikation schafft. Der
 Wärmeaustausch wird damit als notwendiger Antrieb des Stofftrennungsprozesses
 innerhalb der Kolonne abgebildet.\\
-
+\\
 Für die Hochdruckkolonne (\textit{KOLHP}) bzw. die Trennkolonne des Einkolonnenmodells (\textit{KOL}) wird eine Systemgrenze gewählt, welche die Kolonne als reinen Stofftrennungsapparat definiert und den Kopfkondensator als externe Einheit ausschließt. Die exergetische Bilanzierung der Trennkolonnen folgt in dieser Arbeit dem Addition/Removal-Prinzip der SPECO-Methodik nach Lazzaretto und Tsatsaronis \cite{lazzaretto_speco_2006}. Dabei wird für jeden Stoffstrom getrennt geprüft, ob die thermischen, mechanischen oder chemischen Exergieanteile beim Durchgang durch die Komponente zu- oder abnehmen.\\
 Als Produktexergie \(\dot{E}_P\) werden diejenigen Exergieanteile bilanziert, die eine Zunahme erfahren. Dies umfasst neben der chemischen Stofftrennung und der thermischen Abkühlung im kryogenen Bereich auch den mechanischen Exergiegewinn der stickstoffreichen Kopfströme. Dieser resultiert aus der Verringerung der mittleren Molmasse und der damit verbundenen Erhöhung der spezifischen Gaskonstante \(R\) des Gasstroms. Übersteigt dieser
-Effekt den exergetischen Verlust durch den Reibungsdruckabfall, nimmt das massenspezifische Arbeitsvermögen zu und wird als funktioneller Nutzen
+Effekt den exergetischen Verlust durch den Reibungsdruckabfall, nimmt das massenspezifische Arbeitsvermögen zu und wird als funktionaler Nutzen
 gewertet.\\
 Exergieabnahmen werden entsprechend als Brennstoffexergie \(\dot{E}_F\) berücksichtigt. Hierzu zählt primär der exergetische Aufwand des externen Kondensationskreislaufs: Da der flüssige Rücklauf im kryogenen Temperaturbereich aufgrund seiner geringen Entropie exergetisch höherwertig ist als der gasförmige Hinlauf zum Kondensator, stellt die Differenz dieser Ströme den notwendigen thermischen Antrieb dar, den die Kolonne für die Rektifikation benötigt. Auf mechanischer Ebene werden Abnahmen bilanziert, wenn der Druckverlust über die Kolonneneinbauten oder die Zunahme der Molmasse in den sauerstoffreichen Sumpfströmen, verbunden mit einer Verringerung der spezifischen Gaskonstante \(R\), das Arbeitsvermögen reduziert.\\
 Durch diese getrennte Betrachtung der Exergieanteile wird eine höhere analytische Trennschärfe erreicht als bei der Verwendung aggregierter physikalischer Exergiewerte. Dadurch können die Prozesse der Rektifikation sowie der Einfluss der Gemischzusammensetzung auf das mechanische Arbeitspotenzial transparent abgebildet werden.\\
-
-Für die Bilanzierung der Niederdruckkolonne (KOLLP) wird aufgrund der multiplen Feedströme (14, 18, 21) ein massenstromgewichteter Mischzustand ($e_{mix}$) als Referenzniveau definiert. Dieser virtuelle Zustand repräsentiert das gemittelte exergetische Potenzial der eintretenden Ressourcen und ermöglicht die Anwendung des Addition/Removal-Prinzips nach Lazzaretto und Tsatsaronis für komplexe Mehrstromsysteme. Ein Exergieanteil eines Austrittsstroms wird genau dann als Produkt ($E_P$) gewertet, wenn sein spezifischer Wert über dem Niveau des Mischzustands liegt ($\Delta e > 0$). Dies bildet die gezielte Veredelung der Stoffströme durch Reinheitssteigerung, Abkühlung oder Erhöhung der spezifischen Gaskonstante ab. Unterschreitet ein Anteil das Referenzniveau ($e_{mix}$), wird die Differenz konsequent als Brennstoff ($E_F$) bilanziert. Diese methodische Vorgehensweise stellt sicher, dass die exergetische Effizienz der Niederdruckstufe die reale Aufwertung der Stoffströme gegenüber der Gesamtheit aller zugeführten Medien präzise widerspiegelt.
+\\
+Für die Bilanzierung der Niederdruckkolonne (KOLLP) wird aufgrund der multiplen Feedströme (14, 18, 21) ein massenstromgewichteter Mischzustand \(e_\mathrm{mix}\) als Referenzniveau definiert. Dieser virtuelle Zustand repräsentiert das gemittelte exergetische Potenzial der eintretenden Ressourcen und ermöglicht die Anwendung des Addition/Removal-Prinzips nach Lazzaretto und Tsatsaronis für komplexe Mehrstromsysteme. Ein Exergieanteil eines Austrittsstroms wird genau dann als Produkt \(\dot{E}_P\) gewertet, wenn sein spezifischer Wert über dem Niveau des Mischzustands liegt \(\Delta e > 0\). Dies bildet die gezielte Veredelung der Stoffströme durch Reinheitssteigerung, Abkühlung oder Erhöhung der spezifischen Gaskonstante ab. Unterschreitet ein Anteil das Referenzniveau \(e_\mathrm{mix}\), wird die Differenz konsequent als Brennstoff \(\dot{E}_F\) bilanziert. Diese methodische Vorgehensweise stellt sicher, dass die exergetische Effizienz der Niederdruckstufe die reale Aufwertung der Stoffströme gegenüber der Gesamtheit aller zugeführten Medien konsistent abbildet.
 
 \section{Annahmen zur wirtschaftlichen Modellierung}
 \label{sec:modell_economics}
 
-Die wirtschaftliche Modellierung der beiden Prozessvarianten erfolgt auf Basis der in Kapitel~\ref{sec:wirtschaftlichkeitsanalyse} beschriebenen Methodik. Ziel ist es, die Einzel- und Doppelkolonnenkonfiguration in der großen und kleinen Variante unter einheitlichen ökonomischen Randbedingungen vergleichbar zu bewerten. Die detaillierten apparatespezifischen Kostenrechnungen sind in Anhang~\ref{ch:a_kosten} dokumentiert. Im vorliegenden Kapitel werden die verwendeten Randbedingungen, Kostenblöcke und Modellannahmen zusammengefasst.
-
-Die ökonomischen Annahmen der Wirtschaftlichkeitsanalyse sind in Tabelle~\ref{tab:oekonomische_rahmenparameter} dargestellt. Die Anlage wird als kontinuierlich betriebene Industrieanlage mit 8000 Jahresvolllaststunden betrachtet. Für die ökonomische Lebensdauer werden 20 Jahre angesetzt. Die Umrechnung der Investitionskosten in jährliche kapitalgebundene Kosten erfolgt mit einem effektiven Zinssatz von 10~\%/a. Die Betriebs- und Wartungskosten werden vereinfachend mit 5~\% des Total Capital Investment angesetzt und mit einer allgemeinen Kostensteigerungsrate nivelliert. Für die Stromkosten wird im Basisfall ein Strompreis von 0{,}16~EUR/kWh angenommen \cite{noauthor_smard_nodate}. Zusätzlich wird eine Sensitivität im Bereich von 0{,}13 bis 0{,}19~EUR/kWh betrachtet. Da ein Teil der verwendeten Kostenkorrelationen in USD angegeben ist, erfolgt die Kostenanpassung zunächst auf das Bezugsjahr 2026 und anschließend die Umrechnung in EUR mit einem einheitlichen Wechselkurs \cite{bank_euro_2026}.
-
+Die wirtschaftliche Modellierung der beiden Prozessvarianten erfolgt auf Basis der in Kapitel~\ref{sec:wirtschaftlichkeitsanalyse} beschriebenen Methodik. Ziel ist es, die Einzel- und Doppelkolonnenkonfiguration in der großen und kleinen Variante unter einheitlichen ökonomischen Randbedingungen vergleichbar zu bewerten. Die detaillierten apparatespezifischen Kostenabschätzungen sind in Anhang~\ref{ch:a_kosten} dokumentiert. Im vorliegenden Kapitel werden die verwendeten Randbedingungen, Kostenblöcke und Modellannahmen zusammengefasst.\\
+Die ökonomischen Annahmen der Wirtschaftlichkeitsanalyse sind in Tabelle~\ref{tab:oekonomische_rahmenparameter} dargestellt. Die Anlage wird als kontinuierlich betriebene Industrieanlage mit 8000 Jahresvolllaststunden betrachtet. Für die ökonomische Lebensdauer werden 20 Jahre angesetzt. Die Umrechnung der Investitionskosten in jährliche kapitalgebundene Kosten erfolgt mit einem effektiven Zinssatz von \SI{10}{\percent/a}. Die Betriebs- und Wartungskosten werden vereinfachend mit \SI{5}{\percent}
+des Total Capital Investment angesetzt und mit einer allgemeinen Kostensteigerungsrate über die Anlagenlebensdauer nivelliert.. Für die Stromkosten wird im Basisfall ein Strompreis von \SI{0,16}{EUR/kWh} angenommen \cite{SMARDEntwicklungIndustriestrompreise, bdewBDEWStrompreisanalyseApril2026}. Zusätzlich wird eine Sensitivität im Bereich von \SIrange{0,13}{0,19}{EUR/kWh} betrachtet. Da ein Teil der verwendeten Kostenkorrelationen in USD angegeben ist, erfolgt zunächst die Kostenanpassung auf das Bezugsjahr 2026 und anschließend die Umrechnung in EUR mit einem einheitlichen Wechselkurs \cite{bank_euro_2026}.
 \begin{table}[H]
 \centering
 \caption{Ökonomische Annahmen der Wirtschaftlichkeitsanalyse}
 \label{tab:oekonomische_rahmenparameter}
 \begin{tabular}{llll}
-\hline
-Parameter & Symbol & Wert & Einheit \\
-\hline
+\toprule
+\textbf{Parameter} & \textbf{Symbol} & \textbf{Wert} & \textbf{Einheit} \\
+\midrule
 Bezugsjahr & -- & 2026 & -- \\
-Währung & -- & EUR$_{2026}$ & -- \\
-Jahresvolllaststunden & $t_\mathrm{op}$ & 8000 & h/a \\
-Ökonomische Lebensdauer & $n$ & 20 & a \\
-Effektiver Zinssatz & $i_\mathrm{eff}$ & 10 & \%/a \\
-Betriebs- und Wartungsfaktor & $f_\mathrm{OM}$ & 0{,}05 & -- \\
-Strompreis im Basisfall & $c_\mathrm{el}$ & 0{,}16 & EUR/kWh \\
-Strompreisbereich der Sensitivität & $c_\mathrm{el}$ & 0{,}13--0{,}19 & EUR/kWh \\
-Allgemeine Kostensteigerungsrate & $r_{n,\mathrm{OM}}$ & 2{,}5 & \%/a \\
-Nominelle Strompreissteigerungsrate & $r_{n,\mathrm{el}}$ & 3{,}5 & \%/a \\
-Wechselkurs & $e_{\$ \rightarrow EUR}$ & 0{,}8546 & EUR/USD \\
-CEPCI Bezugsjahr & $CEPCI_{2026}$ & 840{,}6 & -- \\
-\hline
+Währung & -- & \(\mathrm{EUR}_{2026}\) & -- \\
+Jahresvolllaststunden & \(t_\mathrm{op}\) & 8000 & \(\mathrm{h\,a^{-1}}\) \\
+Ökonomische Lebensdauer & \(n\) & 20 & \(\mathrm{a}\) \\
+Effektiver Zinssatz & \(i_\mathrm{eff}\) & 10 & \(\mathrm{\%\,a^{-1}}\) \\
+Betriebs- und Wartungsfaktor & \(f_\mathrm{OM}\) & 0{,}05 & -- \\
+Strompreis im Basisfall & \(c_\mathrm{el}\) & 0{,}16 & \(\mathrm{EUR\,kWh^{-1}}\) \\
+Strompreisbereich der Sensitivität & \(c_\mathrm{el}\) & 0{,}13--0{,}19 & \(\mathrm{EUR\,kWh^{-1}}\) \\
+Allgemeine Kostensteigerungsrate & \(r_{n,\mathrm{OM}}\) & 2{,}5 & \(\mathrm{\%\,a^{-1}}\) \\
+Nominelle Strompreissteigerungsrate & \(r_{n,\mathrm{el}}\) & 3{,}5 & \(\mathrm{\%\,a^{-1}}\) \\
+Wechselkurs & \(e_{\$ \rightarrow \mathrm{EUR}}\) & 0{,}8546 & \(\mathrm{EUR\,USD^{-1}}\) \\
+CEPCI Bezugsjahr & \(CEPCI_{2026}\) & 840{,}6 & -- \\
+\bottomrule
 \end{tabular}
 \end{table}
-
-Die apparatespezifischen Kosten werden in Anlehnung an Tesch \cite{tesch_exergy-based_nodate} komponentenbasiert bestimmt. Je nach Apparategruppe liefern die verwendeten Kostenkorrelationen entweder Purchased-Equipment-Kosten ($PEC$) oder bereits modulbezogene Kosten ($C_{BM}$). Für Kostenblöcke, die als $PEC$ vorliegen, werden zur Abschätzung der Investitionskosten zusätzlich die Zuschläge aus Tabelle \ref{tab:zuschlagsfaktoren_investition} berücksichtigt. Diese umfassen direkte Kostenanteile wie Installation, Rohrleitungen, Mess- und Regeltechnik, elektrische Ausrüstung sowie Nebenanlagen und bauliche Maßnahmen. Unter den direkten Kosten ($DC$) wird hierbei die Summe aus den Anschaffungskosten ($PEC$)
-und den unmittelbaren onsite- und offsite-Kosten verstanden.
-
+\noindent
+Die apparatespezifischen Kosten werden in Anlehnung an Tesch \cite{teschExergybasedMethodsApplied} komponentenbasiert bestimmt. Je nach Apparategruppe liefern die verwendeten Kostenkorrelationen entweder Purchased-Equipment-Kosten ($PEC$) oder bereits modulbezogene Kosten ($C_{BM}$). Für Kostenblöcke, die als $PEC$ vorliegen, werden zur Abschätzung der Investitionskosten zusätzlich die Zuschläge aus Tabelle \ref{tab:zuschlagsfaktoren_detailliert} berücksichtigt. Diese umfassen direkte Kostenanteile wie Installation, Rohrleitungen, Mess- und Regeltechnik, elektrische Ausrüstung sowie Nebenanlagen und bauliche Maßnahmen. Unter den direkten Kosten ($DC$) wird hierbei die Summe aus den Anschaffungskosten ($PEC$)
+und den unmittelbaren standortbezogenen und anlagenbezogenen Zusatzkosten.\\
+\\
 Da die Kostenkorrelationen für die Rektifikationskolonnen bereits als Bare-Module-Kosten ($C_{BM}$) definiert sind, enthalten diese bereits modulbezogene Aufwendungen für Montage, Material und apparatenahe
-Zusatzkosten. Eine erneute Anwendung der Zuschläge aus Tabelle~\ref{tab:zuschlagsfaktoren_investition} entfällt daher für die Kolonne, um eine Überbewertung der Investitionskosten zu vermeiden. Die Luftvorreinigung wird ebenfalls nicht mit den Zuschlägen aus Tabelle~\ref{tab:zuschlagsfaktoren_investition} beaufschlagt, da sie als pauschaler Kostenblock berücksichtigt wird. Einen Überblick über die Rechnungen der Hauptapparate gibt Tabelle \ref{tab:kostenbasis_hauptapparate}.
+Zusatzkosten. Eine erneute Anwendung der Zuschläge aus Tabelle~\ref{tab:zuschlagsfaktoren_detailliert} entfällt daher für die Kolonne, um eine Überbewertung der Investitionskosten zu vermeiden. Die Luftvorreinigung wird ebenfalls nicht mit Zuschlägen beaufschlagt, da sie als pauschaler Kostenblock berücksichtigt wird. Einen Überblick über die Rechnungen der Hauptapparate gibt Tabelle \ref{tab:kostenbasis_hauptapparate}.
 
 \begin{table}[H]
 \centering
@@ -426,21 +395,19 @@ Zusatzkosten. Eine erneute Anwendung der Zuschläge aus Tabelle~\ref{tab:zuschla
 \hline
 Kostenblock & Komponenten & Kostenbasis \\
 \hline
-Luftverdichtung & LK1, LK2 & $PEC$ \\
-Produkt-/Prozessverdichtung & PK1 & $PEC$ \\
-Expansion/Kältebereitstellung & TURB/T & $PEC$ \\
+Verdichter & LK1, LK2, PK1 & $PEC$ \\
+Expansion/Kältebereitstellung & T & $PEC$ \\
 Zwischenkühlung & ZK1, ZK2 & $PEC$ \\
-Hauptwärmeübertrager & MH/MW & $PEC$ \\
-Reboiler/Kondensator & RECO/RC/RC2 & $PEC$ \\
+Hauptwärmeübertrager & MW & $PEC$ \\
+Verdampfer/Kondensator & RC, RC1, RC2 & $PEC$ \\
 Kolonnenblock & KOL, KOLHP, KOLLP & $C_{BM}$ \\
 Luftvorreinigung & GW1, GW2 & pauschaler Zuschlag \\
 \hline
 \end{tabular}
 \end{table}
-
 \begin{table}[H]
 \centering
-\caption{Detaillierte Zuschlagsfaktoren zur Ermittlung der Investitionskosten in Anlehnung an Bejan et al. und Tsatsaronis \cite{bejan_thermal_1996}}
+\caption{Zuschlagsfaktoren zur Ermittlung der Investitionskosten in Anlehnung an Bejan et al. und Tsatsaronis \cite{bejan_thermal_1996}}
 \label{tab:zuschlagsfaktoren_detailliert}
 \begin{tabular}{lll}
 \hline
@@ -463,8 +430,8 @@ Baukosten einschließlich Gewinn der Baufirma & 15\,\% & $C_\mathrm{BM,tot}$ \\
 Unvorhergesehenes (Contingencies) & 10\,\% & $C_\mathrm{BM,tot}+IC$ \\
 \hline
 \end{tabular}
-\end{table}
-
+\end{table} 
+\noindent
 Das Fixed Capital Investment \(FCI\) wird in dieser Arbeit aus den
 Bare-Module-Kosten der kostenrelevanten Hauptapparate sowie den darauf
 bezogenen indirekten Kosten und dem Zuschlag für Unvorhergesehenes bestimmt.
@@ -474,7 +441,7 @@ Berechnung des Total Capital Investment wird vermieden.\\
 Nach Bejan et al. und Tsatsaronis setzt sich das Total Capital Investment
 aus dem Fixed Capital Investment und weiteren sonstigen Ausgaben zusammen:
 \begin{equation}
-TCI = FCI + SUC + WC + LRD + AFUDC .
+\mathrm{TCI} = \mathrm{FCI} + \mathrm{SUC} + \mathrm{WC} + \mathrm{LRD} + \mathrm{AFUDC}.
 \end{equation}
 Dabei bezeichnen \(SUC\) die Anfahrkosten, \(WC\) das Umlaufkapital,
 \(LRD\) Lizenz-, Forschungs- und Entwicklungskosten sowie \(AFUDC\) die
@@ -487,8 +454,8 @@ TCI = 1{,}47\,FCI .
 Der Faktor berücksichtigt ausschließlich die zusätzlichen sonstigen Ausgaben
 des \(TCI\) und stellt keine erneute Berücksichtigung der bereits im \(FCI\)
 enthaltenen direkten und indirekten Kosten dar.\\
-
-Die wirtschaftliche Bewertung erfolgt anschließend über den jährlichen nivellierten Gesamtumsatzbedarf $TRR_L$ sowie über die spezifischen Stickstoffbereitstellungskosten. Diese werden auf die jährlich erzeugte
+\\
+Die wirtschaftliche Bewertung erfolgt anschließend über den jährlichen nivellierten Gesamtkostenbedarf $TRR_L$ sowie über die spezifischen Stickstoffbereitstellungskosten. Diese werden auf die jährlich erzeugte
 Stickstoffmenge bezogen:
 \begin{equation}
 c_{N_2}
@@ -497,6 +464,5 @@ c_{N_2}
 \end{equation}
 Dabei beschreibt $\dot m_{N_2}$ den Produktmassenstrom des erzeugten Stickstoffs.\\
 Die wirtschaftliche Modellierung ist als vergleichende Vorabschätzung zu verstehen. Standortabhängige Kosten, detaillierte Rohrleitungsdimensionierung,
-Gebäudeauslegung, Genehmigungskosten sowie Herstellerangebote werden nicht
-explizit berücksichtigt, sondern nur über die gewählten und beschriebenen Zuschläge angenähert.
+Gebäudeauslegung, Genehmigungskosten sowie Herstellerangebote werden nicht explizit berücksichtigt, sondern über die gewählten Zuschlagsfaktoren angenähert.
 
