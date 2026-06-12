@@ -19,7 +19,7 @@ Unter stationären Bedingungen und unter Vernachlässigung von Änderungen der k
 + \sum_{\text{ein}} \dot{m}_{\text{ein}} h_{\text{ein}}
 - \sum_{\text{aus}} \dot{m}_{\text{aus}} h_{\text{aus}},
 \end{equation}
-sodass die energetische Bewertung auf Wärme-, Arbeits- und Enthalpieströme an den Systemgrenzen beschränkt bleibt. Diese stationäre Form ist die in der Energieverfahrenstechnik gebräuchliche Arbeitsschreibweise für offene stationäre Systeme. \cite{baehr_thermodynamik_2016}
+sodass die energetische Bewertung auf Wärme-, Arbeits- und Enthalpieströme an den Systemgrenzen beschränkt bleibt. Diese stationäre Form ist die in der Energieverfahrenstechnik gebräuchliche Arbeitsschreibweise für offene stationäre Systeme. \cite{baehrThermodynamik2016}
 
 \section{Exergieanalyse}
 \label{sec:exergieanalyse}
@@ -50,13 +50,13 @@ R T_0 \sum_i x_i \ln(x_i)
 \end{equation}
 Dabei bezeichnet $\dot{n}_j$ den molaren Stoffstrom, $x_i$ die Molfraktion der Komponente $i$, $R$ die universelle Gaskonstante und $T_0$ die Temperatur der Referenzumgebung.\\
 \\
-Zur Bestimmung irreversibler Verluste innerhalb von Anlagenkomponenten wird eine Exergiebilanz über ein Kontrollvolumen formuliert. Diese umfasst Exergietransport über Wärme- und Arbeitsströme sowie über ein- und austretende Stoffströme. Die Exergievernichtung $\dot{E}_D$ beschreibt die durch Irreversibilitäten verursachten Verluste innerhalb der Systemgrenze der Komponente, beispielsweise durch Reibung oder Wärmeübertragung bei großen Temperaturdifferenzen.
+Zur Bestimmung irreversibler Verluste innerhalb von Anlagenkomponenten wird eine Exergiebilanz über ein Kontrollvolumen formuliert. Diese umfasst Exergietransport über Wärme- und Arbeitsströme sowie über ein- und austretende Stoffströme. Die Exergievernichtung $\dot{E}_D$ beschreibt die durch Irreversibilitäten verursachten Verluste innerhalb der Systemgrenze der Komponente, beispielsweise durch Reibung oder Wärmeübertragung bei großen Temperaturdifferenzen
 \begin{equation}
 \frac{d\dot{E}_{sys}}{dt} = \sum_j \left( 1 - \frac{T_0}{T_j} \right) \dot{Q}_j
 + \left( \dot{W} + p_0 \frac{dV}{dt} \right)
 + \sum_{\text{i}} \dot{E}_{\text{i}}
 - \sum_{\text{o}} \dot{E}_{\text{o}}
-- \dot{E}_D
+- \dot{E}_D.
 \end{equation}
 Für eine detaillierte Bewertung wird für jede Komponente des Gesamtsystems die Exergiebilanz in Brennstoffexergie (Fuel), Produktexergie (Product) und Exergievernichtung (Destruction) aufgeteilt. Der Brennstoff ($\dot{E}_F$) definiert hierbei den exergetischen Aufwand, der für den Betrieb der Komponente aufgebracht werden muss, während das Produkt ($\dot{E}_P$) den gewünschten Nutzen beschreibt. Für eine Komponente ($k$) ergibt sich
 \begin{equation}
@@ -64,7 +64,7 @@ Für eine detaillierte Bewertung wird für jede Komponente des Gesamtsystems die
 \end{equation}
 und im Gesamtsystem treten Exergieverluste ($\dot{E}_{L,tot}$) auf, die durch Exergieabgabe an die Umgebung verursacht werden. Die Bilanzgleichung ergibt sich zu
 \begin{equation}
-\dot{E}_{F,tot} = \dot{E}_{P,tot} + \dot{E}_{D,tot} + \dot{E}_{L,tot}
+\dot{E}_{F,tot} = \dot{E}_{P,tot} + \dot{E}_{D,tot} + \dot{E}_{L,tot}.
 \end{equation}
 Diese Methodik ermöglicht eine konsistente Bewertung der Prozessvarianten sowohl auf Gesamtanlagen- als auch auf Komponentenebene.\\
 Um die thermodynamische Güte der einzelnen Komponenten sowie des Gesamtsystems vergleichbar zu machen, kann der Exergetische Wirkungsgrad berechnet werden. Der exergetische Wirkungsgrad einer Komponente ergibt sich aus dem Verhältnis von Produktexergie zu Brennstoffexergie
@@ -81,11 +81,14 @@ und analog kann ein Gesamtwirkungsgrad für die Anlage definiert werden
 \section{Wirtschaftlichkeitsanalyse}
 \label{sec:wirtschaftlichkeitsanalyse}
 
-Die wirtschaftliche Analyse dient der Bewertung der ökonomischen Machbarkeit der untersuchten Prozessvarianten sowie der Ermittlung der spezifischen Kosten der erzeugten Produkte. Sie ergänzt die thermodynamische und exergetische Analyse und ermöglicht eine ganzheitliche Beurteilung der Systeme. In dieser Arbeit wird zur wirtschaftlichen Bewertung die Methode des Total Revenue Requirement (TRR) angewendet, welche die jährlich erforderlichen Gesamtkosten zur Deckung der Investitionskosten sowie der laufenden Betriebs-, Wartungs- und Energiekosten einer Anlage beschreibt \cite{bejan_thermal_1996, tesch_exergy-based_nodate}. Zur Vergleichbarkeit der zeitlich unterschiedlich anfallenden Kosten werden diese über die Lebensdauer der Anlage nivelliert und als konstante jährliche Kosten dargestellt. Der nivellierte Gesamtwert ergibt sich aus der Summe der kapitalgebundenen Kosten, der Betriebs- und Wartungskosten sowie der Energiekosten zu
+Die wirtschaftliche Analyse dient der Bewertung der ökonomischen Machbarkeit der untersuchten Prozessvarianten sowie der Ermittlung der spezifischen Kosten der erzeugten Produkte. Sie ergänzt die thermodynamische und exergetische Analyse und ermöglicht eine ganzheitliche Beurteilung der Systeme. In dieser Arbeit wird zur wirtschaftlichen Bewertung die Methode des Total Revenue Requirement (TRR) angewendet, welche die jährlich erforderlichen Gesamtkosten zur Deckung der Investitionskosten sowie der laufenden Betriebs-, Wartungs- und Energiekosten einer Anlage beschreibt \cite{bejanThermalDesignOptimization1996, teschExergybasedMethodsApplied}. Zur Vergleichbarkeit der zeitlich unterschiedlich anfallenden Kosten werden diese über die Lebensdauer der Anlage nivelliert und als konstante jährliche Kosten dargestellt. Der nivellierte Gesamtwert ergibt sich aus der Summe der kapitalgebundenen Kosten, der Betriebs- und Wartungskosten sowie der Energiekosten zu
 \begin{equation}
 TRR_L = CC_L + OM_L + EC_L
 \end{equation}
-wobei $CC_L$ die nivellierten kapitalgebundenen Kosten, $OM_L$ die nivellierten Betriebs- und Wartungskosten und $EC_L$ die nivellierten Energiekosten darstellen.\\
+wobei $CC_L$ die nivellierten kapitalgebundenen Kosten
+(Capital Costs), $OM_L$ die nivellierten Betriebs- und
+Wartungskosten (Operation and Maintenance Costs) und $EC_L$
+die nivellierten Energiekosten (Energy Costs) darstellen.\\
 Die kapitalgebundenen Kosten werden über die Annuität der Gesamtinvestition berechnet. Die Grundlage bildet das Total Capital Investment (TCI), welches die gesamten Investitionskosten der Anlage umfasst. Diese setzen sich aus direkten und indirekten Anlagekosten sowie gegebenenfalls weiteren projektbezogenen Aufwendungen zusammen. Die Umrechnung der einmaligen Investition in äquivalente jährliche Kosten erfolgt mithilfe des Kapitalrückgewinnungsfaktors, sodass sich ergibt
 \begin{equation}
 CC_L = TCI \cdot CRF
@@ -94,20 +97,20 @@ mit dem Kapitalrückgewinnungsfaktor
 \begin{equation}
 CRF = \frac{i_\mathrm{eff} (1+i_\mathrm{eff})^n}{(1+i_\mathrm{eff})^n - 1}
 \end{equation}
-wobei $i_\mathrm{eff}$ den effektiven Zinssatz und $n$ die ökonomische Lebensdauer der Anlage beschreibt. \cite{bejan_thermal_1996}\\
+wobei $i_\mathrm{eff}$ den effektiven Zinssatz und $n$ die ökonomische Lebensdauer der Anlage beschreibt. \cite{bejanThermalDesignOptimization1996}\\
 \\
-Die Ermittlung der Investitionskosten erfolgt nach einem komponentenbasierten Ansatz. Dabei werden zunächst die Anschaffungskosten (Purchased Equipment Costs, PEC) der Hauptapparate auf Basis ihrer charakteristischen Kapazitätsgrößen (z. B. elektrische Leistung, Wärmeübertragerfläche oder geometrische Abmessungen) bestimmt. Hierzu werden literaturbasierte Kostenkorrelationen herangezogen, die den Zusammenhang zwischen Größe und Kosten unter Berücksichtigung von Skaleneffekten mathematisch beschreiben. Je nach Apparategruppe kommen dabei unterschiedliche mathematische Ansätze zum Einsatz, die von klassischen Skalierungsgesetzen (Potenzfunktionen) bis hin zu spezifischen Kostenpolynomen reichen.\\
+Die Ermittlung der Investitionskosten erfolgt nach einem komponentenbasierten Ansatz. Dabei werden zunächst die Anschaffungskosten (Purchased Equipment Costs, PEC) der Hauptapparate auf Basis ihrer charakteristischen Kapazitätsgrößen wie elektrischer Leistung, Wärmeübertragerfläche oder geometrische Abmessungen bestimmt. Hierzu werden literaturbasierte Kostenkorrelationen herangezogen, die den Zusammenhang zwischen Größe und Kosten unter Berücksichtigung von Skaleneffekten mathematisch beschreiben. Je nach Apparategruppe kommen dabei unterschiedliche mathematische Ansätze zum Einsatz, die von klassischen Skalierungsgesetzen (Potenzfunktionen) bis hin zu spezifischen Kostenpolynomen reichen.\\
 Um von den reinen Anschaffungskosten zu den installierten Kosten zu gelangen, wird die Bare-Module-Methode angewendet. Dabei werden die Basiskosten der Apparate durch Korrekturfaktoren für Material, Druck und Temperatur sowie durch modulspezifische Installationsfaktoren angepasst. Letztere berücksichtigen pauschal die Aufwendungen für Montage, Rohrleitungen, Mess- und Regeltechnik sowie bauliche Maßnahmen. Die Summe der so ermittelten Modulkosten bildet, ergänzt um Zuschläge für indirekte Anlagenkosten wie Engineering und Unvorhergesehenes, die Basis für das Total Capital Investment (TCI).\\
 Zur Gewährleistung der Vergleichbarkeit werden alle Kosten auf ein einheitliches Bezugsjahr normiert, wofür geeignete Kostenindizes herangezogen werden. \\
 \\
-Die Betriebs- und Wartungskosten werden in vereinfachter Form als konstanter Anteil der Gesamtinvestition angesetzt und unter Berücksichtigung der allgemeinen Kostensteigerung nivelliert:
+Die Betriebs- und Wartungskosten werden in vereinfachter Form als konstanter Anteil der Gesamtinvestition angesetzt und unter Berücksichtigung der allgemeinen Kostensteigerung nivelliert
 \begin{equation}
-OM_L = f_{OM} \cdot TCI \cdot CELF_{OM}
+OM_L = f_{OM} \cdot TCI \cdot CELF_{OM},
 \end{equation}
-wobei $f_{OM}$ einen empirischen Faktor darstellt, der typische industrielle Verhältnisse abbildet, und $CELF_{OM}$ den Nivellierungsfaktor für die Betriebs- und Wartungskosten beschreibt \cite{bejan_thermal_1996}.\\
+wobei $f_{OM}$ einen empirischen Faktor darstellt, der typische industrielle Verhältnisse abbildet, und $CELF_{OM}$ den Nivellierungsfaktor für die Betriebs- und Wartungskosten (Constant Escalation Levelization Factor) beschreibt \cite{bejanThermalDesignOptimization1996}.\\
 Energiebedingte Betriebskosten, insbesondere durch den elektrischen Energiebedarf von Kompressoren und weiteren Aggregaten, werden als eigenständige nivellierte Energiekosten berücksichtigt. Die jährlichen Stromkosten ergeben sich aus der elektrischen Leistungsaufnahme, den jährlichen Betriebsstunden und dem angesetzten Strompreis im Bezugsjahr. Zur Berücksichtigung zeitlicher Preisänderungen werden die Energiekosten mithilfe eines konstanten Nivellierungsfaktors berechnet. Für die nivellierten Energiekosten gilt
 \begin{equation}
-EC_L = \dot{W}_\mathrm{el} \cdot t_\mathrm{op} \cdot c_\mathrm{el} \cdot CELF_\mathrm{el}
+EC_L = \dot{W}_\mathrm{el} \cdot t_\mathrm{op} \cdot c_\mathrm{el} \cdot CELF_\mathrm{el},
 \end{equation}
 wobei $\dot{W}_\mathrm{el}$ die elektrische Leistungsaufnahme, $t_\mathrm{op}$ die jährlichen Betriebsstunden, $c_\mathrm{el}$ den Strompreis im Bezugsjahr und $CELF_\mathrm{el}$ den Nivellierungsfaktor für die Stromkosten beschreibt.\\
 Der Nivellierungsfaktor berücksichtigt die nominale Eskalationsrate der jeweiligen Kosten sowie den effektiven Zinssatz und wird berechnet zu
@@ -126,6 +129,6 @@ wobei $r_{n,j}$ die nominale Eskalationsrate der jeweiligen Kostenart $j$ darste
 \label{sec:simulationssoftware}
 
 Die stationäre Modellierung und Bilanzierung der Luftzerlegungsprozesse erfolgt mit der Simulationssoftware Aspen Plus V14.5. Zur Berechnung der thermophysikalischen Zustandsgrößen wird die Peng-Robinson-Zustandsgleichung verwendet, um das Realgasverhalten der Komponenten im kryogenen Bereich präzise abzubilden. Alle Berechnungen erfolgten unter stationären Bedingungen (steady-state) und die Simulation wurde im sequential modular mode durchgeführt. \\
-Exergieberechnung und Datenauswertung Für die thermodynamische Bewertung werden neben den energetischen Bilanzgrößen auch die thermischen, mechanischen und chemischen Exergien der Stoffströme bestimmt. Diese werden unmittelbar innerhalb der Simulationsumgebung mithilfe von Fortran-Subroutinen berechnet, welche am Institut für Energietechnik der Technischen Universität Berlin entwickelt wurden \cite{TUB_ExergySubroutine_2017}. \\
+Exergieberechnung und Datenauswertung für die thermodynamische Bewertung werden neben den energetischen Bilanzgrößen auch die thermischen, mechanischen und chemischen Exergien der Stoffströme bestimmt. Diese werden unmittelbar innerhalb der Simulationsumgebung mithilfe von Fortran-Subroutinen berechnet, welche am Institut für Energietechnik der Technischen Universität Berlin entwickelt wurden \cite{TUB_ExergySubroutine_2017}. \\
 Für die automatisierte Auswertung und detaillierte Exergieanalyse der resultierenden Datenströme wird das Open-Source-Werkzeug ExerPy \cite{ExerPy} eingesetzt. Dieses Python-basierte Tool ermöglicht die systematische Berechnung von Exergievernichtungen, Wirkungsgraden und der gesamten Exergiebilanz auf Basis der aus Aspen Plus exportierten Daten. Im Rahmen dieser Arbeit wurde der Quellcode von ExerPy spezifisch an die Anforderungen der Luftzerlegungsprozesse sowie die Schnittstellen der vorliegenden Simulation angepasst. Zur Unterstützung bei der Erstellung, Strukturierung und Fehlerbehebung der Python-Skripte für die Datenauswertung wurde das KI-basierte Assistenzwerkzeug GitHub Copilot (Microsoft / GitHub, Version 2026, Stand 2026) eingesetzt. \\
 
