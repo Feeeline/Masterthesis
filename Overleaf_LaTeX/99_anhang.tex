@@ -54,9 +54,35 @@ Ozon (O$_3$)           & 0{,}003–0{,}03\,ppm \\
 
 \input{Overleaf_LaTeX/tabellen/aspen_luftzerlegung_streams_molfrac_round}
 
-\input{Overleaf_LaTeX/tabellen/Druckreihe_single}
+\begin{table}[H]
+\centering
+\caption{Spezifischer Energiebedarf des Einkolonnenmodells bei variierendem Produktdruck}
+\label{tab:spez_energie_single}
+\begin{tabular}{cccc}
+\hline
+\textbf{Produktdruck} & \textbf{$ESPECN$} & \textbf{$ESPECST$} & \textbf{Bemerkung} \\
+{[bar (abs.)]} & {[kWh/Nm³]} & {[kWh/m³$_{ST}$]} & \\ \hline
+4,5 & 0,2049 & 0,1942 & Minimum \\
+6,0 & 0,2413 & 0,2288 & Modellierter Druck \\
+8,0 & 0,2793 & 0,2648 & Moderater Druck \\
+10,0 & 0,3103 & 0,2941 & Hoher "Power Penalty" \\ \hline
+\end{tabular}
+\end{table}
 
-\input{Overleaf_LaTeX/tabellen/Druckreihe_doppel}
+\begin{table}[htbp]
+\centering
+\caption{Spezifischer Energiebedarf des Doppelkolonnenmodells bei variierendem Produktdruck}
+\label{tab:spez_energie_doppel}
+\begin{tabular}{cccc}
+\hline
+\textbf{Produktdruck} & \textbf{$ESPECN$} & \textbf{$ESPECST$} & \textbf{Bemerkung} \\
+{[bar (abs.)]} & {[kWh/Nm³]} & {[kWh/m³$_{ST}$]} & \\ \hline
+4,5 & 0,1453 & 0,1377 & Minimum\\
+6,0 & 0,1667 & 0,1580 & Modeldruck \\
+8,0 & 0,1905 & 0,1806 & Moderater Druck \\
+10,0 & 0,2108 & 0,1998 & Geringer "Power Penalty" \\ \hline
+\end{tabular}
+\end{table}
 
 \chapter{Exergieberechnung}
 \label{ch:a_exergie}
@@ -337,7 +363,7 @@ Zur Vergleichbarkeit der Literaturkosten werden alle apparatspezifischen Kosten 
 \begin{equation}
 C_{2026} = C_\mathrm{ref} \cdot \frac{CEPCI_{2026}}{CEPCI_\mathrm{ref}} .
 \end{equation}
-Dabei beschreibt $C_\mathrm{ref}$ die Kosten im ursprünglichen Referenzjahr, $CEPCI_\mathrm{ref}$ den zugehörigen Kostenindex und $CEPCI_{2026}$ den für diese Arbeit verwendeten Kostenindex des Bezugsjahres 2026. Für die vorliegende Arbeit wird $CEPCI_{2026}=840{,}6$ angesetzt \cite{noauthor_plant_2014}. Die verwendeten CEPCI-Werte sind in Tabelle~\ref{tab:cepci_werte} zusammengefasst.
+Dabei beschreibt $C_\mathrm{ref}$ die Kosten im ursprünglichen Referenzjahr, $CEPCI_\mathrm{ref}$ den zugehörigen Kostenindex und $CEPCI_{2026}$ den für diese Arbeit verwendeten Kostenindex des Bezugsjahres 2026. Für die vorliegende Arbeit wird $CEPCI_{2026}=840{,}6$ angesetzt \cite{PlantCostIndex2014}. Die verwendeten CEPCI-Werte sind in Tabelle~\ref{tab:cepci_werte} zusammengefasst.
 
 \begin{table}[H]
 \centering
@@ -347,11 +373,11 @@ Dabei beschreibt $C_\mathrm{ref}$ die Kosten im ursprünglichen Referenzjahr, $C
 \hline
 Jahr & CEPCI & Verwendung \\
 \hline
-2000 & 391{,}1 & Referenzjahr der Verdichterkosten nach Smith \cite{smith_chemical_2005} \\
+2000 & 391{,}1 & Referenzjahr der Verdichterkosten nach Smith \cite{smithChemicalProcessDesign} \\
 2002 & 395{,}6 & Referenzjahr einzelner Kostenkorrelationen \\
 2004 & 444{,}2 & Referenzjahr einzelner Kostenkorrelationen \\
-2015 & 556{,}8 & Referenzjahr der Kostenangaben nach Tesch \cite{stefanie_janine_tesch_exergy-based_nodate} \\
-2026 & 840{,}6 & Bezugsjahr dieser Arbeit \cite{noauthor_plant_2014} \\
+2015 & 556{,}8 & Referenzjahr der Kostenangaben nach Tesch \cite{teschExergybasedMethodsApplied} \\
+2026 & 840{,}6 & Bezugsjahr dieser Arbeit \cite{PlantCostIndex2014} \\
 \hline
 \end{tabular}
 \end{table}
@@ -367,7 +393,7 @@ angesetzt \cite{bank_euro_2026}. Daraus ergibt sich die Umrechnung von USD in EU
 
 \subsection*{Kostenabschätzung der Verdichter}
 
-Die Kostenabschätzung der Verdichter erfolgt in Anlehnung an Tesch \cite{stefanie_janine_tesch_exergy-based_nodate} und Smith \cite{smith_chemical_nodate} leistungsbasiert. Als Skalierungsgröße wird die in Aspen Plus berechnete elektrische Leistungsaufnahme verwendet. Die Referenzwerte der Kostenkorrelation werden Smith entnommen. Für Verdichter einschließlich Motor gibt Smith eine Referenzleistung von $\dot W_{BS}=250~\mathrm{kW}$, Referenzkosten von $PEC_{BS,2000}=9{,}84 \cdot 10^4~\mathrm{USD}_{2000}$ und einen Kostenexponenten von $m=0{,}46$ an \cite{smith_chemical_nodate}. Die verwendeten Referenzdaten sind in Tabelle~\ref{tab:referenzdaten_verdichter} zusammengefasst.
+Die Kostenabschätzung der Verdichter erfolgt in Anlehnung an Tesch \cite{teschExergybasedMethodsApplied} und Smith \cite{smithChemicalProcessDesign} leistungsbasiert. Als Skalierungsgröße wird die in Aspen Plus berechnete elektrische Leistungsaufnahme verwendet. Die Referenzwerte der Kostenkorrelation werden Smith entnommen. Für Verdichter einschließlich Motor gibt Smith eine Referenzleistung von $\dot W_{BS}=250~\mathrm{kW}$, Referenzkosten von $PEC_{BS,2000}=9{,}84 \cdot 10^4~\mathrm{USD}_{2000}$ und einen Kostenexponenten von $m=0{,}46$ an \cite{smith_chemical_nodate}. Die verwendeten Referenzdaten sind in Tabelle~\ref{tab:referenzdaten_verdichter} zusammengefasst.
 
 \begin{equation}
 PEC_{0,2000} =
@@ -380,7 +406,7 @@ Dabei beschreibt $f_d$ einen Faktor für die konstruktive Ausführung, $f_M$ den
 
 \begin{table}[H]
 \centering
-\caption{Verwendete Referenzdaten für die Kostenabschätzung der Verdichter nach Smith \cite{smith_chemical_nodate}}
+\caption{Verwendete Referenzdaten für die Kostenabschätzung der Verdichter nach Smith \cite{smithChemicalProcessDesign}}
 \label{tab:referenzdaten_verdichter}
 \begin{tabular}{llll}
 \hline
@@ -421,7 +447,7 @@ Doppelkolonne klein & PK1 & 209{,}93 & 1{,}10 & 99884 & 214682 & 183458 \\
 
 \subsection*{Kostenabschätzung der Turbinen}
 
-Die Kostenabschätzung der Turbinen erfolgt in Anlehnung an Tesch \cite{tesch_exergy-based_nodate} und Peters et al \cite{peters_plant_2004} leistungsbasiert über die abgegebene mechanische Leistung. Die zugrunde liegenden Kostendaten stammen aus Peters et al. \cite{peters_plant_2004}. Die Kosten im Referenzjahr 2002 ergeben sich zu
+Die Kostenabschätzung der Turbinen erfolgt in Anlehnung an Tesch \cite{teschExergybasedMethodsApplied} und Peters et al \cite{peters_plant_2004} leistungsbasiert über die abgegebene mechanische Leistung. Die zugrunde liegenden Kostendaten stammen aus Peters et al. \cite{peters_plant_2004}. Die Kosten im Referenzjahr 2002 ergeben sich zu
 \begin{equation}
 PEC_{2002} = 3220{,}9 \cdot |\dot W|^{0{,}5963} \cdot f_M .
 \end{equation}
@@ -447,7 +473,7 @@ Doppelkolonne klein & T & 20{,}21 & 2{,}00 & 38683 & 82197 & 70245 \\
 
 \subsection*{Kostenabschätzung der Wärmeübertrager}
 
-Die Kostenabschätzung der Wärmeübertrager erfolgt in Anlehnung an Tesch \cite{stefanie_janine_tesch_exergy-based_nodate} und Ulrich et al. \cite{ulrich2004chemical} flächenbasiert. Die Grundlage ist der Zusammenhang zwischen Wärmestrom, Wärmeübertragerfläche, logarithmischer mittlerer Temperaturdifferenz und Gesamtwärmeübergangskoeffizient:
+Die Kostenabschätzung der Wärmeübertrager erfolgt in Anlehnung an Tesch \cite{teschExergybasedMethodsApplied} und Ulrich et al. \cite{ulrich2004chemical} flächenbasiert. Die Grundlage ist der Zusammenhang zwischen Wärmestrom, Wärmeübertragerfläche, logarithmischer mittlerer Temperaturdifferenz und Gesamtwärmeübergangskoeffizient:
 \begin{equation}
 \dot Q = U \cdot A \cdot \Delta T_{\ln}.
 \end{equation}
@@ -459,7 +485,7 @@ bestimmt. Dadurch wird die Vorgehensweise von Tesch und Ulrich beibehalten, wäh
 Der Gesamtwärmeübergangskoeffizient $U$ hängt vom Wärmeübertragertyp, den beteiligten Phasen, den Stoffeigenschaften, der Strömungsführung sowie von
 Verschmutzungs- und Wandwiderständen ab. Smith beschreibt den Gesamtwärmeübergang entsprechend als Summe einzelner Wärmeübergangs- und Widerstandsanteile und gibt
 typische Größenordnungen für unterschiedliche Stoffsysteme und
-Wärmeübertragungssituationen an \cite{smith_chemical_nodate}. Für die kryogenen Hauptwärmeübertrager sowie die Reboiler/Kondensatoren wird eine kompakte bzw. Platten-Lamellen Bauweise angenommen. Smith beschreibt Plate-Fin-Wärmeübertrager als besonders geeignet für kryogene Anwendungen, da sie hohe Flächendichten, kleine Temperaturdifferenzen und mehrstromige Verschaltungen ermöglichen  \cite{smith_chemical_nodate}. Auch Peters et al. führen kompakte  Platten-Lamellen-Wärmeübertrager als geeignete Bauform für tiefe Temperaturen und hohe thermische Effektivität auf \cite{peters_plant_2003}. Für diese Apparate wird ein einheitlicher Gesamtwärmeübergangskoeffizient von $U_\mathrm{kryo}=300~\mathrm{W/(m^2K)}$ angesetzt.\\
+Wärmeübertragungssituationen an \cite{smithChemicalProcessDesign}. Für die kryogenen Hauptwärmeübertrager sowie die Reboiler/Kondensatoren wird eine kompakte bzw. Platten-Lamellen Bauweise angenommen. Smith beschreibt Plate-Fin-Wärmeübertrager als besonders geeignet für kryogene Anwendungen, da sie hohe Flächendichten, kleine Temperaturdifferenzen und mehrstromige Verschaltungen ermöglichen  \cite{smithChemicalProcessDesign}. Auch Peters et al. führen kompakte  Platten-Lamellen-Wärmeübertrager als geeignete Bauform für tiefe Temperaturen und hohe thermische Effektivität auf \cite{petersPlantDesignEconomics2004}. Für diese Apparate wird ein einheitlicher Gesamtwärmeübergangskoeffizient von $U_\mathrm{kryo}=300~\mathrm{W/(m^2K)}$ angesetzt.\\
 Die Zwischenkühler $ZK1$ und $ZK2$ befinden sich auf der warmen Prozessseite und werden als konventionelle Wärmeübertrager zur Abfuhr der Verdichtungswärme betrachtet. Da bei Gas-Kühlwasser-Wärmeübertragern häufig der gasseitige Wärmeübergang begrenzend wirkt, wird für diese Apparate ein niedrigerer Gesamtwärmeübergangskoeffizient von $U_\mathrm{ZK}=200~\mathrm{W/(m^2K)}$ angenommen. Die gewählten Werte dienen einer überschlägigen und für beide Prozessvarianten konsistenten Flächen- und Kostenabschätzung.
 
 \begin{table}[H]
@@ -529,7 +555,7 @@ Doppelkolonne klein & ZK2 & 1110{,}59 & 148{,}92 & 35{,}00 & 56{,}98 & 97{,}46 \
 
 Für die apparatspezifischen Kosten werden die von Tesch verwendeten
 Kostenfunktionen für Shell-and-Tube- und Plattenwärmeübertrager übernommen
-\cite{stefanie_janine_tesch_exergy-based_nodate}. Die Zwischenkühler werden als
+\cite{teschExergybasedMethodsApplied}. Die Zwischenkühler werden als
 Shell-and-Tube-Wärmeübertrager betrachtet, da sie auf der warmen Prozessseite
 angeordnet sind. Der Hauptwärmeübertrager sowie die Reboiler/Kondensatoren werden
 aufgrund der kryogenen Anwendung und der angenommenen kompakten Bauweise als
@@ -550,6 +576,11 @@ PEC_{0,2004} =
 +2323{,}6 .
 \end{equation}
 
+Da die berechnete Wärmeübertragerfläche teilweise außerhalb des
+Gültigkeitsbereichs der verwendeten Kostenkorrelation liegt, wird die
+Gesamtfläche in der Vorabschätzung auf mehrere gleichartige Module
+aufgeteilt. Die Anzahl der Module wird so gewählt, dass die jeweilige
+Modulfläche innerhalb des zulässigen Flächenbereichs der Kostenfunktion liegt. Die Gesamtkosten ergeben sich anschließend als Summe der Einzelkosten der Module. Dieses Vorgehen entspricht der in der Literatur beschriebenen Praxis (vgl. \cite{petersPlantDesignEconomics2004, hewittApproximateDesignCosting2007}, große Wärmeübertrager bei Überschreiten typischer Einzelapparatgrößen bzw. der Gültigkeitsbereiche von Kostenkurven als mehrere Wärmeübertragereinheiten abzuschätzen.\\
 Dabei ist $A$ in m$^2$ einzusetzen und $PEC_{0,2004}$ ergibt sich in USD$_{2004}$. Da die Kostenfunktion für Plattenwärmeübertrager nur in einem begrenzten Flächenbereich
 verwendet wird, werden Wärmeübertrager mit einer Gesamtfläche oberhalb von
 \SI{3000}{m^2} als modular aufgebaute Einheiten betrachtet. Hierfür wird die Gesamtfläche
@@ -602,7 +633,7 @@ Siebbodenkolonnen betrachtet, wird in dieser Arbeit eine Ausführung als
 Packungskolonne angenommen. In der Simulation wurden für die Kolonnen zunächst jeweils \(N_{\text{theo}}=50\) theoretische Stufen gewählt. 
 Ergänzende Sensitivitätsanalysen zeigen für das Einkolonnenmodell und die Hochdruckkolonne, dass eine Reduktion auf unter \(N_{\text{theo}}=35\) theoretische Stufen technisch möglich ist, ohne dass signifikante Einbußen bei Produktreinheit, Ausbeute oder thermischen Lasten der Wärmeübertrager auftreten. Da sich die kleinen und großen Varianten in dieser Arbeit im Wesentlichen durch den skalierten Massenstrom unterscheiden, wird für die wirtschaftliche Abschätzung keine zusätzliche Skalierung der theoretischen Stufenzahl vorgenommen. Die Kolonnenhöhe wird daher für kleine und große Anlagenvarianten einheitlich auf Basis von \(N_{\text{theo}}=50\) bestimmt. Die Skalierung der Kolonnengröße erfolgt primär über den Durchmesser, da dieser unmittelbar von den internen Gasvolumenströmen abhängt.
 \\
-Zur Überführung der theoretischen Stufen in eine reale Bauhöhe wird der \(HETP\)-Ansatz (Height Equivalent to a Theoretical Plate) nach Kraume verwendet \cite{kraume_transportvorgange_2020}. Die erforderliche
+Zur Überführung der theoretischen Stufen in eine reale Bauhöhe wird der \(HETP\)-Ansatz (Height Equivalent to a Theoretical Plate) nach Kraume verwendet \cite{kraumeTransportvorgaengeVerfahrenstechnikGrundlagen2020}. Die erforderliche
 Packungshöhe ergibt sich aus
 \begin{equation}
 H_{\text{Packung}} = N_{\text{theo}} \cdot HETP .
@@ -611,7 +642,7 @@ H_{\text{Packung}} = N_{\text{theo}} \cdot HETP .
 Nach Kraume weisen moderne strukturierte Packungen Trennleistungen zwischen
 1{,}5 und 6 Stufen pro Meter auf, was einem \(HETP\)-Bereich von
 \(0{,}17\,\mathrm{m}\) bis \(0{,}67\,\mathrm{m}\) entspricht
-\cite{kraume_transportvorgange_2020}. Für die wirtschaftliche Abschätzung wird
+\cite{kraumeTransportvorgaengeVerfahrenstechnikGrundlagen2020}. Für die wirtschaftliche Abschätzung wird
 ein mittlerer Wert von
 \begin{equation}
 HETP = 0{,}30\,\mathrm{m}
@@ -622,7 +653,7 @@ Zusätzlich zur Packung werden konstruktive Zuschläge für Kolonnenkopf
 \((h_{\text{TC}}=1{,}2\,\mathrm{m})\), Sumpf
 \((h_{\text{SC}}=1{,}8\,\mathrm{m})\) und Flüssigkeitsverteilung
 \((h_{\text{vert}}=1{,}5\,\mathrm{m})\) nach Tesch berücksichtigt
-\cite{stefanie_janine_tesch_exergy-based_nodate}. Die gesamte Kolonnenhöhe berechnet sich somit zu
+\cite{teschExergybasedMethodsApplied}. Die gesamte Kolonnenhöhe berechnet sich somit zu
 \begin{equation}
 H_{\text{Kolonne}}
 =
@@ -640,7 +671,7 @@ eine separate Auslegung oder Sensitivitätsanalyse nachgewiesen würde.
 \begin{table}[H]
 \centering
 \caption{Für die Kostenabschätzung angesetzte Kolonnenhöhen
-((N_{\text{theo}}=50), (HETP=0{,}30,\mathrm{m}))}
+(\(N_{\text{theo}}=50\), \(HETP=0{,}30,\mathrm{m}\))}
 \label{tab:kolonnenhoehen_packung}
 \small
 \begin{tabular}{llccc}
@@ -661,7 +692,7 @@ Doppelkolonnenmodell klein & LPC & 50 & 15{,}0 & 19{,}5 \\
 \end{tabular}
 \end{table}
 
-Die Durchmesser der betrachteten Packungskolonnen werden näherungsweise über die maximale Gasbelastung bestimmt. Nach Kraume stellt bei Füllkörper- und Packungskolonnen die Flutgrenze die technisch relevante obere Belastungsgrenze dar. Die Gasgeschwindigkeit am Flutpunkt bestimmt damit die maximal zulässige Belastbarkeit und folglich den erforderlichen Kolonnenquerschnitt \cite{kraume_transportvorgange_2020}.
+Die Durchmesser der betrachteten Packungskolonnen werden näherungsweise über die maximale Gasbelastung bestimmt. Nach Kraume stellt bei Füllkörper- und Packungskolonnen die Flutgrenze die technisch relevante obere Belastungsgrenze dar. Die Gasgeschwindigkeit am Flutpunkt bestimmt damit die maximal zulässige Belastbarkeit und folglich den erforderlichen Kolonnenquerschnitt \cite{kraumeTransportvorgaengeVerfahrenstechnikGrundlagen2020}.
 Da im Rahmen dieser Arbeit keine detaillierte hydraulische Auslegung der
 Packungen durchgeführt wird, erfolgt die Berechnung als Vorabschätzung. Hierzu
 wird aus der Aspen-Simulation je Kolonne der maximale Dampfvolumenstrom
@@ -713,8 +744,8 @@ Doppelkolonnenmodell klein  & LPC    & 0{,}523 & 0{,}872 & 1{,}05 \\
 \end{table}
 
 Die Kostenabschätzung der Kolonnen erfolgt in Anlehnung an Tesch
-\cite{stefanie_janine_tesch_exergy-based_nodate} sowie Peters et al.
-\cite{peters_plant_2004}. Während Tesch für kryogene Luftzerlegungskolonnen
+\cite{teschExergybasedMethodsApplied} sowie Peters et al.
+\cite{petersPlantDesignEconomics2004}. Während Tesch für kryogene Luftzerlegungskolonnen
 Siebböden berücksichtigt, wird in dieser Arbeit eine Ausführung als
 Packungskolonne angenommen. Die Kolonnenkosten werden daher aus den Kosten für
 den Kolonnenmantel und den Kosten für die Packung zusammengesetzt:
@@ -731,7 +762,7 @@ vertikale Kolonnen nach Peters et al. abgelesen. Dieses Diagramm gibt die
 Anschaffungskosten des Kolonnenmantels in Abhängigkeit von Kolonnendurchmesser
 und Kolonnenhöhe an. Die angegebenen Kosten beziehen sich auf den Mantel mit
 Böden und Skirt, jedoch ohne Böden, Packungen oder Anschlüsse
-\cite{peters_plant_2004}. Für den Mantel werden anschließend ein Materialfaktor
+\cite{petersPlantDesignEconomics2004}. Für den Mantel werden anschließend ein Materialfaktor
 und, falls erforderlich, ein Druckfaktor berücksichtigt:
 \begin{equation}
     C_{\mathrm{shell}}
@@ -744,7 +775,7 @@ und, falls erforderlich, ein Druckfaktor berücksichtigt:
 Die Kosten der Packung werden ebenfalls aus Peters et al. abgelesen. Das
 entsprechende Kostendiagramm gibt die Anschaffungskosten für Packungen in
 Abhängigkeit von Packungshöhe und Kolonnendurchmesser an. Die Kosten enthalten nach Peters et al. bereits interne Träger und Verteiler
-\cite{peters_plant_2004}. Für die Packung wird ein separater Materialfaktor
+\cite{petersPlantDesignEconomics2004}. Für die Packung wird ein separater Materialfaktor
 angesetzt:
 \begin{equation}
     C_{\mathrm{packing}}
@@ -826,7 +857,7 @@ Luftvorreinigung zusammengefasst.
 
 In Anlehnung an Tesch wird die Luftvorreinigung pauschal als Zuschlag auf die
 Kosten der übrigen Hauptapparate berücksichtigt
-\cite{stefanie_janine_tesch_exergy-based_nodate}. Für diese Arbeit wird ein
+\cite{teschExergybasedMethodsApplied}. Für diese Arbeit wird ein
 Zuschlagsfaktor von $f_\mathrm{PPU}=0{,}08$ angesetzt, sodass sich ergibt:
 \begin{equation}
 C_\mathrm{PPU}
@@ -1361,3 +1392,13 @@ Doppelkolonne groß
 \hline
 \end{tabular}
 \end{table}
+
+\chapter{Alternative Simulationen}
+\label{ch:a_andere_ergebnisse}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\textwidth]{Overleaf_LaTeX/bilder/singlekolonne_E_D_barh2.png}
+    \caption{Vergleich der Exergievernichtung $\dot{E}_D$ der Systemkomponenten Einzelkolonnenprozess bei einer minimale Temperaturdifferenz von ... im Multistromwärmeübertrager}
+    \label{fig:exergieverluste_einzelkolonne}
+\end{figure}
